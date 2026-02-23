@@ -1,0 +1,154 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>NATA Bar | Korean Food & Bar</title>
+    <meta
+      name="description"
+      content="NATA Bar - Cuisine coréenne, plats signature et boissons dans une ambiance chaleureuse."
+    />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <header class="topbar">
+      <a class="brand" href="#accueil">NATA Bar</a>
+      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
+      <nav class="nav">
+        <a href="#accueil">Accueil</a>
+        <a href="#plats">Plats</a>
+        <a href="#boissons">Boissons</a>
+        <a href="#contact">Contact</a>
+      </nav>
+    </header>
+
+    <main>
+      <section id="accueil" class="hero reveal">
+        <div class="hero-copy">
+          <p class="eyebrow">Korean Food & Bar</p>
+          <h1>Saveurs Coréennes, Esprit de Bar.</h1>
+          <p>
+            Chez NATA Bar, découvre des plats coréens généreux, des recettes maison et une
+            carte de boissons pensée pour partager de vrais moments.
+          </p>
+          <div class="hero-actions">
+            <a class="btn btn-primary" href="#plats">Voir le menu</a>
+            <a class="btn btn-ghost" href="#contact">Réserver</a>
+          </div>
+        </div>
+        <div class="hero-media">
+          <img src="media/img/logo-nata.jpg" alt="Logo NATA Korean Food & Bar" />
+        </div>
+      </section>
+
+      <section class="story reveal">
+        <div class="story-card">
+          <h2>Une ambiance chaude, une cuisine vivante</h2>
+          <p>
+            Inspiré des bars coréens de quartier, NATA mélange bols fumants, grillades
+            caramélisées et cocktails frais dans un lieu intime et moderne.
+          </p>
+        </div>
+      </section>
+
+      <section id="plats" class="menu-section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Nos plats</p>
+          <h2>Le meilleur de la cuisine coréenne</h2>
+        </div>
+        <div class="menu-grid">
+          <article class="dish dish-image">
+            <img src="media/img/plat-nata.jpg" alt="Bol coréen servi au NATA Bar" />
+          </article>
+          <article class="dish">
+            <h3>Bibimbap Signature</h3>
+            <p>Légumes sautés, riz, bœuf mariné, œuf coulant, sauce gochujang maison.</p>
+            <span>17€</span>
+          </article>
+          <article class="dish">
+            <h3>Kimchi Jjigae</h3>
+            <p>Ragoût de kimchi mijoté, tofu soyeux, porc confit, servi avec riz vapeur.</p>
+            <span>15€</span>
+          </article>
+          <article class="dish">
+            <h3>Korean Fried Chicken</h3>
+            <p>Poulet croustillant, glaçage piment doux et ail, pickles maison.</p>
+            <span>14€</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="boissons" class="drinks reveal">
+        <div class="section-head">
+          <p class="eyebrow">Boissons</p>
+          <h2>Cocktails, soju et créations maison</h2>
+        </div>
+        <div class="drink-list">
+          <article>
+            <h3>Soju Yuzu Spritz</h3>
+            <p>Soju, yuzu, eau pétillante, zeste de citron.</p>
+            <span>9€</span>
+          </article>
+          <article>
+            <h3>Seoul Mule</h3>
+            <p>Gingembre frais, vodka, citron vert, bitter maison.</p>
+            <span>10€</span>
+          </article>
+          <article>
+            <h3>Mocktail Gingembre Poire</h3>
+            <p>Poire, gingembre, citron jaune, tonic floral.</p>
+            <span>7€</span>
+          </article>
+          <article>
+            <h3>Thé glacé prune</h3>
+            <p>Thé noir infusé, prune coréenne, menthe.</p>
+            <span>6€</span>
+          </article>
+        </div>
+      </section>
+
+      <section id="contact" class="contact reveal">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>Réserve ta table</h2>
+          <p>Ouvert du mardi au dimanche, 12h00 - 23h30.</p>
+          <p>45 Rue des Saveurs, Paris</p>
+          <p>Tél: 01 23 45 67 89</p>
+        </div>
+        <form class="booking-form" action="#" method="post">
+          <label>
+            Nom
+            <input type="text" name="name" placeholder="Ton nom" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" placeholder="nom@email.com" required />
+          </label>
+          <label>
+            Date
+            <input type="date" name="date" required />
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="4" placeholder="Nombre de personnes, heure..."></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary">Envoyer</button>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
