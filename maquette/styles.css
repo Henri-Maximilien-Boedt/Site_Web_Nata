@@ -260,6 +260,286 @@ main {
   color: var(--muted);
 }
 
+.date-picker,
+.time-picker {
+  display: grid;
+  gap: 0.4rem;
+}
+
+.date-trigger,
+.time-trigger {
+  min-height: 58px;
+  width: 100%;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  padding: 0.95rem 1rem;
+  font: inherit;
+  font-size: 1.05rem;
+  font-weight: 700;
+  background: #140f0c;
+  color: var(--text);
+  cursor: pointer;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, transform 0.2s ease;
+}
+
+.date-trigger::placeholder,
+.time-trigger::placeholder {
+  color: #baa58a;
+  font-weight: 600;
+}
+
+.date-trigger:focus,
+.time-trigger:focus {
+  outline: none;
+  border-color: var(--orange);
+  box-shadow: 0 0 0 3px rgba(232, 110, 47, 0.2);
+  transform: scale(1.01);
+}
+
+.date-trigger.is-filled,
+.time-trigger.is-filled {
+  color: var(--gold);
+}
+
+.date-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 80;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.date-modal[hidden] {
+  display: none;
+}
+
+.date-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 4, 3, 0.72);
+  backdrop-filter: blur(4px);
+}
+
+.date-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1rem;
+  background: linear-gradient(165deg, #22150f, #150f0b 75%);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+}
+
+.date-modal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.date-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--gold);
+}
+
+.date-close {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #1b120d;
+  color: var(--text);
+  font-size: 1rem;
+  padding: 0.45rem 0.8rem;
+  cursor: pointer;
+}
+
+.date-nav {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 0.8rem;
+}
+
+.date-nav button {
+  border: 1px solid var(--line);
+  border-radius: 10px;
+  background: #1b120d;
+  color: var(--text);
+  font-size: 0.95rem;
+  padding: 0.45rem 0.7rem;
+  cursor: pointer;
+}
+
+.date-month {
+  text-align: center;
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 2rem;
+}
+
+.date-weekdays,
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 0.35rem;
+}
+
+.date-weekdays span {
+  text-align: center;
+  font-size: 0.72rem;
+  color: var(--muted);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+
+.date-cell {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 64px;
+  background: #1d130e;
+  color: var(--text);
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.date-cell:hover {
+  border-color: var(--orange);
+}
+
+.date-cell.is-out {
+  opacity: 0.4;
+}
+
+.date-cell.is-past {
+  opacity: 0.32;
+  cursor: not-allowed;
+}
+
+.date-cell.is-selected {
+  background: linear-gradient(140deg, #e86e2f, #ff8f4f);
+  border-color: #ff9c62;
+  color: #fff;
+}
+
+.date-quick {
+  margin-top: 0.9rem;
+  display: flex;
+  gap: 0.45rem;
+  flex-wrap: wrap;
+}
+
+.date-quick button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #1d130e;
+  color: var(--gold);
+  font: inherit;
+  font-size: 0.82rem;
+  font-weight: 700;
+  padding: 0.45rem 0.75rem;
+  cursor: pointer;
+}
+
+.time-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 85;
+  display: grid;
+  place-items: center;
+  padding: 1rem;
+}
+
+.time-modal[hidden] {
+  display: none;
+}
+
+.time-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(5, 4, 3, 0.76);
+  backdrop-filter: blur(4px);
+}
+
+.time-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(760px, 95vw);
+  max-height: 90vh;
+  overflow: auto;
+  border: 1px solid var(--line);
+  border-radius: 20px;
+  padding: 1rem;
+  background: linear-gradient(165deg, #22150f, #140e0a 75%);
+  box-shadow: 0 22px 60px rgba(0, 0, 0, 0.55);
+}
+
+.time-modal__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 0.8rem;
+}
+
+.time-modal__title {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--gold);
+}
+
+.time-date {
+  margin: 0 0 0.8rem;
+  color: var(--muted);
+  font-size: 0.9rem;
+}
+
+.time-grid {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 0.5rem;
+}
+
+.time-slot {
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  min-height: 48px;
+  background: #1d130e;
+  color: var(--text);
+  font: inherit;
+  font-size: 1rem;
+  font-weight: 700;
+  cursor: pointer;
+}
+
+.time-slot:hover {
+  border-color: var(--orange);
+}
+
+.time-slot.is-selected {
+  background: linear-gradient(140deg, #e86e2f, #ff8f4f);
+  border-color: #ff9c62;
+  color: #fff;
+}
+
+.time-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
+.date-help {
+  margin: 0;
+  font-size: 0.78rem;
+  color: var(--gold);
+}
+
 input,
 textarea {
   width: 100%;
@@ -319,5 +599,33 @@ footer {
 
   .nav.open {
     display: flex;
+  }
+
+  .date-modal__panel {
+    width: min(680px, 96vw);
+    padding: 0.85rem;
+  }
+
+  .date-month {
+    font-size: 1.6rem;
+  }
+
+  .date-cell {
+    min-height: 54px;
+  }
+
+  .time-modal__panel {
+    width: min(680px, 96vw);
+    padding: 0.85rem;
+  }
+
+  .time-grid {
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 560px) {
+  .time-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }

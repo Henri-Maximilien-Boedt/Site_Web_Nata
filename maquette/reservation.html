@@ -54,7 +54,33 @@
           </label>
           <label>
             Date
-            <input type="date" name="date" required />
+            <div class="date-picker" data-date-picker>
+              <input type="hidden" name="date" data-date-value />
+              <input
+                type="text"
+                class="date-trigger"
+                data-date-trigger
+                placeholder="Clique pour choisir une date"
+                readonly
+                required
+              />
+              <p class="date-help">Clique sur le champ pour ouvrir le sélecteur grand format.</p>
+            </div>
+          </label>
+          <label>
+            Heure
+            <div class="time-picker" data-time-picker>
+              <input type="hidden" name="time" data-time-value />
+              <input
+                type="text"
+                class="time-trigger"
+                data-time-trigger
+                placeholder="Sélectionne d'abord une date"
+                readonly
+                required
+              />
+              <p class="date-help">Après la date, un second écran s'ouvre pour choisir l'heure.</p>
+            </div>
           </label>
           <label>
             Message
