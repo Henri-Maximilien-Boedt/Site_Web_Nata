@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Réservation | NATA Bar</title>
+    <meta name="description" content="Réservez votre table chez NATA Bar." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <header class="topbar">
+      <a class="brand" href="index.html">NATA Bar</a>
+      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
+      <nav class="nav">
+        <a href="index.html">Accueil</a>
+        <a href="menu.html">Menu</a>
+        <a href="reservation.html">Réservation</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Réservation</p>
+          <h2>Réserve ta table</h2>
+          <p>Choisis ta date et envoie-nous ta demande de réservation.</p>
+        </div>
+      </section>
+
+      <section class="contact reveal">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>NATA Bar</h2>
+          <p>Ouvert le : <br />Lundi de 18:00–22:00 et du<br />mardi au Samedi, 12:00–14:30 18:00–22:00.</p>
+          <p>Grand-Place 51, 1348 Ottignies-Louvain-la-Neuve</p>
+          <p>Tél: 01 23 45 67 89</p>
+        </div>
+        <form class="booking-form" action="#" method="post">
+          <label>
+            Nom
+            <input type="text" name="name" placeholder="Ton nom" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" placeholder="nom@email.com" required />
+          </label>
+          <label>
+            Date
+            <input type="date" name="date" required />
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="4" placeholder="Nombre de personnes, heure..."></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary">Envoyer</button>
+        </form>
+      </section>
+    </main>
+
+    <footer>
+      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>

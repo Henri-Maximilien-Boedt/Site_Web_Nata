@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Menu | NATA Bar</title>
+    <meta name="description" content="Carte des plats et boissons de NATA Bar." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <header class="topbar">
+      <a class="brand" href="index.html">NATA Bar</a>
+      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
+      <nav class="nav">
+        <a href="index.html">Accueil</a>
+        <a href="menu.html">Menu</a>
+        <a href="reservation.html">Réservation</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Carte</p>
+          <h2>Menu NATA Bar</h2>
+          <p>Découvre notre sélection de plats et boissons coréens.</p>
+        </div>
+      </section>
+
+      <section class="menu-section reveal">
+        <div class="section-head">
+          <p class="eyebrow">Nos plats</p>
+          <h2>Le meilleur de la cuisine coréenne</h2>
+        </div>
+        <div class="menu-grid">
+          <article class="dish dish-image">
+            <img src="media/img/plat-nata.jpg" alt="Bol coréen servi au NATA Bar" />
+          </article>
+          <article class="dish">
+            <h3>Plat 1</h3>
+            <p>Description</p>
+            <span>17€</span>
+          </article>
+          <article class="dish">
+            <h3>Plat 2</h3>
+            <p>Description</p>
+            <span>15€</span>
+          </article>
+          <article class="dish">
+            <h3>Plat 3</h3>
+            <p>Description</p>
+            <span>14€</span>
+          </article>
+        </div>
+      </section>
+
+      <section class="drinks reveal">
+        <div class="section-head">
+          <p class="eyebrow">Boissons</p>
+          <h2>Cocktails, soju et créations maison</h2>
+        </div>
+        <div class="drink-list">
+          <article>
+            <h3>Soju Yuzu Spritz</h3>
+            <p>Soju, yuzu, eau pétillante, zeste de citron.</p>
+            <span>9€</span>
+          </article>
+          <article>
+            <h3>Cocktail 1</h3>
+            <p>Description</p>
+            <span>10€</span>
+          </article>
+          <article>
+            <h3>Cocktail 2</h3>
+            <p>Description</p>
+            <span>7€</span>
+          </article>
+          <article>
+            <h3>Cocktail 3</h3>
+            <p>Description</p>
+            <span>6€</span>
+          </article>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
