@@ -6,6 +6,8 @@ const STORAGE_KEYS = {
   reservations: 'nata_reservations_v1',
   adminSession: 'nata_admin_session_v1',
   adminBlocks: 'nata_admin_blocks_v1',
+  tableLayout: 'nata_table_layout_v2',
+  tableMerges: 'nata_table_merges_v1',
 };
 
 const ADMIN_CREDENTIALS = {
@@ -27,16 +29,237 @@ const TABLES = [
 ];
 
 const TABLE_PLAN = {
-  'T2-1': { x: 7, y: 12, w: 12, h: 11, shape: 'square' },
-  'T2-2': { x: 7, y: 31, w: 12, h: 11, shape: 'square' },
-  'T2-3': { x: 7, y: 50, w: 12, h: 11, shape: 'square' },
-  'T2-4': { x: 8, y: 74, w: 11, h: 10, shape: 'square' },
-  'T2-5': { x: 21, y: 74, w: 11, h: 10, shape: 'square' },
-  'T4-1': { x: 24, y: 12, w: 22, h: 11, shape: 'rect' },
-  'T4-2': { x: 54, y: 12, w: 22, h: 11, shape: 'rect' },
-  'T4-3': { x: 24, y: 31, w: 14, h: 11, shape: 'square' },
-  'T4-4': { x: 24, y: 50, w: 14, h: 11, shape: 'square' },
-  'T10-1': { x: 82, y: 82, w: 13, h: 14, shape: 'round' },
+  'T2-1': { x: 7, y: 12, w: 11, h: 12, shape: 'square' },
+  'T2-2': { x: 7, y: 31, w: 11, h: 12, shape: 'square' },
+  'T2-3': { x: 7, y: 50, w: 11, h: 12, shape: 'square' },
+  'T2-4': { x: 8, y: 74, w: 10, h: 11, shape: 'square' },
+  'T2-5': { x: 21, y: 74, w: 10, h: 11, shape: 'square' },
+  'T4-1': { x: 24, y: 12, w: 11, h: 22, shape: 'rect' },
+  'T4-2': { x: 54, y: 12, w: 11, h: 22, shape: 'rect' },
+  'T4-3': { x: 24, y: 31, w: 11, h: 14, shape: 'square' },
+  'T4-4': { x: 24, y: 50, w: 11, h: 14, shape: 'square' },
+  'T10-1': { x: 82, y: 82, w: 14, h: 13, shape: 'round' },
+};
+
+const TABLE_BY_ID = Object.fromEntries(TABLES.map((table) => [table.id, table]));
+
+const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+
+const readTableLayout = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.tableLayout);
+    const parsed = raw ? JSON.parse(raw) : {};
+    return parsed && typeof parsed === 'object' ? parsed : {};
+  } catch {
+    return {};
+  }
+};
+
+const writeTableLayout = (layout) => {
+  localStorage.setItem(STORAGE_KEYS.tableLayout, JSON.stringify(layout));
+};
+
+const readTableMerges = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.tableMerges);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeTableMerges = (groups) => {
+  localStorage.setItem(STORAGE_KEYS.tableMerges, JSON.stringify(groups));
+};
+
+const normalizeMergeGroups = (groups) => {
+  const validGroups = groups
+    .filter((group) => Array.isArray(group))
+    .map((group) =>
+      Array.from(
+        new Set(
+          group
+            .map((id) => String(id || '').trim())
+            .filter((id) => id && TABLE_BY_ID[id])
+        )
+      )
+    )
+    .filter((group) => group.length > 1);
+
+  const merged = [];
+  validGroups.forEach((group) => {
+    const touching = merged.filter((existing) => existing.some((id) => group.includes(id)));
+    if (!touching.length) {
+      merged.push([...group]);
+      return;
+    }
+    const combined = new Set(group);
+    touching.forEach((existing) => existing.forEach((id) => combined.add(id)));
+    for (let index = merged.length - 1; index >= 0; index -= 1) {
+      if (touching.includes(merged[index])) merged.splice(index, 1);
+    }
+    merged.push(Array.from(combined));
+  });
+
+  return merged
+    .map((group) => group.sort())
+    .sort((a, b) => a[0].localeCompare(b[0]));
+};
+
+const getTableLayout = () => {
+  const saved = readTableLayout();
+  const layout = {};
+
+  TABLES.forEach((table) => {
+    const base = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
+    const custom = saved[table.id] && typeof saved[table.id] === 'object' ? saved[table.id] : {};
+    const width = Number(custom.w ?? base.w);
+    const height = Number(custom.h ?? base.h);
+    const x = Number(custom.x ?? base.x);
+    const y = Number(custom.y ?? base.y);
+    layout[table.id] = {
+      x: clamp(Number.isFinite(x) ? x : base.x, 3, 97),
+      y: clamp(Number.isFinite(y) ? y : base.y, 3, 97),
+      w: clamp(Number.isFinite(width) ? width : base.w, 8, 42),
+      h: clamp(Number.isFinite(height) ? height : base.h, 8, 35),
+      shape: custom.shape || base.shape || 'square',
+    };
+  });
+
+  return layout;
+};
+
+const getTableGroups = () => {
+  const mergeGroups = normalizeMergeGroups(readTableMerges());
+  const linked = new Set(mergeGroups.flat());
+  const singles = TABLES.map((table) => table.id)
+    .filter((id) => !linked.has(id))
+    .map((id) => [id]);
+  return [...mergeGroups, ...singles];
+};
+
+const buildTableUnitFromMembers = (members, layout = getTableLayout()) => {
+  const sortedMembers = [...members].sort();
+  const memberTables = sortedMembers.map((id) => TABLE_BY_ID[id]).filter(Boolean);
+  const seats = memberTables.reduce((sum, table) => sum + table.seats, 0);
+  const isMerged = sortedMembers.length > 1;
+
+  if (!isMerged) {
+    const onlyId = sortedMembers[0];
+    const table = TABLE_BY_ID[onlyId];
+    return {
+      id: onlyId,
+      label: table?.label || onlyId,
+      seats: table?.seats || 0,
+      members: sortedMembers,
+      isMerged: false,
+      plan: layout[onlyId] || TABLE_PLAN[onlyId],
+    };
+  }
+
+  const bounds = sortedMembers.reduce(
+    (acc, id) => {
+      const item = layout[id];
+      if (!item) return acc;
+      const left = item.x - item.w / 2;
+      const right = item.x + item.w / 2;
+      const top = item.y - item.h / 2;
+      const bottom = item.y + item.h / 2;
+      return {
+        left: Math.min(acc.left, left),
+        right: Math.max(acc.right, right),
+        top: Math.min(acc.top, top),
+        bottom: Math.max(acc.bottom, bottom),
+      };
+    },
+    { left: Infinity, right: -Infinity, top: Infinity, bottom: -Infinity }
+  );
+
+  const plan = {
+    x: (bounds.left + bounds.right) / 2,
+    y: (bounds.top + bounds.bottom) / 2,
+    w: clamp(bounds.right - bounds.left, 12, 60),
+    h: clamp(bounds.bottom - bounds.top, 10, 45),
+    shape: 'rect',
+  };
+
+  return {
+    id: `GROUP:${sortedMembers.join('+')}`,
+    label: `Table groupée (${sortedMembers.join(' + ')})`,
+    seats,
+    members: sortedMembers,
+    isMerged: true,
+    plan,
+  };
+};
+
+const getTableUnits = (layout = getTableLayout()) =>
+  getTableGroups(layout).map((members) => buildTableUnitFromMembers(members, layout));
+
+const getUnitById = (unitId, layout = getTableLayout()) =>
+  getTableUnits(layout).find((unit) => unit.id === unitId);
+
+const getGroupForMember = (memberId, groups = normalizeMergeGroups(readTableMerges())) =>
+  groups.find((group) => group.includes(memberId)) || null;
+
+const mergeTablesById = (sourceId, targetId) => {
+  if (!TABLE_BY_ID[sourceId] || !TABLE_BY_ID[targetId] || sourceId === targetId) return null;
+  const groups = normalizeMergeGroups(readTableMerges());
+  const sourceGroup = getGroupForMember(sourceId, groups);
+  const targetGroup = getGroupForMember(targetId, groups);
+
+  if (sourceGroup && targetGroup && sourceGroup === targetGroup) {
+    return sourceGroup;
+  }
+
+  const nextGroups = groups.filter((group) => group !== sourceGroup && group !== targetGroup);
+  const mergedGroup = Array.from(
+    new Set([...(sourceGroup || [sourceId]), ...(targetGroup || [targetId])])
+  ).sort();
+  nextGroups.push(mergedGroup);
+  writeTableMerges(normalizeMergeGroups(nextGroups));
+  return mergedGroup;
+};
+
+const splitGroupByMember = (memberId) => {
+  const groups = normalizeMergeGroups(readTableMerges());
+  const sourceGroup = getGroupForMember(memberId, groups);
+  if (!sourceGroup) return false;
+  const nextGroups = groups.filter((group) => group !== sourceGroup);
+  if (sourceGroup.length > 2) {
+    const rest = sourceGroup.filter((id) => id !== memberId);
+    if (rest.length > 1) nextGroups.push(rest);
+  }
+  writeTableMerges(normalizeMergeGroups(nextGroups));
+  return true;
+};
+
+const alignMergedGroupLayout = (group, anchorId) => {
+  if (!Array.isArray(group) || group.length < 2) return;
+  const layout = getTableLayout();
+  const anchor = layout[anchorId] || layout[group[0]];
+  if (!anchor) return;
+
+  const ordered = [anchorId, ...group.filter((id) => id !== anchorId)];
+  const totalWidth = ordered.reduce((sum, tableId) => {
+    const item = layout[tableId];
+    return sum + (item ? item.w : 0);
+  }, 0);
+  if (!totalWidth) return;
+
+  let cursor = anchor.x - totalWidth / 2;
+  ordered.forEach((tableId) => {
+    const item = layout[tableId];
+    if (!item) return;
+    const halfW = item.w / 2;
+    const halfH = item.h / 2;
+    item.x = clamp(cursor + item.w / 2, halfW + 1, 99 - halfW);
+    item.y = clamp(anchor.y, halfH + 1, 99 - halfH);
+    cursor += item.w;
+  });
+
+  writeTableLayout(layout);
 };
 
 const pad2 = (value) => String(value).padStart(2, '0');
@@ -62,6 +285,7 @@ const fromMinutes = (totalMinutes) => {
 };
 
 const overlaps = (startA, endA, startB, endB) => startA < endB && startB < endA;
+const normalizeRange = (start, end) => (end <= start ? [start, end + 1440] : [start, end]);
 
 const fromISODate = (value) => {
   if (!value) return null;
@@ -314,32 +538,73 @@ const removeAdminBlock = (id) => {
 };
 
 const getTableById = (id) => TABLES.find((table) => table.id === id);
+const getReservationMembers = (reservation) => {
+  if (Array.isArray(reservation.tableMembers) && reservation.tableMembers.length) {
+    return reservation.tableMembers.filter((id) => Boolean(TABLE_BY_ID[id]));
+  }
+  const tableId = String(reservation.tableId || '').trim();
+  if (tableId.startsWith('GROUP:')) {
+    return tableId
+      .slice(6)
+      .split('+')
+      .map((id) => id.trim())
+      .filter((id) => Boolean(TABLE_BY_ID[id]));
+  }
+  return TABLE_BY_ID[tableId] ? [tableId] : [];
+};
 
 const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => {
   const targetStart = toMinutes(timeHHMM);
   const targetEnd = targetStart + 120;
 
-  return readReservations().some((reservation) => {
+  const hasReservationOverlap = readReservations().some((reservation) => {
     if (ignoreReservationId && reservation.id === ignoreReservationId) return false;
     if (reservation.date !== dateISO) return false;
-    if (reservation.tableId !== tableId) return false;
+    const members = getReservationMembers(reservation);
+    if (!members.includes(tableId)) return false;
     const start = toMinutes(reservation.time);
     const end = start + 120;
+    return overlaps(targetStart, targetEnd, start, end);
+  });
+
+  if (hasReservationOverlap) return true;
+
+  return readAdminBlocks().some((block) => {
+    if (block.date !== dateISO) return false;
+    if (block.tableId !== tableId) return false;
+    const start = toMinutes(block.startTime);
+    const rawEnd =
+      Number.isFinite(Number(block.endMinutes)) && Number(block.endMinutes) > 0
+        ? Number(block.endMinutes)
+        : toMinutes(block.endTime);
+    const [, end] = normalizeRange(start, rawEnd);
     return overlaps(targetStart, targetEnd, start, end);
   });
 };
 
 const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
-  .map((form) => ({
-    form,
-    dateHidden: form.querySelector('[data-date-value]'),
-    dateTrigger: form.querySelector('[data-date-trigger]'),
-    timeHidden: form.querySelector('[data-time-value]'),
-    timeTrigger: form.querySelector('[data-time-trigger]'),
-    tableHidden: form.querySelector('[data-table-value]'),
-    tableTrigger: form.querySelector('[data-table-trigger]'),
-    peopleInput: form.querySelector('input[name="people"]'),
-  }))
+  .map((form) => {
+    let tableMembersHidden = form.querySelector('[data-table-members]');
+    if (!tableMembersHidden) {
+      tableMembersHidden = document.createElement('input');
+      tableMembersHidden.type = 'hidden';
+      tableMembersHidden.name = 'tableMembers';
+      tableMembersHidden.setAttribute('data-table-members', '');
+      form.appendChild(tableMembersHidden);
+    }
+
+    return {
+      form,
+      dateHidden: form.querySelector('[data-date-value]'),
+      dateTrigger: form.querySelector('[data-date-trigger]'),
+      timeHidden: form.querySelector('[data-time-value]'),
+      timeTrigger: form.querySelector('[data-time-trigger]'),
+      tableHidden: form.querySelector('[data-table-value]'),
+      tableMembersHidden,
+      tableTrigger: form.querySelector('[data-table-trigger]'),
+      peopleInput: form.querySelector('input[name="people"]'),
+    };
+  })
   .filter(
     (entry) =>
       entry.dateHidden &&
@@ -347,6 +612,7 @@ const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
       entry.timeHidden &&
       entry.timeTrigger &&
       entry.tableHidden &&
+      entry.tableMembersHidden &&
       entry.tableTrigger &&
       entry.peopleInput
   );
@@ -494,6 +760,7 @@ if (bookingForms.length) {
 
   const resetTable = (booking) => {
     booking.tableHidden.value = '';
+    booking.tableMembersHidden.value = '';
     booking.tableTrigger.value = '';
     booking.tableTrigger.classList.remove('is-filled');
     booking.tableTrigger.placeholder = 'Choisis d\'abord une date et une heure';
@@ -570,10 +837,14 @@ if (bookingForms.length) {
     resetTable(booking);
   };
 
+  const isUnitBooked = (members, dateISO, timeHHMM) =>
+    members.some((memberId) => isTableBooked(memberId, dateISO, timeHHMM));
+
   const renderTablePlan = (booking) => {
     const date = booking.dateHidden.value;
     const time = booking.timeHidden.value;
     const people = getPeopleCount(booking);
+    const units = getTableUnits();
     tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (2h) - ${people} personne${people > 1 ? 's' : ''}`;
 
     const decorations = `
@@ -585,13 +856,13 @@ if (bookingForms.length) {
       </div>
     `;
 
-    tableLayout.innerHTML = `${decorations}${TABLES.map((table) => {
-      const occupied = isTableBooked(table.id, date, time);
-      const tooSmall = !occupied && people > table.seats;
-      const selected = booking.tableHidden.value === table.id;
+    tableLayout.innerHTML = `${decorations}${units.map((unit) => {
+      const occupied = isUnitBooked(unit.members, date, time);
+      const tooSmall = !occupied && people > unit.seats;
+      const selected = booking.tableHidden.value === unit.id;
       const disabled = occupied || tooSmall;
-      const plan = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
-      const chairCount = Math.max(2, Math.min(6, table.seats));
+      const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
+      const chairCount = Math.max(2, Math.min(8, unit.seats));
       const status = occupied ? 'Réservée' : tooSmall ? 'Trop petite' : 'Libre';
 
       return `
@@ -600,11 +871,12 @@ if (bookingForms.length) {
           class="table-seat table-seat--${plan.shape}${occupied ? ' is-busy' : ''}${tooSmall ? ' is-small' : ''}${
             !occupied && !tooSmall ? ' is-free' : ''
           }${selected ? ' is-selected' : ''}"
-          data-table-select="${table.id}"
+          data-table-select="${unit.id}"
           style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs:${chairCount};"
           ${disabled ? 'disabled' : ''}
         >
-          <span class="table-seat__label">${table.id}</span>
+          <span class="table-seat__label">${escapeHTML(unit.isMerged ? `Groupe` : unit.id)}</span>
+          <span class="table-seat__capacity">${escapeHTML(`${unit.seats}P`)}</span>
           <span class="table-seat__time">${time}</span>
           <span class="table-seat__state">${status}</span>
         </button>
@@ -612,16 +884,17 @@ if (bookingForms.length) {
     }).join('')}`;
   };
 
-  const selectTable = (tableId) => {
+  const selectTable = (unitId) => {
     if (!activeBooking) return;
-    const table = getTableById(tableId);
+    const unit = getUnitById(unitId);
     const people = getPeopleCount(activeBooking);
-    if (!table) return;
-    if (people > table.seats) return;
-    if (isTableBooked(table.id, activeBooking.dateHidden.value, activeBooking.timeHidden.value)) return;
+    if (!unit) return;
+    if (people > unit.seats) return;
+    if (isUnitBooked(unit.members, activeBooking.dateHidden.value, activeBooking.timeHidden.value)) return;
 
-    activeBooking.tableHidden.value = table.id;
-    activeBooking.tableTrigger.value = `${table.label} (${table.seats} pers.)`;
+    activeBooking.tableHidden.value = unit.id;
+    activeBooking.tableMembersHidden.value = unit.members.join(',');
+    activeBooking.tableTrigger.value = `${unit.label} (${unit.seats} pers.)`;
     activeBooking.tableTrigger.classList.add('is-filled');
     closeTableModal();
   };
@@ -727,9 +1000,15 @@ if (bookingForms.length) {
     }
 
     if (booking.tableHidden.value) {
-      const table = getTableById(booking.tableHidden.value);
-      if (table) {
-        booking.tableTrigger.value = `${table.label} (${table.seats} pers.)`;
+      const selectedUnit = getUnitById(booking.tableHidden.value);
+      const fallbackTable = getTableById(booking.tableHidden.value);
+      if (selectedUnit) {
+        booking.tableMembersHidden.value = selectedUnit.members.join(',');
+        booking.tableTrigger.value = `${selectedUnit.label} (${selectedUnit.seats} pers.)`;
+        booking.tableTrigger.classList.add('is-filled');
+      } else if (fallbackTable) {
+        booking.tableMembersHidden.value = fallbackTable.id;
+        booking.tableTrigger.value = `${fallbackTable.label} (${fallbackTable.seats} pers.)`;
         booking.tableTrigger.classList.add('is-filled');
       }
     }
@@ -801,6 +1080,7 @@ if (bookingForms.length) {
       const date = String(formData.get('date') || '').trim();
       const time = String(formData.get('time') || '').trim();
       const tableId = String(formData.get('tableId') || '').trim();
+      const tableMembersRaw = String(formData.get('tableMembers') || '').trim();
       const message = String(formData.get('message') || '').trim();
 
       if (!name || !email || !date || !time || !tableId || !people) {
@@ -813,23 +1093,45 @@ if (bookingForms.length) {
         return;
       }
 
-      const table = getTableById(tableId);
-      if (!table) {
+      const parsedMembers = tableMembersRaw
+        .split(',')
+        .map((id) => id.trim())
+        .filter((id) => id && getTableById(id));
+      const tableUnit = getUnitById(tableId);
+      const fallbackTable = getTableById(tableId);
+      const parsedSeats = parsedMembers.reduce((sum, id) => sum + (getTableById(id)?.seats || 0), 0);
+      const parsedLabel =
+        parsedMembers.length > 1
+          ? `Table groupée (${parsedMembers.join(' + ')})`
+          : parsedMembers.length === 1
+            ? getTableById(parsedMembers[0])?.label || parsedMembers[0]
+            : '';
+      const selectedMembers = parsedMembers.length
+        ? parsedMembers
+        : tableUnit
+          ? tableUnit.members
+          : fallbackTable
+            ? [fallbackTable.id]
+            : [];
+      const tableSeats = tableUnit ? tableUnit.seats : fallbackTable ? fallbackTable.seats : parsedSeats;
+      const tableLabel = tableUnit ? tableUnit.label : fallbackTable ? fallbackTable.label : parsedLabel;
+
+      if (!selectedMembers.length || !tableLabel) {
         showFeedback(booking, 'Table invalide. Merci de sélectionner une table.', 'error');
         return;
       }
 
-      if (people > table.seats) {
+      if (people > tableSeats) {
         resetTable(booking);
         showFeedback(booking, 'Cette table est trop petite pour ce groupe.', 'error');
         return;
       }
 
-      if (isTableBooked(tableId, date, time)) {
+      if (selectedMembers.some((memberId) => isTableBooked(memberId, date, time))) {
         resetTable(booking);
         showFeedback(
           booking,
-          'Cette table vient d\'être réservée. Choisis une autre table pour ce créneau.',
+          'Cette table n\'est plus disponible sur ce créneau. Choisis une autre table.',
           'error'
         );
         return;
@@ -848,8 +1150,9 @@ if (bookingForms.length) {
         date,
         time,
         tableId,
-        tableLabel: table.label,
-        tableSeats: table.seats,
+        tableLabel,
+        tableSeats,
+        tableMembers: selectedMembers,
         message,
         createdAt: new Date().toISOString(),
       });
@@ -934,6 +1237,13 @@ if (adminRoot) {
   let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
     ? roundCurrentTimeToHalfHour()
     : EVENING_SLOTS[0];
+  const mergeMenu = document.createElement('div');
+  mergeMenu.className = 'admin-merge-menu';
+  mergeMenu.hidden = true;
+  mergeMenu.innerHTML = '<div class="admin-merge-menu__list" data-merge-menu-list></div>';
+  document.body.appendChild(mergeMenu);
+  const mergeMenuList = mergeMenu.querySelector('[data-merge-menu-list]');
+  let mergeMenuSourceId = '';
 
   const isLoggedIn = () => localStorage.getItem(STORAGE_KEYS.adminSession) === '1';
 
@@ -954,6 +1264,50 @@ if (adminRoot) {
     if (type === 'error') actionFeedback.classList.add('is-error');
   };
 
+  const closeMergeMenu = () => {
+    mergeMenu.hidden = true;
+    mergeMenuSourceId = '';
+    if (mergeMenuList) mergeMenuList.innerHTML = '';
+  };
+
+  const openMergeMenu = (tableId, clientX, clientY) => {
+    if (!mergeMenuList) return;
+    const groups = normalizeMergeGroups(readTableMerges());
+    const sourceGroup = getGroupForMember(tableId, groups) || [tableId];
+    const mergeTargets = TABLES.map((table) => table.id).filter((id) => !sourceGroup.includes(id));
+
+    const mergeButtons = mergeTargets.length
+      ? mergeTargets
+          .map((id) => {
+            const target = TABLE_BY_ID[id];
+            return `<button type="button" data-merge-target="${id}">Fusionner avec ${id} (${target.seats}P)</button>`;
+          })
+          .join('')
+      : '<p>Aucune table disponible pour fusionner.</p>';
+
+    const splitButton =
+      sourceGroup.length > 1
+        ? `<button type="button" data-merge-split="1">Retirer ${tableId} du groupe</button>`
+        : '';
+
+    mergeMenuList.innerHTML = `
+      <p class="admin-merge-menu__title">${tableId}</p>
+      ${mergeButtons}
+      ${splitButton}
+      <button type="button" data-merge-close="1">Fermer</button>
+    `;
+
+    mergeMenuSourceId = tableId;
+    mergeMenu.hidden = false;
+
+    const viewportPadding = 12;
+    const rect = mergeMenu.getBoundingClientRect();
+    const left = clamp(clientX, viewportPadding, window.innerWidth - rect.width - viewportPadding);
+    const top = clamp(clientY, viewportPadding, window.innerHeight - rect.height - viewportPadding);
+    mergeMenu.style.left = `${left}px`;
+    mergeMenu.style.top = `${top}px`;
+  };
+
   const getReservationRangeText = (reservation) => {
     const start = toMinutes(reservation.time);
     const end = start + 120;
@@ -963,7 +1317,11 @@ if (adminRoot) {
   const getReservationAt = (tableId, dateISO, atTime) => {
     const point = toMinutes(atTime);
     const reservations = readReservations()
-      .filter((item) => item.date === dateISO && item.tableId === tableId)
+      .filter((item) => {
+        if (item.date !== dateISO) return false;
+        const members = getReservationMembers(item);
+        return members.includes(tableId);
+      })
       .sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
 
     return reservations.find((reservation) => {
@@ -981,7 +1339,11 @@ if (adminRoot) {
 
     return blocks.find((block) => {
       const start = toMinutes(block.startTime);
-      const end = toMinutes(block.endTime);
+      const rawEnd =
+        Number.isFinite(Number(block.endMinutes)) && Number(block.endMinutes) > 0
+          ? Number(block.endMinutes)
+          : toMinutes(block.endTime);
+      const [, end] = normalizeRange(start, rawEnd);
       return point >= start && point < end;
     });
   };
@@ -996,10 +1358,20 @@ if (adminRoot) {
 
   const toggleManualOccupation = (tableId, atTime) => {
     const selectedDate = dateInput.value || toISODate(new Date());
-    const reservation = getReservationAt(tableId, selectedDate, atTime);
-    if (reservation) {
+    const blockStart = toMinutes(atTime);
+    const blockEnd = blockStart + 120;
+    const overlappingReservation = readReservations().find((reservation) => {
+      if (reservation.date !== selectedDate) return false;
+      const members = getReservationMembers(reservation);
+      if (!members.includes(tableId)) return false;
+      const start = toMinutes(reservation.time);
+      const end = start + 120;
+      return overlaps(blockStart, blockEnd, start, end);
+    });
+
+    if (overlappingReservation) {
       setActionFeedback(
-        `${tableId} est déjà réservée (${reservation.name} - ${reservation.time}).`,
+        `${tableId} a déjà une réservation sur ce créneau (${overlappingReservation.name} - ${overlappingReservation.time}).`,
         'error'
       );
       return;
@@ -1013,12 +1385,14 @@ if (adminRoot) {
       return;
     }
 
-    const endTime = fromMinutes(toMinutes(atTime) + 120);
+    const endMinutes = toMinutes(atTime) + 120;
+    const endTime = fromMinutes(endMinutes);
     addAdminBlock({
       id: `blk_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
       tableId,
       date: selectedDate,
       startTime: atTime,
+      endMinutes,
       endTime,
       reason: 'Arrivée sans réservation',
       createdAt: new Date().toISOString(),
@@ -1104,6 +1478,7 @@ if (adminRoot) {
 
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
+    const currentLayout = getTableLayout();
     if (!EVENING_SLOTS.includes(selectedTime)) {
       selectedTime = EVENING_SLOTS[0];
     }
@@ -1165,7 +1540,7 @@ if (adminRoot) {
 
     tableGrid.innerHTML = `${decorations}${TABLES.map((table) => {
       const status = getTableStatusAt(table.id, selectedDate, selectedTime);
-      const plan = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
+      const plan = currentLayout[table.id] || TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
       const chairCount = Math.max(2, Math.min(6, table.seats));
       const statusLabel =
         status.type === 'reserved' ? 'Réservée' : status.type === 'blocked' ? 'Indispo' : 'Libre';
@@ -1187,10 +1562,11 @@ if (adminRoot) {
           type="button"
           class="table-seat table-seat--${plan.shape}${extraClass}"
           data-admin-table="${escapeHTML(table.id)}"
+          data-admin-table-status="${status.type}"
           style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs:${chairCount};"
-          ${status.type === 'reserved' ? 'disabled' : ''}
         >
           <span class="table-seat__label">${escapeHTML(table.id)}</span>
+          <span class="table-seat__capacity">${escapeHTML(`${table.seats}P`)}</span>
           <span class="table-seat__time">${escapeHTML(shownTime)}</span>
           <span class="table-seat__state">${escapeHTML(statusLabel)}</span>
         </button>
@@ -1203,7 +1579,7 @@ if (adminRoot) {
   const initAdmin = () => {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
-    setActionFeedback('Clique sur un créneau puis sur une table libre pour la marquer indisponible (2h).');
+    setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
 
     if (isLoggedIn()) {
       showDashboard();
@@ -1224,7 +1600,7 @@ if (adminRoot) {
         localStorage.setItem(STORAGE_KEYS.adminSession, '1');
         feedback.textContent = '';
         showDashboard();
-        setActionFeedback('Clique sur un créneau puis sur une table libre pour la marquer indisponible (2h).');
+        setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
         renderAdmin();
       } else {
         feedback.textContent = 'Identifiants invalides.';
@@ -1233,16 +1609,149 @@ if (adminRoot) {
   }
 
   if (tableGrid) {
-    tableGrid.addEventListener('click', (event) => {
+    let dragState = null;
+
+    const updateDraggedButtonStyle = (button, plan) => {
+      button.style.setProperty('--x', `${plan.x}%`);
+      button.style.setProperty('--y', `${plan.y}%`);
+    };
+
+    const endDrag = () => {
+      if (!dragState) return;
+      const finishedState = dragState;
+      dragState = null;
+      if (finishedState.didMove) {
+        writeTableLayout(finishedState.layout);
+        setActionFeedback(`${finishedState.tableId} déplacée. Position enregistrée.`);
+        renderAdmin();
+      } else {
+        toggleManualOccupation(finishedState.tableId, selectedTime);
+      }
+    };
+
+    tableGrid.addEventListener('pointerdown', (event) => {
+      if (event.button !== 0) return;
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
       const button = target.closest('[data-admin-table]');
-      if (!button) return;
+      if (!(button instanceof HTMLElement)) return;
+      event.preventDefault();
       const tableId = button.getAttribute('data-admin-table');
       if (!tableId) return;
-      toggleManualOccupation(tableId, selectedTime);
+
+      const layout = getTableLayout();
+      const plan = layout[tableId];
+      if (!plan) return;
+
+      dragState = {
+        tableId,
+        button,
+        pointerId: event.pointerId,
+        startClientX: event.clientX,
+        startClientY: event.clientY,
+        originX: plan.x,
+        originY: plan.y,
+        didMove: false,
+        layout,
+      };
+
+      button.setPointerCapture(event.pointerId);
+    });
+
+    tableGrid.addEventListener('pointermove', (event) => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      const rect = tableGrid.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+
+      const deltaX = event.clientX - dragState.startClientX;
+      const deltaY = event.clientY - dragState.startClientY;
+
+      if (!dragState.didMove && Math.hypot(deltaX, deltaY) > 4) {
+        dragState.didMove = true;
+      }
+
+      if (!dragState.didMove) return;
+
+      const tablePlan = dragState.layout[dragState.tableId];
+      const deltaXPercent = (deltaX / rect.width) * 100;
+      const deltaYPercent = (deltaY / rect.height) * 100;
+      const halfW = tablePlan.w / 2;
+      const halfH = tablePlan.h / 2;
+
+      tablePlan.x = clamp(dragState.originX + deltaXPercent, halfW + 1, 99 - halfW);
+      tablePlan.y = clamp(dragState.originY + deltaYPercent, halfH + 1, 99 - halfH);
+      updateDraggedButtonStyle(dragState.button, tablePlan);
+    });
+
+    tableGrid.addEventListener('pointerup', (event) => {
+      if (!dragState || event.pointerId !== dragState.pointerId) return;
+      endDrag();
+    });
+
+    tableGrid.addEventListener('pointercancel', () => {
+      if (!dragState) return;
+      dragState = null;
+      renderAdmin();
+    });
+
+    tableGrid.addEventListener('contextmenu', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-table]');
+      if (!(button instanceof HTMLElement)) return;
+      const tableId = button.getAttribute('data-admin-table');
+      if (!tableId) return;
+      event.preventDefault();
+      openMergeMenu(tableId, event.clientX, event.clientY);
     });
   }
+
+  if (mergeMenuList) {
+    mergeMenuList.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+
+      const mergeTarget = target.getAttribute('data-merge-target');
+      if (mergeTarget && mergeMenuSourceId) {
+        const mergedGroup = mergeTablesById(mergeMenuSourceId, mergeTarget);
+        if (mergedGroup) {
+          alignMergedGroupLayout(mergedGroup, mergeMenuSourceId);
+          setActionFeedback(`Fusion créée: ${mergedGroup.join(' + ')}.`);
+        }
+        closeMergeMenu();
+        renderAdmin();
+        return;
+      }
+
+      const shouldSplit = target.getAttribute('data-merge-split');
+      if (shouldSplit && mergeMenuSourceId) {
+        if (splitGroupByMember(mergeMenuSourceId)) {
+          setActionFeedback(`${mergeMenuSourceId} retirée de son groupe.`);
+        }
+        closeMergeMenu();
+        renderAdmin();
+        return;
+      }
+
+      if (target.getAttribute('data-merge-close')) {
+        closeMergeMenu();
+      }
+    });
+  }
+
+  document.addEventListener('click', (event) => {
+    if (mergeMenu.hidden) return;
+    const target = event.target;
+    if (!(target instanceof Node)) return;
+    if (mergeMenu.contains(target)) return;
+    closeMergeMenu();
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !mergeMenu.hidden) {
+      closeMergeMenu();
+    }
+  });
 
   if (slotStrip) {
     slotStrip.addEventListener('click', (event) => {
@@ -1276,7 +1785,8 @@ if (adminRoot) {
       localStorage.removeItem(STORAGE_KEYS.adminSession);
       if (loginForm) loginForm.reset();
       if (feedback) feedback.textContent = '';
-      setActionFeedback('Clique sur un créneau puis sur une table pour marquer une indisponibilité.');
+      setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
+      closeMergeMenu();
       showLogin();
     });
   }

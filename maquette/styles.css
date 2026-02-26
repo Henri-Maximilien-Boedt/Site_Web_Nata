@@ -771,20 +771,20 @@ a.focus-card {
 .table-seat::after {
   content: "";
   position: absolute;
-  left: 8%;
-  right: 8%;
-  height: 10px;
-  background: radial-gradient(circle, #d9dde2 0 4px, transparent 5px) repeat-x;
-  background-size: calc(100% / var(--chairs)) 10px;
+  top: 10%;
+  bottom: 10%;
+  width: 10px;
+  background: radial-gradient(circle, #d9dde2 0 4px, transparent 5px) repeat-y;
+  background-size: 10px calc(100% / var(--chairs));
   pointer-events: none;
 }
 
 .table-seat::before {
-  top: -7px;
+  left: -7px;
 }
 
 .table-seat::after {
-  bottom: -7px;
+  right: -7px;
 }
 
 .table-seat--round {
@@ -793,14 +793,13 @@ a.focus-card {
 
 .table-seat--round::before,
 .table-seat--round::after {
-  left: -7px;
-  right: -7px;
-  top: -7px;
-  bottom: -7px;
-  height: auto;
-  border: 2px dashed #d9dde2;
-  border-radius: 999px;
-  background: transparent;
+  top: 12%;
+  bottom: 12%;
+  width: 10px;
+  border: 0;
+  border-radius: 0;
+  background: radial-gradient(circle, #d9dde2 0 4px, transparent 5px) repeat-y;
+  background-size: 10px calc(100% / var(--chairs));
 }
 
 .table-seat.is-free {
@@ -838,6 +837,13 @@ a.focus-card {
   font-size: 0.88rem;
   font-weight: 800;
   letter-spacing: 0.02em;
+}
+
+.table-seat__capacity {
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
 }
 
 .table-seat__time {
@@ -1009,6 +1015,61 @@ a.focus-card {
 
 .admin-help.is-error {
   color: #bd2f2f;
+}
+
+.admin-merge-menu {
+  position: fixed;
+  z-index: 120;
+}
+
+.admin-merge-menu[hidden] {
+  display: none;
+}
+
+.admin-merge-menu__list {
+  min-width: 230px;
+  max-width: 320px;
+  max-height: 55vh;
+  overflow: auto;
+  border: 1px solid #c8d9eb;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 14px 40px rgba(20, 38, 59, 0.2);
+  padding: 0.45rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.admin-merge-menu__title {
+  margin: 0;
+  padding: 0.2rem 0.35rem 0.4rem;
+  border-bottom: 1px solid #dde8f4;
+  font-weight: 800;
+  color: #174b84;
+}
+
+.admin-merge-menu__list button {
+  border: 1px solid #c8d9eb;
+  border-radius: 8px;
+  background: #f7fbff;
+  color: #234563;
+  text-align: left;
+  font: inherit;
+  font-size: 0.86rem;
+  padding: 0.45rem 0.55rem;
+  cursor: pointer;
+}
+
+.admin-merge-menu__list button:hover {
+  background: #e9f3ff;
+  border-color: #b6cce4;
+}
+
+.admin-merge-menu__list p {
+  margin: 0;
+  padding: 0.3rem 0.35rem;
+  color: #50667d;
+  font-size: 0.83rem;
 }
 
 .admin-feedback {
@@ -1190,11 +1251,13 @@ a.focus-card {
 }
 
 .admin-page .table-layout--admin .table-seat {
-  cursor: pointer;
+  cursor: grab;
+  touch-action: none;
+  user-select: none;
 }
 
-.admin-page .table-layout--admin .table-seat:disabled {
-  cursor: not-allowed;
+.admin-page .table-layout--admin .table-seat:active {
+  cursor: grabbing;
 }
 
 .admin-page .table-layout--admin .table-seat.is-manual {
