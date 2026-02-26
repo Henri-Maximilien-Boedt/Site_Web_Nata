@@ -26,6 +26,7 @@
         <a href="index.html">Accueil</a>
         <a href="menu.html">Menu</a>
         <a href="reservation.html">Réservation</a>
+        <a href="admin.html">Admin</a>
         <a href="#contact">Contact</a>
       </nav>
     </header>
@@ -132,6 +133,10 @@
             <input type="email" name="email" placeholder="nom@email.com" required />
           </label>
           <label>
+            Nombre de personnes
+            <input type="number" name="people" min="1" max="10" placeholder="Ex: 4" required />
+          </label>
+          <label>
             Date
             <div class="date-picker" data-date-picker>
               <input type="hidden" name="date" data-date-value />
@@ -159,6 +164,21 @@
                 required
               />
               <p class="date-help"></p>
+            </div>
+          </label>
+          <label>
+            Table
+            <div class="table-picker" data-table-picker>
+              <input type="hidden" name="tableId" data-table-value />
+              <input
+                type="text"
+                class="table-trigger"
+                data-table-trigger
+                placeholder="Choisis d'abord une date et une heure"
+                readonly
+                required
+              />
+              <p class="date-help">Plan interactif: 5 tables de 2, 4 tables de 4, 1 table de 10.</p>
             </div>
           </label>
           <label>

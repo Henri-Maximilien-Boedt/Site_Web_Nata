@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Admin | NATA Bar</title>
+    <meta name="description" content="Accès administrateur aux réservations NATA Bar." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="styles.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <header class="topbar">
+      <a class="brand" href="index.html">NATA Bar</a>
+      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
+      <nav class="nav">
+        <a href="index.html">Accueil</a>
+        <a href="menu.html">Menu</a>
+        <a href="reservation.html">Réservation</a>
+        <a href="admin.html">Admin</a>
+      </nav>
+    </header>
+
+    <main>
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Espace admin</p>
+          <h2>Gestion des réservations</h2>
+          <p>Connecte-toi avec le compte admin pour voir les demandes de réservation.</p>
+        </div>
+      </section>
+
+      <section class="admin-section reveal" data-admin-page>
+        <div class="admin-auth" data-admin-auth>
+          <form class="booking-form" data-admin-login>
+            <label>
+              Identifiant
+              <input type="text" name="username" placeholder="admin" required />
+            </label>
+            <label>
+              Mot de passe
+              <input type="password" name="password" placeholder="••••••••" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+            <p class="admin-help">Identifiants par défaut: <strong>admin</strong> / <strong>Nata2026!</strong></p>
+            <p class="admin-feedback" data-admin-feedback aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="admin-dashboard" data-admin-dashboard hidden>
+          <div class="admin-dashboard__head">
+            <div>
+              <p class="eyebrow">Réservations</p>
+              <h3>Demandes reçues</h3>
+            </div>
+            <button type="button" class="btn btn-ghost" data-admin-logout>Déconnexion</button>
+          </div>
+          <div class="admin-tools">
+            <label>
+              Date
+              <input type="date" data-admin-date />
+            </label>
+            <label>
+              Heure (état des tables)
+              <input type="time" data-admin-time step="1800" />
+            </label>
+            <label>
+              Recherche
+              <input type="search" data-admin-search placeholder="Nom, email ou table..." />
+            </label>
+            <div class="admin-tools__quick">
+              <button type="button" class="btn btn-ghost" data-admin-prev>Jour précédent</button>
+              <button type="button" class="btn btn-ghost" data-admin-today>Aujourd'hui</button>
+              <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
+            </div>
+          </div>
+
+          <div class="admin-grid">
+            <div class="admin-panel">
+              <p class="admin-count" data-admin-count>0 réservation</p>
+              <div class="admin-list" data-admin-list></div>
+            </div>
+            <div class="admin-panel">
+              <p class="admin-count" data-admin-table-time>État des tables</p>
+              <div class="table-legend table-legend--admin">
+                <span><i class="legend-dot is-free"></i> Libre</span>
+                <span><i class="legend-dot is-busy"></i> Réservée</span>
+              </div>
+              <div class="table-layout table-layout--admin" data-admin-table-grid></div>
+            </div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <footer>
+      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    </footer>
+
+    <script src="script.js"></script>
+  </body>
+</html>
