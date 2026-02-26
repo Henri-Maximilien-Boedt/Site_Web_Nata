@@ -5,6 +5,7 @@ const year = document.getElementById('year');
 const STORAGE_KEYS = {
   reservations: 'nata_reservations_v1',
   adminSession: 'nata_admin_session_v1',
+  adminBlocks: 'nata_admin_blocks_v1',
 };
 
 const ADMIN_CREDENTIALS = {
@@ -130,6 +131,138 @@ const observer = new IntersectionObserver(
 
 document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
 
+const initHomeFeatureCards = () => {
+  const toggle = document.querySelector('[data-events-toggle]');
+  const details = document.querySelector('[data-events-details]');
+  if (!toggle || !details) return;
+
+  toggle.addEventListener('click', () => {
+    const isOpen = toggle.getAttribute('aria-expanded') === 'true';
+    toggle.setAttribute('aria-expanded', String(!isOpen));
+    details.hidden = isOpen;
+  });
+};
+
+initHomeFeatureCards();
+
+const MENU_DESCRIPTIONS = {
+  Gyoza: 'Raviolis japonais grillés, croustillants dehors et fondants dedans.',
+  Mandu: 'Raviolis coréens généreux, servis chauds.',
+  'Korean Pancakes': 'Pancakes coréens salés, dorés à la poêle.',
+  'Kimchi Jeon': 'Pancake coréen au kimchi, légèrement épicé.',
+  'Haemul Jeon': 'Pancake coréen aux fruits de mer.',
+  Kimbap: 'Roulés coréens de riz et garnitures.',
+  'Fried Popcorn Chicken': 'Morceaux de poulet frits, croustillants et sauce au choix.',
+  'Korean Fried Chicken (Bone-in)': 'Poulet frit coréen avec os, très croustillant.',
+  Japchae: 'Nouilles de patate douce sautées aux légumes.',
+  Bibimbap: 'Bol de riz chaud, légumes et garniture au choix.',
+  'Korean Meal Set': 'Plateau complet coréen avec accompagnements.',
+  'Grillades / BBQ Coréen': 'Viande grillée servie avec riz, légumes et salade.',
+  Tteokbokki: 'Gâteaux de riz coréens dans une sauce relevée.',
+  'Suppléments': 'Ajouts à la carte selon vos envies.',
+  Bungeobang: 'Gaufre coréenne servie avec glace vanille.',
+  'Pannacotta Mangue Coco': 'Panna cotta douce aux notes mangue et coco.',
+  Tiramisu: 'Dessert crémeux et onctueux.',
+  'Glace Melona': 'Glace coréenne parfumée melon ou mangue.',
+  'Glace en boule': 'Boules de glace artisanales, parfums au choix.',
+  'Mojito Classique': 'Rhum, menthe, lime et soda.',
+  'Mojito Passion': 'Version tropicale au fruit de la passion.',
+  'Mojito Mangue': 'Version fruitée à la mangue.',
+  'Moscow Mule': 'Vodka, lime et ginger beer.',
+  'Gin Tonic': 'Cocktail classique gin et tonic.',
+  'Cuba Libre': 'Rhum, cola et lime.',
+  'Pina Colada': 'Cocktail onctueux coco-ananas.',
+  'Aperol Spritz': 'Aperol, bulles et soda.',
+  'Lychee Soju': 'Cocktail soju au litchi.',
+  'Apple Melona Soju': 'Soju pomme avec note glacée melon.',
+  'Strawberry Milkis': 'Soju fraise avec Milkis.',
+  'Grapefruit Highball': 'Highball soju pamplemousse.',
+  'Classic High Ball': 'Soju et tonic en version classique.',
+  'Korean Mule': 'Soju, yuzu et ginger beer.',
+  'Soju Spritz': 'Soju yuzu allongé au prosecco et soda.',
+  'Yuja Spritz': 'Spritz au yuja, frais et agrumé.',
+  'NATA K-Cloud Sunset': 'Signature maison aux notes fruitées et lactées.',
+  'NATA Pink Highball': 'Signature soju, pink tonic et lime.',
+  'NATA Yakult High': 'Signature soju fraise et Yakult.',
+  'NATA Blue Butterfly': 'Signature florale au gin infusé.',
+  'Basil Smash': 'Gin, basilic et agrumes.',
+};
+
+const normalizeMenuKey = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[\u0300-\u036f]/g, '')
+    .replace(/\s+/g, ' ')
+    .trim()
+    .toLowerCase();
+
+const menuDescriptionEntries = Object.entries(MENU_DESCRIPTIONS).reduce((acc, [key, value]) => {
+  acc[normalizeMenuKey(key)] = value;
+  return acc;
+}, {});
+
+const initMenuDescriptions = () => {
+  if (!document.body.classList.contains('menu-page')) return;
+
+  const clickableItems = document.querySelectorAll('.menu-card h3, .drinks-block .plain-list li');
+  if (!clickableItems.length) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'menu-desc-modal';
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="menu-desc-modal__backdrop" data-desc-close></div>
+    <div class="menu-desc-modal__panel" role="dialog" aria-modal="true" aria-labelledby="menu-desc-title">
+      <button type="button" class="date-close" data-desc-close>Fermer</button>
+      <h3 id="menu-desc-title" class="menu-desc-modal__title"></h3>
+      <p class="menu-desc-modal__text"></p>
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const title = modal.querySelector('.menu-desc-modal__title');
+  const text = modal.querySelector('.menu-desc-modal__text');
+
+  const closeModal = () => {
+    modal.hidden = true;
+  };
+
+  const openModal = (itemName, description) => {
+    title.textContent = itemName;
+    text.textContent = description;
+    text.hidden = false;
+    modal.hidden = false;
+  };
+
+  clickableItems.forEach((item) => {
+    const itemName = item.textContent.trim();
+    const description = menuDescriptionEntries[normalizeMenuKey(itemName)];
+    if (!description) return;
+
+    item.classList.add('menu-clickable');
+    item.setAttribute('role', 'button');
+    item.setAttribute('tabindex', '0');
+
+    item.addEventListener('click', () => openModal(itemName, description));
+    item.addEventListener('keydown', (event) => {
+      if (event.key === 'Enter' || event.key === ' ') {
+        event.preventDefault();
+        openModal(itemName, description);
+      }
+    });
+  });
+
+  modal.querySelectorAll('[data-desc-close]').forEach((el) => {
+    el.addEventListener('click', closeModal);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.hidden) closeModal();
+  });
+};
+
+initMenuDescriptions();
+
 const readReservations = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.reservations);
@@ -153,6 +286,31 @@ const addReservation = (payload) => {
 const removeReservation = (id) => {
   const reservations = readReservations().filter((item) => item.id !== id);
   writeReservations(reservations);
+};
+
+const readAdminBlocks = () => {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEYS.adminBlocks);
+    const parsed = raw ? JSON.parse(raw) : [];
+    return Array.isArray(parsed) ? parsed : [];
+  } catch {
+    return [];
+  }
+};
+
+const writeAdminBlocks = (blocks) => {
+  localStorage.setItem(STORAGE_KEYS.adminBlocks, JSON.stringify(blocks));
+};
+
+const addAdminBlock = (payload) => {
+  const blocks = readAdminBlocks();
+  blocks.unshift(payload);
+  writeAdminBlocks(blocks);
+};
+
+const removeAdminBlock = (id) => {
+  const blocks = readAdminBlocks().filter((item) => item.id !== id);
+  writeAdminBlocks(blocks);
 };
 
 const getTableById = (id) => TABLES.find((table) => table.id === id);
@@ -763,13 +921,19 @@ if (adminRoot) {
   const list = adminRoot.querySelector('[data-admin-list]');
   const tableTimeLabel = adminRoot.querySelector('[data-admin-table-time]');
   const tableGrid = adminRoot.querySelector('[data-admin-table-grid]');
+  const slotStrip = adminRoot.querySelector('[data-admin-slots]');
+  const timeline = adminRoot.querySelector('[data-admin-timeline]');
+  const actionFeedback = adminRoot.querySelector('[data-admin-action-feedback]');
   const dateInput = adminRoot.querySelector('[data-admin-date]');
-  const timeInput = adminRoot.querySelector('[data-admin-time]');
   const searchInput = adminRoot.querySelector('[data-admin-search]');
   const prevButton = adminRoot.querySelector('[data-admin-prev]');
   const todayButton = adminRoot.querySelector('[data-admin-today]');
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
+  const EVENING_SLOTS = Array.from({ length: 9 }, (_, index) => fromMinutes(18 * 60 + index * 30));
+  let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
+    ? roundCurrentTimeToHalfHour()
+    : EVENING_SLOTS[0];
 
   const isLoggedIn = () => localStorage.getItem(STORAGE_KEYS.adminSession) === '1';
 
@@ -783,13 +947,20 @@ if (adminRoot) {
     dashboard.hidden = false;
   };
 
+  const setActionFeedback = (message, type = 'ok') => {
+    if (!actionFeedback) return;
+    actionFeedback.textContent = message;
+    actionFeedback.classList.remove('is-error');
+    if (type === 'error') actionFeedback.classList.add('is-error');
+  };
+
   const getReservationRangeText = (reservation) => {
     const start = toMinutes(reservation.time);
     const end = start + 120;
     return `${fromMinutes(start)} - ${fromMinutes(end)}`;
   };
 
-  const getOccupationAt = (tableId, dateISO, atTime) => {
+  const getReservationAt = (tableId, dateISO, atTime) => {
     const point = toMinutes(atTime);
     const reservations = readReservations()
       .filter((item) => item.date === dateISO && item.tableId === tableId)
@@ -802,9 +973,140 @@ if (adminRoot) {
     });
   };
 
+  const getManualBlockAt = (tableId, dateISO, atTime) => {
+    const point = toMinutes(atTime);
+    const blocks = readAdminBlocks()
+      .filter((item) => item.date === dateISO && item.tableId === tableId)
+      .sort((a, b) => toMinutes(a.startTime) - toMinutes(b.startTime));
+
+    return blocks.find((block) => {
+      const start = toMinutes(block.startTime);
+      const end = toMinutes(block.endTime);
+      return point >= start && point < end;
+    });
+  };
+
+  const getTableStatusAt = (tableId, dateISO, atTime) => {
+    const reservation = getReservationAt(tableId, dateISO, atTime);
+    if (reservation) return { type: 'reserved', item: reservation };
+    const block = getManualBlockAt(tableId, dateISO, atTime);
+    if (block) return { type: 'blocked', item: block };
+    return { type: 'free', item: null };
+  };
+
+  const toggleManualOccupation = (tableId, atTime) => {
+    const selectedDate = dateInput.value || toISODate(new Date());
+    const reservation = getReservationAt(tableId, selectedDate, atTime);
+    if (reservation) {
+      setActionFeedback(
+        `${tableId} est déjà réservée (${reservation.name} - ${reservation.time}).`,
+        'error'
+      );
+      return;
+    }
+
+    const existingBlock = getManualBlockAt(tableId, selectedDate, atTime);
+    if (existingBlock) {
+      removeAdminBlock(existingBlock.id);
+      setActionFeedback(`${tableId} repasse en disponible à ${atTime}.`);
+      renderAdmin();
+      return;
+    }
+
+    const endTime = fromMinutes(toMinutes(atTime) + 120);
+    addAdminBlock({
+      id: `blk_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+      tableId,
+      date: selectedDate,
+      startTime: atTime,
+      endTime,
+      reason: 'Arrivée sans réservation',
+      createdAt: new Date().toISOString(),
+    });
+    setActionFeedback(`${tableId} marquée indisponible de ${atTime} à ${endTime}.`);
+    renderAdmin();
+  };
+
+  const renderSlotStrip = (selectedDate) => {
+    if (!slotStrip) return;
+    slotStrip.innerHTML = EVENING_SLOTS.map((slot) => {
+      const busyCount = TABLES.filter((table) => {
+        const status = getTableStatusAt(table.id, selectedDate, slot);
+        return status.type !== 'free';
+      }).length;
+      return `
+        <button
+          type="button"
+          class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}"
+          data-admin-slot="${slot}"
+        >
+          <span>${slot}</span>
+          <strong>${busyCount}</strong>
+        </button>
+      `;
+    }).join('');
+  };
+
+  const renderTimeline = (selectedDate) => {
+    if (!timeline) return;
+    const header = EVENING_SLOTS.map(
+      (slot) => `<div class="admin-timeline__head${slot === selectedTime ? ' is-selected' : ''}">${slot}</div>`
+    ).join('');
+
+    const rows = TABLES.map((table) => {
+      const cells = EVENING_SLOTS.map((slot) => {
+        const status = getTableStatusAt(table.id, selectedDate, slot);
+        const isSelected = slot === selectedTime;
+        const cellLabel =
+          status.type === 'reserved'
+            ? `R`
+            : status.type === 'blocked'
+              ? `I`
+              : 'L';
+        const title =
+          status.type === 'reserved'
+            ? `${table.id} ${slot}: réservée (${status.item.name})`
+            : status.type === 'blocked'
+              ? `${table.id} ${slot}: indisponible (${status.item.reason || 'Arrivée'})`
+              : `${table.id} ${slot}: libre`;
+
+        return `
+          <button
+            type="button"
+            class="admin-timeline__cell is-${status.type}${isSelected ? ' is-selected' : ''}"
+            data-admin-timeline-cell="1"
+            data-admin-table-id="${table.id}"
+            data-admin-slot-time="${slot}"
+            title="${escapeHTML(title)}"
+            ${status.type === 'reserved' ? 'disabled' : ''}
+          >
+            ${cellLabel}
+          </button>
+        `;
+      }).join('');
+
+      return `
+        <div class="admin-timeline__row">
+          <div class="admin-timeline__label">${table.id}</div>
+          <div class="admin-timeline__cells">${cells}</div>
+        </div>
+      `;
+    }).join('');
+
+    timeline.innerHTML = `
+      <div class="admin-timeline__row admin-timeline__row--head">
+        <div class="admin-timeline__label">Tables</div>
+        <div class="admin-timeline__heads">${header}</div>
+      </div>
+      ${rows}
+    `;
+  };
+
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
-    const selectedTime = timeInput.value || roundCurrentTimeToHalfHour();
+    if (!EVENING_SLOTS.includes(selectedTime)) {
+      selectedTime = EVENING_SLOTS[0];
+    }
     const term = (searchInput.value || '').trim().toLowerCase();
 
     const filteredReservations = readReservations()
@@ -820,8 +1122,9 @@ if (adminRoot) {
         if (timeA !== timeB) return timeA - timeB;
         return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
       });
+    const dayBlocks = readAdminBlocks().filter((item) => item.date === selectedDate);
 
-    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} pour ${formatISODateLong(selectedDate)}`;
+    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} • ${dayBlocks.length} indisponibilité${dayBlocks.length > 1 ? 's' : ''} • ${formatISODateLong(selectedDate)}`;
 
     if (!filteredReservations.length) {
       list.innerHTML = '<p class="admin-empty">Aucune réservation trouvée pour cette date.</p>';
@@ -848,6 +1151,7 @@ if (adminRoot) {
         .join('');
     }
 
+    renderSlotStrip(selectedDate);
     tableTimeLabel.textContent = `État des tables le ${formatISODateLong(selectedDate)} à ${selectedTime}`;
 
     const decorations = `
@@ -860,32 +1164,46 @@ if (adminRoot) {
     `;
 
     tableGrid.innerHTML = `${decorations}${TABLES.map((table) => {
-      const occupation = getOccupationAt(table.id, selectedDate, selectedTime);
-      const isBusy = Boolean(occupation);
+      const status = getTableStatusAt(table.id, selectedDate, selectedTime);
       const plan = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
       const chairCount = Math.max(2, Math.min(6, table.seats));
-      const status = isBusy ? 'Réservée' : 'Libre';
-      const shownTime = isBusy ? occupation.time : selectedTime;
+      const statusLabel =
+        status.type === 'reserved' ? 'Réservée' : status.type === 'blocked' ? 'Indispo' : 'Libre';
+      const shownTime =
+        status.type === 'reserved'
+          ? status.item.time
+          : status.type === 'blocked'
+            ? status.item.startTime
+            : selectedTime;
+      const extraClass =
+        status.type === 'reserved'
+          ? ' is-busy'
+          : status.type === 'blocked'
+            ? ' is-manual'
+            : ' is-free';
 
       return `
         <button
           type="button"
-          class="table-seat table-seat--${plan.shape}${isBusy ? ' is-busy' : ' is-free'}"
+          class="table-seat table-seat--${plan.shape}${extraClass}"
+          data-admin-table="${escapeHTML(table.id)}"
           style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs:${chairCount};"
-          disabled
+          ${status.type === 'reserved' ? 'disabled' : ''}
         >
           <span class="table-seat__label">${escapeHTML(table.id)}</span>
           <span class="table-seat__time">${escapeHTML(shownTime)}</span>
-          <span class="table-seat__state">${escapeHTML(status)}</span>
+          <span class="table-seat__state">${escapeHTML(statusLabel)}</span>
         </button>
       `;
     }).join('')}`;
+
+    renderTimeline(selectedDate);
   };
 
   const initAdmin = () => {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
-    timeInput.value = roundCurrentTimeToHalfHour();
+    setActionFeedback('Clique sur un créneau puis sur une table libre pour la marquer indisponible (2h).');
 
     if (isLoggedIn()) {
       showDashboard();
@@ -906,10 +1224,50 @@ if (adminRoot) {
         localStorage.setItem(STORAGE_KEYS.adminSession, '1');
         feedback.textContent = '';
         showDashboard();
+        setActionFeedback('Clique sur un créneau puis sur une table libre pour la marquer indisponible (2h).');
         renderAdmin();
       } else {
         feedback.textContent = 'Identifiants invalides.';
       }
+    });
+  }
+
+  if (tableGrid) {
+    tableGrid.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-table]');
+      if (!button) return;
+      const tableId = button.getAttribute('data-admin-table');
+      if (!tableId) return;
+      toggleManualOccupation(tableId, selectedTime);
+    });
+  }
+
+  if (slotStrip) {
+    slotStrip.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-slot]');
+      if (!button) return;
+      const slot = button.getAttribute('data-admin-slot');
+      if (!slot) return;
+      selectedTime = slot;
+      renderAdmin();
+    });
+  }
+
+  if (timeline) {
+    timeline.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-timeline-cell]');
+      if (!button) return;
+      const tableId = button.getAttribute('data-admin-table-id');
+      const slot = button.getAttribute('data-admin-slot-time');
+      if (!tableId || !slot) return;
+      selectedTime = slot;
+      toggleManualOccupation(tableId, slot);
     });
   }
 
@@ -918,6 +1276,7 @@ if (adminRoot) {
       localStorage.removeItem(STORAGE_KEYS.adminSession);
       if (loginForm) loginForm.reset();
       if (feedback) feedback.textContent = '';
+      setActionFeedback('Clique sur un créneau puis sur une table pour marquer une indisponibilité.');
       showLogin();
     });
   }
@@ -933,7 +1292,7 @@ if (adminRoot) {
     });
   }
 
-  [dateInput, timeInput, searchInput].forEach((field) => {
+  [dateInput, searchInput].forEach((field) => {
     field.addEventListener('input', () => renderAdmin());
   });
 
@@ -947,6 +1306,9 @@ if (adminRoot) {
   if (todayButton) {
     todayButton.addEventListener('click', () => {
       dateInput.value = toISODate(new Date());
+      selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
+        ? roundCurrentTimeToHalfHour()
+        : EVENING_SLOTS[0];
       renderAdmin();
     });
   }

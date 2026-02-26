@@ -50,69 +50,43 @@
         </div>
       </section>
 
-      <section class="story reveal">
-        <div class="story-card">
-          <h2>Une ambiance chaude, une cuisine vivante</h2>
-          <p>
-            Inspiré des bars coréens, NATA mélange la cuisine coréenne, la convivialité et sans oublier modernité.
-          </p>
-        </div>
-      </section>
+      <section class="home-focus reveal">
+        <button
+          type="button"
+          class="focus-card focus-card--events"
+          data-events-toggle
+          aria-expanded="false"
+          aria-controls="events-details"
+        >
+          <p class="eyebrow">Privatisation</p>
+          <h2>NOS EVENEMENTS</h2>
+          <p class="focus-card__hint">Clique ici pour voir ce que nous organisons</p>
+        </button>
 
-      <section id="plats" class="menu-section reveal">
-        <div class="section-head">
-          <p class="eyebrow">Nos plats</p>
-          <h2>Le meilleur de la cuisine coréenne</h2>
+        <div id="events-details" class="focus-details" data-events-details hidden>
+          <h3>Nous organisons</h3>
+          <ul>
+            <li>Anniversaires</li>
+            <li>Événements privés</li>
+            <li>Repas et verres d'entreprise</li>
+            <li>Afterworks</li>
+            <li>Festivals et collaborations</li>
+            <li>Privatisation totale ou partielle</li>
+            <li>Formules sur mesure</li>
+          </ul>
         </div>
-        <div class="menu-grid">
-          <article class="dish dish-image">
-            <img src="media/img/plat-nata.jpg" alt="Bol coréen servi au NATA Bar" />
-          </article>
-          <article class="dish">
-            <h3>Plat 1</h3>
-            <p>Description</p>
-            <span>17€</span>
-          </article>
-          <article class="dish">
-            <h3>Plat 2</h3>
-            <p>Description</p>
-            <span>15€</span>
-          </article>
-          <article class="dish">
-            <h3>Plat 3</h3>
-            <p>description</p>
-            <span>14€</span>
-          </article>
-        </div>
-      </section>
 
-      <section id="boissons" class="drinks reveal">
-        <div class="section-head">
-          <p class="eyebrow">Boissons</p>
-          <h2>Cocktails, soju et créations maison</h2>
-        </div>
-        <div class="drink-list">
-          <article>
-            <h3>Soju Yuzu Spritz</h3>
-            <p>Soju, yuzu, eau pétillante, zeste de citron.</p>
-            <span>9€</span>
-          </article>
-          <article>
-            <h3>cocktail 1</h3>
-            <p>Description.</p>
-            <span>10€</span>
-          </article>
-          <article>
-            <h3>Cocktail 2</h3>
-            <p>Description</p>
-            <span>7€</span>
-          </article>
-          <article>
-            <h3>Cocktail 3</h3>
-            <p>Description</p>
-            <span>6€</span>
-          </article>
-        </div>
+        <article class="focus-card focus-card--truck">
+          <p class="eyebrow">NATA Street Vibes</p>
+          <h2>NOS FOOD TRUCK</h2>
+          <p class="focus-card__hint">Restaurant ou food truck selon votre événement</p>
+        </article>
+
+        <a class="focus-card focus-card--menu" href="menu.html">
+          <p class="eyebrow">Découvrir</p>
+          <h2>NATA BAR MENU</h2>
+          <p class="focus-card__hint">Clique pour accéder à toute la carte</p>
+        </a>
       </section>
 
       <section id="contact" class="contact reveal">

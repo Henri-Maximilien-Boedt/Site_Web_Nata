@@ -13,7 +13,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="menu-page">
     <div class="noise"></div>
 
     <header class="topbar">
@@ -27,67 +27,305 @@
       </nav>
     </header>
 
-    <main>
+    <main class="menu-main">
       <section class="story reveal">
-        <div class="story-card">
+        <div class="story-card menu-hero">
           <p class="eyebrow">Carte</p>
-          <h2>Menu NATA Bar</h2>
-          <p>Découvre notre sélection de plats et boissons coréens.</p>
+          <h2>Menu NATA Bar 2026</h2>
+          <p>Entrées, plats et desserts.</p>
+          <div class="menu-hero-actions">
+            <a class="btn btn-primary" href="#boissons">Voir la carte des boissons</a>
+          </div>
         </div>
       </section>
 
-      <section class="menu-section reveal">
+      <section class="menu-category reveal">
         <div class="section-head">
-          <p class="eyebrow">Nos plats</p>
-          <h2>Selection des meilleurs plats coréens</h2>
+          <p class="eyebrow">Entrées</p>
+          <h2>Entrées / Sharing Food</h2>
         </div>
-        <div class="menu-grid">
-          <article class="dish dish-image">
-            <img src="media/img/plat-nata.jpg" alt="Bol coréen servi au NATA Bar" />
+        <div class="menu-cards">
+          <article class="menu-card">
+            <h3>Gyoza</h3>
+            <ul class="menu-options">
+              <li>Légumes</li>
+              <li>Poulet</li>
+              <li>Boeuf</li>
+            </ul>
           </article>
-          <article class="dish">
-            <h3>Plat 1</h3>
-            <p>Description</p>
-            <span>17€</span>
+          <article class="menu-card">
+            <h3>Mandu</h3>
+            <ul class="menu-options">
+              <li>Porc</li>
+              <li>Boeuf</li>
+            </ul>
           </article>
-          <article class="dish">
-            <h3>Plat 2</h3>
-            <p>Description</p>
-            <span>15€</span>
+          <article class="menu-card">
+            <h3>Korean Pancakes</h3>
+            <ul class="menu-options">
+              <li>Kimchi Jeon</li>
+              <li>Haemul Jeon</li>
+            </ul>
           </article>
-          <article class="dish">
-            <h3>Plat 3</h3>
-            <p>Description</p>
-            <span>14€</span>
+          <article class="menu-card">
+            <h3>Kimbap</h3>
+            <ul class="menu-options">
+              <li>Légumes</li>
+              <li>Boeuf Bulgogi</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Fried Popcorn Chicken</h3>
+            <ul class="menu-options">
+              <li>Original &amp; Gochujang Mayo</li>
+              <li>Spicy Chili &amp; Garlic Pepper</li>
+              <li>Sweet &amp; Spicy</li>
+              <li>Garlic &amp; Soy</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Korean Fried Chicken (Bone-in)</h3>
+            <ul class="menu-options">
+              <li>Original &amp; Gochujang Mayo</li>
+              <li>Spicy Chili &amp; Garlic Pepper</li>
+              <li>Sweet &amp; Spicy</li>
+              <li>Garlic &amp; Soy</li>
+              <li>4 pcs</li>
+              <li>6 pcs</li>
+            </ul>
           </article>
         </div>
       </section>
 
-      <section class="drinks reveal">
+      <section class="menu-category reveal">
+        <div class="section-head">
+          <p class="eyebrow">Plats</p>
+          <h2>Plats principaux</h2>
+        </div>
+        <div class="menu-cards">
+          <article class="menu-card">
+            <h3>Japchae</h3>
+            <ul class="menu-options">
+              <li>Légumes</li>
+              <li>Boeuf Bulgogi</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Bibimbap</h3>
+            <ul class="menu-options">
+              <li>Tofu</li>
+              <li>Boeuf Bulgogi</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Korean Meal Set</h3>
+            <ul class="menu-options">
+              <li>Tofu</li>
+              <li>Fried Chicken</li>
+              <li>Boeuf Bulgogi</li>
+              <li>Spicy Seafood</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Grillades / BBQ Coréen</h3>
+            <ul class="menu-options">
+              <li>Poulet mariné</li>
+              <li>Lard mariné</li>
+              <li>Boeuf Bulgogi</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Tteokbokki</h3>
+            <ul class="menu-options">
+              <li>Classique</li>
+              <li>Spicy</li>
+              <li>Spicy Cheese</li>
+              <li>Gambas</li>
+              <li>Fruits de mer</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Suppléments</h3>
+            <ul class="menu-options">
+              <li>Banchan</li>
+              <li>Bol de riz</li>
+              <li>Sauce</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="menu-category reveal">
+        <div class="section-head">
+          <p class="eyebrow">Desserts</p>
+          <h2>Desserts maison et glaces</h2>
+        </div>
+        <div class="menu-cards">
+          <article class="menu-card">
+            <h3>Bungeobang</h3>
+            <ul class="menu-options">
+              <li>Vanille</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Pannacotta Mangue Coco</h3>
+          </article>
+          <article class="menu-card">
+            <h3>Tiramisu</h3>
+          </article>
+          <article class="menu-card">
+            <h3>Glace Melona</h3>
+            <ul class="menu-options">
+              <li>Melon</li>
+              <li>Mangue</li>
+            </ul>
+          </article>
+          <article class="menu-card">
+            <h3>Glace en boule</h3>
+            <ul class="menu-options">
+              <li>Passion</li>
+              <li>Mangue</li>
+              <li>Fraise</li>
+              <li>Vanille</li>
+              <li>Chocolat</li>
+            </ul>
+          </article>
+        </div>
+      </section>
+
+      <section class="menu-drinks reveal" id="boissons">
         <div class="section-head">
           <p class="eyebrow">Boissons</p>
-          <h2>Cocktails, soju et créations maison</h2>
+          <h2>Carte des boissons</h2>
         </div>
-        <div class="drink-list">
-          <article>
-            <h3>Soju Yuzu Spritz</h3>
-            <p>Soju, yuzu, eau pétillante, zeste de citron.</p>
-            <span>9€</span>
+        <div class="drinks-board">
+          <article class="drinks-block">
+            <h3>Cocktails Classic</h3>
+            <ul class="plain-list">
+              <li>Mojito Classique</li>
+              <li>Mojito Passion</li>
+              <li>Mojito Mangue</li>
+              <li>Moscow Mule</li>
+              <li>Gin Tonic</li>
+              <li>Cuba Libre</li>
+              <li>Pina Colada</li>
+              <li>Aperol Spritz</li>
+            </ul>
           </article>
-          <article>
-            <h3>Cocktail 1</h3>
-            <p>Description</p>
-            <span>10€</span>
+          <article class="drinks-block">
+            <h3>Cocktails Korean Vibes</h3>
+            <ul class="plain-list">
+              <li>Lychee Soju</li>
+              <li>Apple Melona Soju</li>
+              <li>Strawberry Milkis</li>
+              <li>Grapefruit Highball</li>
+              <li>Classic High Ball</li>
+              <li>Korean Mule</li>
+              <li>Soju Spritz</li>
+              <li>Yuja Spritz</li>
+            </ul>
           </article>
-          <article>
-            <h3>Cocktail 2</h3>
-            <p>Description</p>
-            <span>7€</span>
+          <article class="drinks-block">
+            <h3>NATA Signature</h3>
+            <ul class="plain-list">
+              <li>NATA K-Cloud Sunset</li>
+              <li>NATA Pink Highball</li>
+              <li>NATA Yakult High</li>
+              <li>NATA Blue Butterfly</li>
+              <li>Basil Smash</li>
+            </ul>
           </article>
-          <article>
-            <h3>Cocktail 3</h3>
-            <p>Description</p>
-            <span>6€</span>
+          <article class="drinks-block">
+            <h3>Bières</h3>
+            <ul class="plain-list">
+              <li>NATA</li>
+              <li>Liefman Fruitesse</li>
+              <li>Vedett IPA</li>
+              <li>Vedett White</li>
+              <li>Chouffe</li>
+              <li>Duvel</li>
+              <li>Duvel Tripel Hop</li>
+              <li>Bertinchamp Zero</li>
+              <li>Bertinchamp Blanche</li>
+              <li>Bertinchamp Pamplemousse</li>
+              <li>Cass Korean Beer</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Soju &amp; Makgeolli</h3>
+            <ul class="plain-list">
+              <li>Soju Shot</li>
+              <li>Soju Bottle</li>
+              <li>Planche Découverte</li>
+              <li>Somaek</li>
+              <li>Makgeolli</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Vin, Crémant, Towers</h3>
+            <ul class="plain-list">
+              <li>Vin en carafe</li>
+              <li>Crémant d'Alsace Calixte</li>
+              <li>Tower Pils</li>
+              <li>Tower Fruitée</li>
+              <li>Tower Blanche</li>
+              <li>Tower Somaek</li>
+              <li>Tower Cuba Libre</li>
+              <li>Tower Mojito Classique</li>
+              <li>Tower Aperol Spritz</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Iced Drinks</h3>
+            <ul class="plain-list">
+              <li>Yakult Sweet Berries</li>
+              <li>Virgin Mojito Classic</li>
+              <li>Virgin Mojito Passion</li>
+              <li>Virgin Mojito Mango</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Homemade Drinks</h3>
+            <ul class="plain-list">
+              <li>Butterfly Passion Soda</li>
+              <li>Butterfly Lychee Soda</li>
+              <li>Butterfly Yuzu Soda</li>
+              <li>Homemade Yuzu Ice Tea</li>
+              <li>Homemade Ginger Ice Tea</li>
+              <li>Homemade Jujube Ice Tea</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Softs</h3>
+            <ul class="plain-list">
+              <li>Coca Cola</li>
+              <li>Coca Cola Zero</li>
+              <li>Fanta Orange</li>
+              <li>Fuze Tea</li>
+              <li>Sprite</li>
+              <li>Royal Bliss Tonic</li>
+              <li>Royal Bliss Pink</li>
+              <li>Royal Bliss Bitter Lemon</li>
+              <li>Fever-Tree Ginger Beer</li>
+              <li>Milkis Original</li>
+              <li>Milkis Fraise</li>
+              <li>Milkis Banane</li>
+              <li>Chaudfontaine Plate</li>
+              <li>Chaudfontaine Pétillante</li>
+            </ul>
+          </article>
+          <article class="drinks-block">
+            <h3>Boissons Chaudes</h3>
+            <ul class="plain-list">
+              <li>Espresso</li>
+              <li>Double Espresso</li>
+              <li>Café</li>
+              <li>Cappuccino</li>
+              <li>Thé / Tisane</li>
+              <li>Korean Tea Yuzu</li>
+              <li>Korean Tea Ginger</li>
+              <li>Korean Tea Jujube</li>
+            </ul>
           </article>
         </div>
       </section>

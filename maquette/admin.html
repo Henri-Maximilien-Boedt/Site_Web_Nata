@@ -13,7 +13,7 @@
     />
     <link rel="stylesheet" href="styles.css" />
   </head>
-  <body>
+  <body class="admin-page">
     <div class="noise"></div>
 
     <header class="topbar">
@@ -31,8 +31,8 @@
       <section class="story reveal">
         <div class="story-card">
           <p class="eyebrow">Espace admin</p>
-          <h2>Gestion des réservations</h2>
-          <p>Connecte-toi avec le compte admin pour voir les demandes de réservation.</p>
+          <h2>Pilotage de la soirée</h2>
+          <p>Vue demi-heure par demi-heure, état des tables et gestion des arrivées sans réservation.</p>
         </div>
       </section>
 
@@ -57,7 +57,7 @@
           <div class="admin-dashboard__head">
             <div>
               <p class="eyebrow">Réservations</p>
-              <h3>Demandes reçues</h3>
+              <h3>Vue globale du service</h3>
             </div>
             <button type="button" class="btn btn-ghost" data-admin-logout>Déconnexion</button>
           </div>
@@ -65,10 +65,6 @@
             <label>
               Date
               <input type="date" data-admin-date />
-            </label>
-            <label>
-              Heure (état des tables)
-              <input type="time" data-admin-time step="1800" />
             </label>
             <label>
               Recherche
@@ -80,6 +76,7 @@
               <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
             </div>
           </div>
+          <div class="admin-time-strip" data-admin-slots></div>
 
           <div class="admin-grid">
             <div class="admin-panel">
@@ -91,9 +88,16 @@
               <div class="table-legend table-legend--admin">
                 <span><i class="legend-dot is-free"></i> Libre</span>
                 <span><i class="legend-dot is-busy"></i> Réservée</span>
+                <span><i class="legend-dot is-manual"></i> Indispo (arrivée)</span>
               </div>
+              <p class="admin-help" data-admin-action-feedback>Clique sur une table libre pour la marquer indisponible (2h).</p>
               <div class="table-layout table-layout--admin" data-admin-table-grid></div>
             </div>
+          </div>
+
+          <div class="admin-panel admin-panel--timeline">
+            <p class="admin-count">Vue soirée par table (30 minutes)</p>
+            <div class="admin-timeline" data-admin-timeline></div>
           </div>
         </div>
       </section>
