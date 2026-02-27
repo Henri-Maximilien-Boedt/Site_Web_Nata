@@ -16,34 +16,39 @@ const ADMIN_CREDENTIALS = {
 };
 
 const TABLES = [
-  { id: 'T2-1', seats: 2, label: 'Table 2P - #1' },
-  { id: 'T2-2', seats: 2, label: 'Table 2P - #2' },
-  { id: 'T2-3', seats: 2, label: 'Table 2P - #3' },
-  { id: 'T2-4', seats: 2, label: 'Table 2P - #4' },
-  { id: 'T2-5', seats: 2, label: 'Table 2P - #5' },
-  { id: 'T4-1', seats: 4, label: 'Table 4P - #1' },
-  { id: 'T4-2', seats: 4, label: 'Table 4P - #2' },
-  { id: 'T4-3', seats: 4, label: 'Table 4P - #3' },
-  { id: 'T4-4', seats: 4, label: 'Table 4P - #4' },
-  { id: 'T10-1', seats: 10, label: 'Grande table 10P' },
+  { id: 'T2-1', code: 'T-1', seats: 2, label: 'T-1' },
+  { id: 'T2-2', code: 'T-2', seats: 2, label: 'T-2' },
+  { id: 'T2-3', code: 'T-3', seats: 2, label: 'T-3' },
+  { id: 'T2-4', code: 'T-4', seats: 2, label: 'T-4' },
+  { id: 'T2-5', code: 'T-5', seats: 2, label: 'T-5' },
+  { id: 'T4-1', code: 'T-6', seats: 4, label: 'T-6' },
+  { id: 'T4-2', code: 'T-7', seats: 4, label: 'T-7' },
+  { id: 'T4-3', code: 'T-8', seats: 4, label: 'T-8' },
+  { id: 'T4-4', code: 'T-9', seats: 4, label: 'T-9' },
+  { id: 'T10-1', code: 'T-10', seats: 10, label: 'T-10' },
 ];
 
 const TABLE_PLAN = {
-  'T2-1': { x: 7, y: 12, w: 11, h: 12, shape: 'square' },
-  'T2-2': { x: 7, y: 31, w: 11, h: 12, shape: 'square' },
-  'T2-3': { x: 7, y: 50, w: 11, h: 12, shape: 'square' },
-  'T2-4': { x: 8, y: 74, w: 10, h: 11, shape: 'square' },
-  'T2-5': { x: 21, y: 74, w: 10, h: 11, shape: 'square' },
+  'T2-1': { x: 7, y: 12, w: 11, h: 12, shape: 'rect' },
+  'T2-2': { x: 7, y: 31, w: 11, h: 12, shape: 'rect' },
+  'T2-3': { x: 7, y: 50, w: 11, h: 12, shape: 'rect' },
+  'T2-4': { x: 8, y: 74, w: 11, h: 12, shape: 'rect' },
+  'T2-5': { x: 21, y: 74, w: 11, h: 12, shape: 'rect' },
   'T4-1': { x: 24, y: 12, w: 11, h: 22, shape: 'rect' },
   'T4-2': { x: 54, y: 12, w: 11, h: 22, shape: 'rect' },
-  'T4-3': { x: 24, y: 31, w: 11, h: 14, shape: 'square' },
-  'T4-4': { x: 24, y: 50, w: 11, h: 14, shape: 'square' },
-  'T10-1': { x: 82, y: 82, w: 14, h: 13, shape: 'round' },
+  'T4-3': { x: 24, y: 31, w: 11, h: 22, shape: 'rect' },
+  'T4-4': { x: 24, y: 50, w: 11, h: 22, shape: 'rect' },
+  'T10-1': { x: 82, y: 82, w: 11, h: 24, shape: 'rect' },
 };
 
 const TABLE_BY_ID = Object.fromEntries(TABLES.map((table) => [table.id, table]));
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const getTableCode = (tableId) => TABLE_BY_ID[tableId]?.code || tableId;
+const getTableRectSize = (seats) => ({
+  w: 11,
+  h: clamp(8 + seats * 1.6, 12, 30),
+});
 
 const readTableLayout = () => {
   try {
@@ -112,18 +117,17 @@ const getTableLayout = () => {
   const layout = {};
 
   TABLES.forEach((table) => {
-    const base = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
+    const base = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
     const custom = saved[table.id] && typeof saved[table.id] === 'object' ? saved[table.id] : {};
-    const width = Number(custom.w ?? base.w);
-    const height = Number(custom.h ?? base.h);
+    const size = getTableRectSize(table.seats);
     const x = Number(custom.x ?? base.x);
     const y = Number(custom.y ?? base.y);
     layout[table.id] = {
       x: clamp(Number.isFinite(x) ? x : base.x, 3, 97),
       y: clamp(Number.isFinite(y) ? y : base.y, 3, 97),
-      w: clamp(Number.isFinite(width) ? width : base.w, 8, 42),
-      h: clamp(Number.isFinite(height) ? height : base.h, 8, 35),
-      shape: custom.shape || base.shape || 'square',
+      w: size.w,
+      h: size.h,
+      shape: 'rect',
     };
   });
 
@@ -139,7 +143,31 @@ const getTableGroups = () => {
   return [...mergeGroups, ...singles];
 };
 
-const buildTableUnitFromMembers = (members, layout = getTableLayout()) => {
+const hasSameMembers = (a, b) => {
+  if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false;
+  return a.every((id, index) => id === b[index]);
+};
+
+const getMergedUnitCode = (sortedMembers, mergedGroups) => {
+  const groupIndex = mergedGroups.findIndex((group) => hasSameMembers(group, sortedMembers));
+  return `T-G${groupIndex >= 0 ? groupIndex + 1 : 1}`;
+};
+
+const getMembersFromUnitId = (unitId) => {
+  const value = String(unitId || '').trim();
+  if (!value) return [];
+  if (value.startsWith('GROUP:')) {
+    return value
+      .slice(6)
+      .split('+')
+      .map((id) => id.trim())
+      .filter((id) => Boolean(TABLE_BY_ID[id]))
+      .sort();
+  }
+  return TABLE_BY_ID[value] ? [value] : [];
+};
+
+const buildTableUnitFromMembers = (members, layout = getTableLayout(), mergedGroups = []) => {
   const sortedMembers = [...members].sort();
   const memberTables = sortedMembers.map((id) => TABLE_BY_ID[id]).filter(Boolean);
   const seats = memberTables.reduce((sum, table) => sum + table.seats, 0);
@@ -150,7 +178,8 @@ const buildTableUnitFromMembers = (members, layout = getTableLayout()) => {
     const table = TABLE_BY_ID[onlyId];
     return {
       id: onlyId,
-      label: table?.label || onlyId,
+      label: table?.code || onlyId,
+      displayCode: table?.code || onlyId,
       seats: table?.seats || 0,
       members: sortedMembers,
       isMerged: false,
@@ -184,9 +213,11 @@ const buildTableUnitFromMembers = (members, layout = getTableLayout()) => {
     shape: 'rect',
   };
 
+  const mergedCode = getMergedUnitCode(sortedMembers, mergedGroups);
   return {
     id: `GROUP:${sortedMembers.join('+')}`,
-    label: `Table groupée (${sortedMembers.join(' + ')})`,
+    label: mergedCode,
+    displayCode: mergedCode,
     seats,
     members: sortedMembers,
     isMerged: true,
@@ -194,8 +225,13 @@ const buildTableUnitFromMembers = (members, layout = getTableLayout()) => {
   };
 };
 
-const getTableUnits = (layout = getTableLayout()) =>
-  getTableGroups(layout).map((members) => buildTableUnitFromMembers(members, layout));
+const getTableUnits = (layout = getTableLayout()) => {
+  const groups = getTableGroups(layout).map((members) => [...members].sort());
+  const mergedGroups = groups
+    .filter((group) => group.length > 1)
+    .sort((a, b) => a[0].localeCompare(b[0]));
+  return groups.map((members) => buildTableUnitFromMembers(members, layout, mergedGroups));
+};
 
 const getUnitById = (unitId, layout = getTableLayout()) =>
   getTableUnits(layout).find((unit) => unit.id === unitId);
@@ -235,6 +271,33 @@ const splitGroupByMember = (memberId) => {
   return true;
 };
 
+const splitGroupByMembers = (members) => {
+  const target = [...members].sort();
+  if (target.length < 2) return false;
+  const groups = normalizeMergeGroups(readTableMerges());
+  const sourceGroup = groups.find((group) => hasSameMembers(group, target));
+  if (!sourceGroup) return false;
+  const nextGroups = groups.filter((group) => group !== sourceGroup);
+  writeTableMerges(normalizeMergeGroups(nextGroups));
+  return true;
+};
+
+const mergeUnitsById = (sourceUnitId, targetUnitId) => {
+  const sourceMembers = getMembersFromUnitId(sourceUnitId);
+  const targetMembers = getMembersFromUnitId(targetUnitId);
+  if (!sourceMembers.length || !targetMembers.length) return null;
+  if (sourceMembers.some((memberId) => targetMembers.includes(memberId))) return null;
+
+  const anchorId = sourceMembers[0];
+  let mergedGroup = null;
+  targetMembers.forEach((targetMemberId) => {
+    const next = mergeTablesById(anchorId, targetMemberId);
+    if (next) mergedGroup = next;
+  });
+
+  return mergedGroup ? [...mergedGroup].sort() : null;
+};
+
 const alignMergedGroupLayout = (group, anchorId) => {
   if (!Array.isArray(group) || group.length < 2) return;
   const layout = getTableLayout();
@@ -242,21 +305,21 @@ const alignMergedGroupLayout = (group, anchorId) => {
   if (!anchor) return;
 
   const ordered = [anchorId, ...group.filter((id) => id !== anchorId)];
-  const totalWidth = ordered.reduce((sum, tableId) => {
+  const totalHeight = ordered.reduce((sum, tableId) => {
     const item = layout[tableId];
-    return sum + (item ? item.w : 0);
+    return sum + (item ? item.h : 0);
   }, 0);
-  if (!totalWidth) return;
+  if (!totalHeight) return;
 
-  let cursor = anchor.x - totalWidth / 2;
+  let cursor = anchor.y - totalHeight / 2;
   ordered.forEach((tableId) => {
     const item = layout[tableId];
     if (!item) return;
     const halfW = item.w / 2;
     const halfH = item.h / 2;
-    item.x = clamp(cursor + item.w / 2, halfW + 1, 99 - halfW);
-    item.y = clamp(anchor.y, halfH + 1, 99 - halfH);
-    cursor += item.w;
+    item.x = clamp(anchor.x, halfW + 1, 99 - halfW);
+    item.y = clamp(cursor + item.h / 2, halfH + 1, 99 - halfH);
+    cursor += item.h;
   });
 
   writeTableLayout(layout);
@@ -326,6 +389,21 @@ const escapeHTML = (value) =>
     .replaceAll('>', '&gt;')
     .replaceAll('"', '&quot;')
     .replaceAll("'", '&#39;');
+
+const TABLE_FLOOR_DECORATIONS = `
+  <div class="table-floor__bar" aria-hidden="true">
+    <span class="table-floor__bar-title">BAR</span>
+    <span class="table-floor__bar-shelf table-floor__bar-shelf--one"></span>
+    <span class="table-floor__bar-shelf table-floor__bar-shelf--two"></span>
+    <span class="table-floor__bar-obj table-floor__bar-obj--bottle"></span>
+    <span class="table-floor__bar-obj table-floor__bar-obj--glass"></span>
+    <span class="table-floor__bar-obj table-floor__bar-obj--shaker"></span>
+  </div>
+  <div class="table-floor__entrance" aria-hidden="true">
+    <span class="table-floor__entrance-label">ENTREE</span>
+    <span class="table-floor__entrance-arrow">↓</span>
+  </div>
+`;
 
 if (year) {
   year.textContent = new Date().getFullYear();
@@ -847,23 +925,14 @@ if (bookingForms.length) {
     const units = getTableUnits();
     tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (2h) - ${people} personne${people > 1 ? 's' : ''}`;
 
-    const decorations = `
-      <div class="table-floor__bar">BAR</div>
-      <div class="table-floor__pillar table-floor__pillar--one"></div>
-      <div class="table-floor__pillar table-floor__pillar--two"></div>
-      <div class="table-floor__stair" aria-hidden="true">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-    `;
-
-    tableLayout.innerHTML = `${decorations}${units.map((unit) => {
+    tableLayout.innerHTML = `${TABLE_FLOOR_DECORATIONS}${units.map((unit) => {
       const occupied = isUnitBooked(unit.members, date, time);
       const tooSmall = !occupied && people > unit.seats;
       const selected = booking.tableHidden.value === unit.id;
       const disabled = occupied || tooSmall;
-      const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
-      const chairCount = Math.max(2, Math.min(8, unit.seats));
-      const status = occupied ? 'Réservée' : tooSmall ? 'Trop petite' : 'Libre';
+      const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
+      const leftChairs = Math.max(1, Math.ceil(unit.seats / 2));
+      const rightChairs = Math.max(1, Math.floor(unit.seats / 2));
 
       return `
         <button
@@ -872,13 +941,11 @@ if (bookingForms.length) {
             !occupied && !tooSmall ? ' is-free' : ''
           }${selected ? ' is-selected' : ''}"
           data-table-select="${unit.id}"
-          style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs:${chairCount};"
+          style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs-left:${leftChairs};--chairs-right:${rightChairs};"
           ${disabled ? 'disabled' : ''}
         >
-          <span class="table-seat__label">${escapeHTML(unit.isMerged ? `Groupe` : unit.id)}</span>
-          <span class="table-seat__capacity">${escapeHTML(`${unit.seats}P`)}</span>
-          <span class="table-seat__time">${time}</span>
-          <span class="table-seat__state">${status}</span>
+          <span class="table-seat__label">${escapeHTML(unit.displayCode || unit.label || unit.id)}</span>
+          <span class="table-seat__capacity">${escapeHTML(String(unit.seats))}</span>
         </button>
       `;
     }).join('')}`;
@@ -1076,6 +1143,7 @@ if (bookingForms.length) {
       const formData = new FormData(booking.form);
       const name = String(formData.get('name') || '').trim();
       const email = String(formData.get('email') || '').trim();
+      const phone = String(formData.get('phone') || '').trim();
       const people = Number.parseInt(String(formData.get('people') || '').trim(), 10);
       const date = String(formData.get('date') || '').trim();
       const time = String(formData.get('time') || '').trim();
@@ -1083,7 +1151,7 @@ if (bookingForms.length) {
       const tableMembersRaw = String(formData.get('tableMembers') || '').trim();
       const message = String(formData.get('message') || '').trim();
 
-      if (!name || !email || !date || !time || !tableId || !people) {
+      if (!name || !email || !phone || !date || !time || !tableId || !people) {
         showFeedback(booking, 'Merci de compléter les champs obligatoires.', 'error');
         return;
       }
@@ -1102,7 +1170,7 @@ if (bookingForms.length) {
       const parsedSeats = parsedMembers.reduce((sum, id) => sum + (getTableById(id)?.seats || 0), 0);
       const parsedLabel =
         parsedMembers.length > 1
-          ? `Table groupée (${parsedMembers.join(' + ')})`
+          ? getUnitById(`GROUP:${parsedMembers.slice().sort().join('+')}`)?.label || 'T-G'
           : parsedMembers.length === 1
             ? getTableById(parsedMembers[0])?.label || parsedMembers[0]
             : '';
@@ -1146,6 +1214,7 @@ if (bookingForms.length) {
         id,
         name,
         email,
+        phone,
         people,
         date,
         time,
@@ -1211,6 +1280,31 @@ if (bookingForms.length) {
       closeDateModal();
     }
   });
+
+  window.addEventListener('storage', (event) => {
+    const key = event.key || '';
+    const syncKeys = new Set([
+      STORAGE_KEYS.tableLayout,
+      STORAGE_KEYS.tableMerges,
+      STORAGE_KEYS.reservations,
+      STORAGE_KEYS.adminBlocks,
+    ]);
+    if (key && !syncKeys.has(key)) return;
+    if (!activeBooking || tableModal.hidden) return;
+
+    const selectedUnitId = activeBooking.tableHidden.value;
+    if (selectedUnitId) {
+      const refreshedUnit = getUnitById(selectedUnitId);
+      if (!refreshedUnit) {
+        resetTable(activeBooking);
+      } else {
+        activeBooking.tableMembersHidden.value = refreshedUnit.members.join(',');
+        activeBooking.tableTrigger.value = `${refreshedUnit.label} (${refreshedUnit.seats} pers.)`;
+      }
+    }
+
+    renderTablePlan(activeBooking);
+  });
 }
 
 const adminRoot = document.querySelector('[data-admin-page]');
@@ -1227,6 +1321,7 @@ if (adminRoot) {
   const slotStrip = adminRoot.querySelector('[data-admin-slots]');
   const timeline = adminRoot.querySelector('[data-admin-timeline]');
   const actionFeedback = adminRoot.querySelector('[data-admin-action-feedback]');
+  const mergeModeButton = adminRoot.querySelector('[data-admin-merge-mode]');
   const dateInput = adminRoot.querySelector('[data-admin-date]');
   const searchInput = adminRoot.querySelector('[data-admin-search]');
   const prevButton = adminRoot.querySelector('[data-admin-prev]');
@@ -1234,9 +1329,15 @@ if (adminRoot) {
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
   const EVENING_SLOTS = Array.from({ length: 9 }, (_, index) => fromMinutes(18 * 60 + index * 30));
+  const ADMIN_HELP_DEFAULT =
+    'Glisse une table pour la déplacer. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
+  const ADMIN_HELP_MERGE =
+    'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
   let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
     ? roundCurrentTimeToHalfHour()
     : EVENING_SLOTS[0];
+  let quickMergeMode = false;
+  let quickMergeSourceId = '';
   const mergeMenu = document.createElement('div');
   mergeMenu.className = 'admin-merge-menu';
   mergeMenu.hidden = true;
@@ -1246,6 +1347,27 @@ if (adminRoot) {
   let mergeMenuSourceId = '';
 
   const isLoggedIn = () => localStorage.getItem(STORAGE_KEYS.adminSession) === '1';
+  const getUnitDisplayCodeById = (unitId, layout = getTableLayout()) => {
+    const unit = getUnitById(unitId, layout);
+    if (unit) return unit.displayCode || unit.label || unit.id;
+    const members = getMembersFromUnitId(unitId);
+    if (!members.length) return unitId;
+    if (members.length === 1) return getTableCode(members[0]);
+    return 'T-G';
+  };
+  const getCurrentAdminHelp = () => {
+    if (!quickMergeMode) return ADMIN_HELP_DEFAULT;
+    if (!quickMergeSourceId) return ADMIN_HELP_MERGE;
+    return `Mode fusion actif: sélectionne la table à fusionner avec ${getUnitDisplayCodeById(quickMergeSourceId)}.`;
+  };
+  const setQuickMergeMode = (enabled) => {
+    quickMergeMode = Boolean(enabled);
+    if (!quickMergeMode) quickMergeSourceId = '';
+    if (mergeModeButton) {
+      mergeModeButton.textContent = `Mode fusion: ${quickMergeMode ? 'ON' : 'OFF'}`;
+      mergeModeButton.classList.toggle('is-active', quickMergeMode);
+    }
+  };
 
   const showLogin = () => {
     authBox.hidden = false;
@@ -1270,34 +1392,37 @@ if (adminRoot) {
     if (mergeMenuList) mergeMenuList.innerHTML = '';
   };
 
-  const openMergeMenu = (tableId, clientX, clientY) => {
+  const openMergeMenu = (unitId, clientX, clientY) => {
     if (!mergeMenuList) return;
-    const groups = normalizeMergeGroups(readTableMerges());
-    const sourceGroup = getGroupForMember(tableId, groups) || [tableId];
-    const mergeTargets = TABLES.map((table) => table.id).filter((id) => !sourceGroup.includes(id));
+    const sourceUnit = getUnitById(unitId);
+    const sourceMembers = sourceUnit ? sourceUnit.members : getMembersFromUnitId(unitId);
+    if (!sourceMembers.length) return;
+    const units = getTableUnits();
+    const mergeTargets = units.filter(
+      (unit) => !unit.members.some((memberId) => sourceMembers.includes(memberId))
+    );
 
     const mergeButtons = mergeTargets.length
       ? mergeTargets
-          .map((id) => {
-            const target = TABLE_BY_ID[id];
-            return `<button type="button" data-merge-target="${id}">Fusionner avec ${id} (${target.seats}P)</button>`;
+          .map((unit) => {
+            return `<button type="button" data-merge-target="${unit.id}">Fusionner avec ${unit.displayCode} (${unit.seats})</button>`;
           })
           .join('')
       : '<p>Aucune table disponible pour fusionner.</p>';
 
     const splitButton =
-      sourceGroup.length > 1
-        ? `<button type="button" data-merge-split="1">Retirer ${tableId} du groupe</button>`
+      sourceMembers.length > 1
+        ? `<button type="button" data-merge-split="1">Dissocier ${sourceUnit?.displayCode || getUnitDisplayCodeById(unitId)}</button>`
         : '';
 
     mergeMenuList.innerHTML = `
-      <p class="admin-merge-menu__title">${tableId}</p>
+      <p class="admin-merge-menu__title">${sourceUnit?.displayCode || getUnitDisplayCodeById(unitId)}</p>
       ${mergeButtons}
       ${splitButton}
       <button type="button" data-merge-close="1">Fermer</button>
     `;
 
-    mergeMenuSourceId = tableId;
+    mergeMenuSourceId = unitId;
     mergeMenu.hidden = false;
 
     const viewportPadding = 12;
@@ -1356,14 +1481,31 @@ if (adminRoot) {
     return { type: 'free', item: null };
   };
 
-  const toggleManualOccupation = (tableId, atTime) => {
+  const getUnitStatusAt = (unit, dateISO, atTime) => {
+    let blocked = null;
+    for (const memberId of unit.members) {
+      const status = getTableStatusAt(memberId, dateISO, atTime);
+      if (status.type === 'reserved') return status;
+      if (status.type === 'blocked' && !blocked) blocked = status;
+    }
+    if (blocked) return blocked;
+    return { type: 'free', item: null };
+  };
+
+  const toggleManualOccupationForMembers = (memberIds, atTime) => {
+    const normalizedMembers = [...memberIds].filter((id) => Boolean(TABLE_BY_ID[id]));
+    if (!normalizedMembers.length) return;
     const selectedDate = dateInput.value || toISODate(new Date());
     const blockStart = toMinutes(atTime);
     const blockEnd = blockStart + 120;
+    const unitCode =
+      normalizedMembers.length > 1
+        ? getUnitDisplayCodeById(`GROUP:${normalizedMembers.slice().sort().join('+')}`)
+        : getTableCode(normalizedMembers[0]);
     const overlappingReservation = readReservations().find((reservation) => {
       if (reservation.date !== selectedDate) return false;
-      const members = getReservationMembers(reservation);
-      if (!members.includes(tableId)) return false;
+      const reservationMembers = getReservationMembers(reservation);
+      if (!reservationMembers.some((memberId) => normalizedMembers.includes(memberId))) return false;
       const start = toMinutes(reservation.time);
       const end = start + 120;
       return overlaps(blockStart, blockEnd, start, end);
@@ -1371,41 +1513,98 @@ if (adminRoot) {
 
     if (overlappingReservation) {
       setActionFeedback(
-        `${tableId} a déjà une réservation sur ce créneau (${overlappingReservation.name} - ${overlappingReservation.time}).`,
+        `${unitCode} a déjà une réservation sur ce créneau (${overlappingReservation.name} - ${overlappingReservation.time}).`,
         'error'
       );
       return;
     }
 
-    const existingBlock = getManualBlockAt(tableId, selectedDate, atTime);
-    if (existingBlock) {
-      removeAdminBlock(existingBlock.id);
-      setActionFeedback(`${tableId} repasse en disponible à ${atTime}.`);
+    const existingBlocks = normalizedMembers
+      .map((memberId) => getManualBlockAt(memberId, selectedDate, atTime))
+      .filter(Boolean);
+
+    if (existingBlocks.length === normalizedMembers.length) {
+      existingBlocks.forEach((block) => removeAdminBlock(block.id));
+      setActionFeedback(`${unitCode} repasse en disponible à ${atTime}.`);
       renderAdmin();
       return;
     }
 
     const endMinutes = toMinutes(atTime) + 120;
     const endTime = fromMinutes(endMinutes);
-    addAdminBlock({
-      id: `blk_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
-      tableId,
-      date: selectedDate,
-      startTime: atTime,
-      endMinutes,
-      endTime,
-      reason: 'Arrivée sans réservation',
-      createdAt: new Date().toISOString(),
+    normalizedMembers.forEach((memberId) => {
+      if (getManualBlockAt(memberId, selectedDate, atTime)) return;
+      addAdminBlock({
+        id: `blk_${Date.now()}_${Math.random().toString(36).slice(2, 7)}`,
+        tableId: memberId,
+        date: selectedDate,
+        startTime: atTime,
+        endMinutes,
+        endTime,
+        reason: 'Arrivée sans réservation',
+        createdAt: new Date().toISOString(),
+      });
     });
-    setActionFeedback(`${tableId} marquée indisponible de ${atTime} à ${endTime}.`);
+    setActionFeedback(`${unitCode} marquée indisponible de ${atTime} à ${endTime}.`);
+    renderAdmin();
+  };
+
+  const toggleManualOccupationByUnit = (unitId, atTime) => {
+    const unit = getUnitById(unitId);
+    const members = unit ? unit.members : getMembersFromUnitId(unitId);
+    toggleManualOccupationForMembers(members, atTime);
+  };
+
+  const handleAdminTableClick = (unitId) => {
+    const activeUnit = getUnitById(unitId);
+    const activeCode = activeUnit?.displayCode || getUnitDisplayCodeById(unitId);
+    if (!quickMergeMode) {
+      toggleManualOccupationByUnit(unitId, selectedTime);
+      return;
+    }
+
+    if (!quickMergeSourceId) {
+      quickMergeSourceId = unitId;
+      setActionFeedback(`Source de fusion sélectionnée: ${activeCode}.`);
+      renderAdmin();
+      return;
+    }
+
+    if (quickMergeSourceId === unitId) {
+      quickMergeSourceId = '';
+      setActionFeedback('Sélection de fusion annulée.');
+      renderAdmin();
+      return;
+    }
+
+    const sourceMembers = getMembersFromUnitId(quickMergeSourceId);
+    const targetMembers = getMembersFromUnitId(unitId);
+    if (sourceMembers.some((memberId) => targetMembers.includes(memberId))) {
+      setActionFeedback(`${activeCode} est déjà dans ce groupe.`, 'error');
+      return;
+    }
+
+    const mergedGroup = mergeUnitsById(quickMergeSourceId, unitId);
+    if (!mergedGroup) {
+      setActionFeedback('Fusion impossible sur cette sélection.', 'error');
+      return;
+    }
+
+    alignMergedGroupLayout(mergedGroup, sourceMembers[0]);
+    quickMergeSourceId = '';
+    const totalSeats = mergedGroup.reduce((sum, id) => sum + (TABLE_BY_ID[id]?.seats || 0), 0);
+    const mergedUnitId = `GROUP:${mergedGroup.join('+')}`;
+    const mergedCode = getUnitDisplayCodeById(mergedUnitId);
+    setActionFeedback(`Fusion créée: ${mergedCode} (${totalSeats}).`);
     renderAdmin();
   };
 
   const renderSlotStrip = (selectedDate) => {
     if (!slotStrip) return;
+    const units = getTableUnits();
     slotStrip.innerHTML = EVENING_SLOTS.map((slot) => {
-      const busyCount = TABLES.filter((table) => {
-        const status = getTableStatusAt(table.id, selectedDate, slot);
+      const busyCount = units.filter((unit) => {
+        const status = getUnitStatusAt(unit, selectedDate, slot);
         return status.type !== 'free';
       }).length;
       return `
@@ -1423,13 +1622,14 @@ if (adminRoot) {
 
   const renderTimeline = (selectedDate) => {
     if (!timeline) return;
+    const units = getTableUnits();
     const header = EVENING_SLOTS.map(
       (slot) => `<div class="admin-timeline__head${slot === selectedTime ? ' is-selected' : ''}">${slot}</div>`
     ).join('');
 
-    const rows = TABLES.map((table) => {
+    const rows = units.map((unit) => {
       const cells = EVENING_SLOTS.map((slot) => {
-        const status = getTableStatusAt(table.id, selectedDate, slot);
+        const status = getUnitStatusAt(unit, selectedDate, slot);
         const isSelected = slot === selectedTime;
         const cellLabel =
           status.type === 'reserved'
@@ -1439,17 +1639,17 @@ if (adminRoot) {
               : 'L';
         const title =
           status.type === 'reserved'
-            ? `${table.id} ${slot}: réservée (${status.item.name})`
+            ? `${unit.displayCode} ${slot}: réservée (${status.item.name})`
             : status.type === 'blocked'
-              ? `${table.id} ${slot}: indisponible (${status.item.reason || 'Arrivée'})`
-              : `${table.id} ${slot}: libre`;
+              ? `${unit.displayCode} ${slot}: indisponible (${status.item.reason || 'Arrivée'})`
+              : `${unit.displayCode} ${slot}: libre`;
 
         return `
           <button
             type="button"
             class="admin-timeline__cell is-${status.type}${isSelected ? ' is-selected' : ''}"
             data-admin-timeline-cell="1"
-            data-admin-table-id="${table.id}"
+            data-admin-unit-id="${unit.id}"
             data-admin-slot-time="${slot}"
             title="${escapeHTML(title)}"
             ${status.type === 'reserved' ? 'disabled' : ''}
@@ -1461,7 +1661,7 @@ if (adminRoot) {
 
       return `
         <div class="admin-timeline__row">
-          <div class="admin-timeline__label">${table.id}</div>
+          <div class="admin-timeline__label">${unit.displayCode}</div>
           <div class="admin-timeline__cells">${cells}</div>
         </div>
       `;
@@ -1479,8 +1679,12 @@ if (adminRoot) {
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
+    const units = getTableUnits(currentLayout);
     if (!EVENING_SLOTS.includes(selectedTime)) {
       selectedTime = EVENING_SLOTS[0];
+    }
+    if (quickMergeSourceId && !units.some((unit) => unit.id === quickMergeSourceId)) {
+      quickMergeSourceId = '';
     }
     const term = (searchInput.value || '').trim().toLowerCase();
 
@@ -1488,7 +1692,7 @@ if (adminRoot) {
       .filter((item) => item.date === selectedDate)
       .filter((item) => {
         if (!term) return true;
-        const combined = `${item.name || ''} ${item.email || ''} ${item.tableLabel || ''} ${item.tableId || ''}`;
+        const combined = `${item.name || ''} ${item.email || ''} ${item.phone || ''} ${item.tableLabel || ''} ${item.tableId || ''}`;
         return combined.toLowerCase().includes(term);
       })
       .sort((a, b) => {
@@ -1515,6 +1719,7 @@ if (adminRoot) {
                 </button>
               </div>
               <p><strong>Email :</strong> ${escapeHTML(item.email)}</p>
+              <p><strong>Téléphone :</strong> ${escapeHTML(item.phone || 'Non renseigné')}</p>
               <p><strong>Date :</strong> ${escapeHTML(formatISODateLong(item.date))}</p>
               <p><strong>Horaire :</strong> ${escapeHTML(getReservationRangeText(item))}</p>
               <p><strong>Personnes :</strong> ${escapeHTML(item.people || '?')}</p>
@@ -1528,28 +1733,25 @@ if (adminRoot) {
 
     renderSlotStrip(selectedDate);
     tableTimeLabel.textContent = `État des tables le ${formatISODateLong(selectedDate)} à ${selectedTime}`;
+    if (tableGrid) {
+      tableGrid.classList.toggle('is-merge-mode', quickMergeMode);
+    }
 
-    const decorations = `
-      <div class="table-floor__bar">BAR</div>
-      <div class="table-floor__pillar table-floor__pillar--one"></div>
-      <div class="table-floor__pillar table-floor__pillar--two"></div>
-      <div class="table-floor__stair" aria-hidden="true">
-        <span></span><span></span><span></span><span></span><span></span>
-      </div>
-    `;
+    const sourceMembers = quickMergeSourceId ? getMembersFromUnitId(quickMergeSourceId) : [];
 
-    tableGrid.innerHTML = `${decorations}${TABLES.map((table) => {
-      const status = getTableStatusAt(table.id, selectedDate, selectedTime);
-      const plan = currentLayout[table.id] || TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'square' };
-      const chairCount = Math.max(2, Math.min(6, table.seats));
-      const statusLabel =
-        status.type === 'reserved' ? 'Réservée' : status.type === 'blocked' ? 'Indispo' : 'Libre';
-      const shownTime =
-        status.type === 'reserved'
-          ? status.item.time
-          : status.type === 'blocked'
-            ? status.item.startTime
-            : selectedTime;
+    tableGrid.innerHTML = `${TABLE_FLOOR_DECORATIONS}${units.map((unit) => {
+      const status = getUnitStatusAt(unit, selectedDate, selectedTime);
+      const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
+      const leftChairs = Math.max(1, Math.ceil(unit.seats / 2));
+      const rightChairs = Math.max(1, Math.floor(unit.seats / 2));
+      const mergeClass =
+        quickMergeMode && quickMergeSourceId
+          ? quickMergeSourceId === unit.id
+            ? ' is-merge-source'
+            : unit.members.some((memberId) => sourceMembers.includes(memberId))
+              ? ''
+              : ' is-merge-candidate'
+          : '';
       const extraClass =
         status.type === 'reserved'
           ? ' is-busy'
@@ -1560,15 +1762,13 @@ if (adminRoot) {
       return `
         <button
           type="button"
-          class="table-seat table-seat--${plan.shape}${extraClass}"
-          data-admin-table="${escapeHTML(table.id)}"
+          class="table-seat table-seat--${plan.shape}${extraClass}${mergeClass}"
+          data-admin-unit="${escapeHTML(unit.id)}"
           data-admin-table-status="${status.type}"
-          style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs:${chairCount};"
+          style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs-left:${leftChairs};--chairs-right:${rightChairs};"
         >
-          <span class="table-seat__label">${escapeHTML(table.id)}</span>
-          <span class="table-seat__capacity">${escapeHTML(`${table.seats}P`)}</span>
-          <span class="table-seat__time">${escapeHTML(shownTime)}</span>
-          <span class="table-seat__state">${escapeHTML(statusLabel)}</span>
+          <span class="table-seat__label">${escapeHTML(unit.displayCode)}</span>
+          <span class="table-seat__capacity">${escapeHTML(String(unit.seats))}</span>
         </button>
       `;
     }).join('')}`;
@@ -1579,7 +1779,8 @@ if (adminRoot) {
   const initAdmin = () => {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
-    setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
+    setQuickMergeMode(false);
+    setActionFeedback(getCurrentAdminHelp());
 
     if (isLoggedIn()) {
       showDashboard();
@@ -1600,11 +1801,19 @@ if (adminRoot) {
         localStorage.setItem(STORAGE_KEYS.adminSession, '1');
         feedback.textContent = '';
         showDashboard();
-        setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
+        setActionFeedback(getCurrentAdminHelp());
         renderAdmin();
       } else {
         feedback.textContent = 'Identifiants invalides.';
       }
+    });
+  }
+
+  if (mergeModeButton) {
+    mergeModeButton.addEventListener('click', () => {
+      setQuickMergeMode(!quickMergeMode);
+      setActionFeedback(getCurrentAdminHelp());
+      renderAdmin();
     });
   }
 
@@ -1614,6 +1823,8 @@ if (adminRoot) {
     const updateDraggedButtonStyle = (button, plan) => {
       button.style.setProperty('--x', `${plan.x}%`);
       button.style.setProperty('--y', `${plan.y}%`);
+      button.style.setProperty('--w', `${plan.w}%`);
+      button.style.setProperty('--h', `${plan.h}%`);
     };
 
     const endDrag = () => {
@@ -1622,10 +1833,10 @@ if (adminRoot) {
       dragState = null;
       if (finishedState.didMove) {
         writeTableLayout(finishedState.layout);
-        setActionFeedback(`${finishedState.tableId} déplacée. Position enregistrée.`);
+        setActionFeedback(`${getUnitDisplayCodeById(finishedState.unitId, finishedState.layout)} déplacée. Position enregistrée.`);
         renderAdmin();
       } else {
-        toggleManualOccupation(finishedState.tableId, selectedTime);
+        handleAdminTableClick(finishedState.unitId);
       }
     };
 
@@ -1633,25 +1844,31 @@ if (adminRoot) {
       if (event.button !== 0) return;
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      const button = target.closest('[data-admin-table]');
+      const button = target.closest('[data-admin-unit]');
       if (!(button instanceof HTMLElement)) return;
       event.preventDefault();
-      const tableId = button.getAttribute('data-admin-table');
-      if (!tableId) return;
+      const unitId = button.getAttribute('data-admin-unit');
+      if (!unitId) return;
 
       const layout = getTableLayout();
-      const plan = layout[tableId];
-      if (!plan) return;
+      const unit = getUnitById(unitId, layout);
+      if (!unit || !unit.plan) return;
+      const origins = {};
+      unit.members.forEach((memberId) => {
+        const plan = layout[memberId];
+        if (!plan) return;
+        origins[memberId] = { x: plan.x, y: plan.y };
+      });
 
       dragState = {
-        tableId,
+        unitId,
+        members: unit.members,
         button,
         pointerId: event.pointerId,
         startClientX: event.clientX,
         startClientY: event.clientY,
-        originX: plan.x,
-        originY: plan.y,
         didMove: false,
+        origins,
         layout,
       };
 
@@ -1672,15 +1889,23 @@ if (adminRoot) {
 
       if (!dragState.didMove) return;
 
-      const tablePlan = dragState.layout[dragState.tableId];
       const deltaXPercent = (deltaX / rect.width) * 100;
       const deltaYPercent = (deltaY / rect.height) * 100;
-      const halfW = tablePlan.w / 2;
-      const halfH = tablePlan.h / 2;
 
-      tablePlan.x = clamp(dragState.originX + deltaXPercent, halfW + 1, 99 - halfW);
-      tablePlan.y = clamp(dragState.originY + deltaYPercent, halfH + 1, 99 - halfH);
-      updateDraggedButtonStyle(dragState.button, tablePlan);
+      dragState.members.forEach((memberId) => {
+        const tablePlan = dragState.layout[memberId];
+        const origin = dragState.origins[memberId];
+        if (!tablePlan || !origin) return;
+        const halfW = tablePlan.w / 2;
+        const halfH = tablePlan.h / 2;
+        tablePlan.x = clamp(origin.x + deltaXPercent, halfW + 1, 99 - halfW);
+        tablePlan.y = clamp(origin.y + deltaYPercent, halfH + 1, 99 - halfH);
+      });
+
+      const previewUnit = buildTableUnitFromMembers(dragState.members, dragState.layout);
+      if (previewUnit.plan) {
+        updateDraggedButtonStyle(dragState.button, previewUnit.plan);
+      }
     });
 
     tableGrid.addEventListener('pointerup', (event) => {
@@ -1697,12 +1922,12 @@ if (adminRoot) {
     tableGrid.addEventListener('contextmenu', (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      const button = target.closest('[data-admin-table]');
+      const button = target.closest('[data-admin-unit]');
       if (!(button instanceof HTMLElement)) return;
-      const tableId = button.getAttribute('data-admin-table');
-      if (!tableId) return;
+      const unitId = button.getAttribute('data-admin-unit');
+      if (!unitId) return;
       event.preventDefault();
-      openMergeMenu(tableId, event.clientX, event.clientY);
+      openMergeMenu(unitId, event.clientX, event.clientY);
     });
   }
 
@@ -1713,11 +1938,15 @@ if (adminRoot) {
 
       const mergeTarget = target.getAttribute('data-merge-target');
       if (mergeTarget && mergeMenuSourceId) {
-        const mergedGroup = mergeTablesById(mergeMenuSourceId, mergeTarget);
+        const sourceMembers = getMembersFromUnitId(mergeMenuSourceId);
+        const mergedGroup = mergeUnitsById(mergeMenuSourceId, mergeTarget);
         if (mergedGroup) {
-          alignMergedGroupLayout(mergedGroup, mergeMenuSourceId);
-          setActionFeedback(`Fusion créée: ${mergedGroup.join(' + ')}.`);
+          alignMergedGroupLayout(mergedGroup, sourceMembers[0]);
+          const seats = mergedGroup.reduce((sum, id) => sum + (TABLE_BY_ID[id]?.seats || 0), 0);
+          const mergedCode = getUnitDisplayCodeById(`GROUP:${mergedGroup.join('+')}`);
+          setActionFeedback(`Fusion créée: ${mergedCode} (${seats}).`);
         }
+        quickMergeSourceId = '';
         closeMergeMenu();
         renderAdmin();
         return;
@@ -1725,9 +1954,12 @@ if (adminRoot) {
 
       const shouldSplit = target.getAttribute('data-merge-split');
       if (shouldSplit && mergeMenuSourceId) {
-        if (splitGroupByMember(mergeMenuSourceId)) {
-          setActionFeedback(`${mergeMenuSourceId} retirée de son groupe.`);
+        const sourceMembers = getMembersFromUnitId(mergeMenuSourceId);
+        const sourceCode = getUnitDisplayCodeById(mergeMenuSourceId);
+        if (splitGroupByMembers(sourceMembers)) {
+          setActionFeedback(`${sourceCode} dissociée.`);
         }
+        quickMergeSourceId = '';
         closeMergeMenu();
         renderAdmin();
         return;
@@ -1772,11 +2004,11 @@ if (adminRoot) {
       if (!(target instanceof HTMLElement)) return;
       const button = target.closest('[data-admin-timeline-cell]');
       if (!button) return;
-      const tableId = button.getAttribute('data-admin-table-id');
+      const unitId = button.getAttribute('data-admin-unit-id');
       const slot = button.getAttribute('data-admin-slot-time');
-      if (!tableId || !slot) return;
+      if (!unitId || !slot) return;
       selectedTime = slot;
-      toggleManualOccupation(tableId, slot);
+      toggleManualOccupationByUnit(unitId, slot);
     });
   }
 
@@ -1785,7 +2017,8 @@ if (adminRoot) {
       localStorage.removeItem(STORAGE_KEYS.adminSession);
       if (loginForm) loginForm.reset();
       if (feedback) feedback.textContent = '';
-      setActionFeedback('Glisse une table pour la déplacer. Clic droit sur une table puis "Fusionner avec..." pour créer une table groupée. Clic gauche sur une table libre pour la marquer indisponible (2h).');
+      setQuickMergeMode(false);
+      setActionFeedback(getCurrentAdminHelp());
       closeMergeMenu();
       showLogin();
     });
@@ -1829,6 +2062,27 @@ if (adminRoot) {
       renderAdmin();
     });
   }
+
+  window.addEventListener('storage', (event) => {
+    const key = event.key || '';
+    const syncKeys = new Set([
+      STORAGE_KEYS.tableLayout,
+      STORAGE_KEYS.tableMerges,
+      STORAGE_KEYS.reservations,
+      STORAGE_KEYS.adminBlocks,
+      STORAGE_KEYS.adminSession,
+    ]);
+    if (key && !syncKeys.has(key)) return;
+
+    if (!isLoggedIn()) {
+      closeMergeMenu();
+      showLogin();
+      return;
+    }
+    if (!dashboard.hidden) {
+      renderAdmin();
+    }
+  });
 
   initAdmin();
 }
