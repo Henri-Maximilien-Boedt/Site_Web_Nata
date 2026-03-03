@@ -1,0 +1,116 @@
+/* ── Plan de salle — CSS pur ────────────────────────────────── */
+
+.floor-plan {
+  position: relative;
+  width: 100%;
+  padding-bottom: 70%;       /* ratio fixe hauteur/largeur */
+  background: #1c1916;
+  border-radius: 0.5rem;
+  border: 1px solid #252119;
+  overflow: hidden;
+}
+
+/* ── Bouton de table ────────────────────────────────────────── */
+.table-btn {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  width: 11%;
+  aspect-ratio: 1;
+  min-width: 44px;
+  min-height: 44px;
+  border-radius: 50%;
+  border: 2px solid rgba(255, 255, 255, 0.15);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+  touch-action: none;        /* évite le scroll pendant drag */
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  color: #fff;
+  line-height: 1.2;
+  text-align: center;
+  padding: 0;
+  gap: 0;
+}
+
+.table-btn:not(:disabled):active {
+  transform: translate(-50%, -50%) scale(0.92);
+}
+
+/* ── Statuts ────────────────────────────────────────────────── */
+.table-btn.free {
+  background: #22c55e;
+  box-shadow: 0 0 12px rgba(34, 197, 94, 0.4);
+}
+.table-btn.free:not(:disabled):hover {
+  box-shadow: 0 0 20px rgba(34, 197, 94, 0.6);
+}
+
+.table-btn.pending {
+  background: #f59e0b;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.4);
+}
+
+.table-btn.reserved {
+  background: #ef4444;
+  box-shadow: 0 0 12px rgba(239, 68, 68, 0.35);
+}
+
+.table-btn.small {
+  background: #6b7280;
+}
+
+.table-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.75;
+}
+
+/* ── Mode admin — drag & drop ───────────────────────────────── */
+.table-btn.dragging {
+  z-index: 10;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+/* ── Labels dans le bouton ──────────────────────────────────── */
+.table-btn .table-code {
+  font-size: 0.65rem;
+  font-weight: 800;
+  line-height: 1;
+}
+
+.table-btn .table-seats {
+  font-size: 0.55rem;
+  font-weight: 500;
+  opacity: 0.9;
+  line-height: 1;
+}
+
+/* ── Légende ────────────────────────────────────────────────── */
+.floor-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+  font-size: 0.75rem;
+  color: #a89880;
+}
+
+.floor-legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+
+.floor-legend-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
