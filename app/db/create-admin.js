@@ -29,17 +29,49 @@ async function createAdmin() {
   }
 
   try {
+    console.log('⏳ Hachage du mot de passe en cours...')
     const passwordHash = await bcrypt.hash(password, 12)
+    
+    // Vérification CRITIQUE : s'assurer que bcrypt.compare() fonctionne avant d'insérer
+    console.log('🔍 Vérification du hash...')
+    const isValid = await bcrypt.compare(password, passwordHash)
+    if (!isValid) {
+      throw new Error('CRITIQUE : bcrypt.compare() a échoué ! Le hash est invalide.')
+    }
+    console.log('✓ Hash validé avec succès')
+    
+    // Insérer en base de données
+    console.log('💾 Insertion en base de données...')
     const { rows } = await pool.query(
-      'INSERT INTO admin_users (email, password_hash) VALUES ($1, $2) RETURNING id, email',
+      'INSERT INTO admin_users (email, password_hash) VALUES ($1, $2) RETURNING id, email, created_at',
       [email, passwordHash]
     )
-    console.log(`✓ Admin créé — id: ${rows[0].id}, email: ${rows[0].email}`)
+    
+    // Vérification finale : récupérer et tester le hash depuis la BDD
+    console.log('🔐 Vérification finale du hash en base de données...')
+    const { rows: checkRows } = await pool.query(
+      'SELECT password_hash FROM admin_users WHERE email = $1',
+      [email]
+    )
+    const dbHash = checkRows[0].password_hash
+    const finalCheck = await bcrypt.compare(password, dbHash)
+    if (!finalCheck) {
+      throw new Error('CRITIQUE : Le hash en base de données ne correspond pas au mot de passe !')
+    }
+    
+    console.log('\n✅ SUCCÈS ! Admin créé et vérifié')
+    console.log(`   ID    : ${rows[0].id}`)
+    console.log(`   Email : ${rows[0].email}`)
+    console.log(`   Créé  : ${rows[0].created_at}`)
+    console.log(`\n📝 Identifiants de connexion :`)
+    console.log(`   Email    : ${email}`)
+    console.log(`   Password : ${password}`)
+    console.log(`\n✨ Le mot de passe a été testé et fonctionne correctement !`)
   } catch (err) {
     if (err.code === '23505') {
-      console.error(`Erreur : l'email "${email}" est déjà utilisé par un admin.`)
+      console.error(`\n❌ Erreur : l'email "${email}" est déjà utilisé par un admin.`)
     } else {
-      console.error('Erreur lors de la création de l\'admin :', err.message)
+      console.error(`\n❌ Erreur CRITIQUE : ${err.message}`)
     }
     process.exit(1)
   } finally {
