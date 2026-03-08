@@ -1,21 +1,17 @@
-# CONTEXT.md — NATA Bar Web Project
+# CONTEXT.md — NATA Bar
 > Fichier de contexte pour Claude Code. Lis ce fichier en entier avant de commencer.
 
 ---
 
-## Vue d'ensemble du projet
+## Vue d'ensemble
 
 Site web complet pour **NATA Bar**, restaurant coréen à Louvain-la-Neuve (Belgique).
-Le projet est en phase de **setup initial** — aucun code Next.js n'existe encore.
+Stack : Express.js + EJS + PostgreSQL + Brevo + Render.
 
-Une maquette HTML/CSS/JS existe dans un dossier séparé (`/maquette/`) et sert de
-**référence de design uniquement**. Elle n'est pas à intégrer telle quelle — elle
-est non commentée, hardcodée, et utilise localStorage comme fausse BDD.
-Ce qu'on garde de la maquette : le design visuel (couleurs, typographies, composants),
-le contenu du menu, et l'idée du plan de salle en CSS pur.
+Le dossier `/maquette/` est une référence visuelle uniquement — ne pas réutiliser son code.
+Ce qu'on garde de la maquette : le design (couleurs, typo), le contenu du menu, l'idée du plan de salle CSS pur.
 
-**Le site est entièrement en français.** Pas de multilingue, pas de next-i18next,
-pas de colonnes `_en` en base de données.
+**Le site est entièrement en français.** Pas de multilingue.
 
 ---
 
@@ -23,323 +19,241 @@ pas de colonnes `_en` en base de données.
 
 | Couche | Technologie | Notes |
 |---|---|---|
-| Framework | Next.js 14, **Pages Router** | PAS App Router |
-| Style | Tailwind CSS | **mobile-first strict** |
-| BDD + Auth + Realtime | **Supabase** (PostgreSQL) | |
-| Emails | **Brevo** (ex-Sendinblue) | 300/jour gratuit, RGPD EU |
-| Hébergement | Vercel | déploiement auto depuis GitHub |
-| Plan de salle | CSS pur (variables CSS + position absolue) | PAS de Canvas ni SVG library |
+| Backend | Express.js | Serveur Node.js classique |
+| Templates | EJS | Rendu serveur, pas de React |
+| BDD | PostgreSQL | Sur Render (même service que l'app) |
+| Auth admin | express-session + bcrypt | Sessions côté serveur |
+| Emails | Brevo | 300/jour gratuit, RGPD EU |
+| Upload images | Multer | Stockage dans `public/uploads/` |
+| Hébergement | Render | App + BDD ensemble |
+| Polling admin | fetch + setInterval | Toutes les 20s, vanilla JS |
 
 ---
 
-## Pages du site (routing Next.js Pages Router)
+## Pages du site
 
 ```
 /                    → Accueil
 /menu                → Menu / Carte
-/evenements          → Événements (food truck + privatisation sur devis)
-/actualites          → Actualités passées et à venir
+/evenements          → Événements (food truck + privatisation)
+/actualites          → Liste des actualités
+/actualites/:id      → Détail d'une actualité
 /reservation         → Réservation + plan de salle interactif
-/admin               → Dashboard admin (protégé, redirect si non connecté)
+/login               → Login admin
+/admin               → Dashboard (protégé)
 /admin/reservations  → Gestion des réservations
-/admin/tables        → Éditeur du plan de salle (drag & drop)
+/admin/tables        → Éditeur du plan de salle
 /admin/menu          → CRUD menu
 /admin/actualites    → CRUD articles
-/login               → Login admin (Supabase Auth)
 ```
 
 ---
 
-## Structure des dossiers cible
+## Structure des dossiers
 
 ```
-nata-bar/
-├── pages/
+app/
+├── server.js
+├── db.js
+├── lib/
+│   ├── brevo.js
+│   └── dateUtils.js
+├── routes/
 │   ├── index.js
 │   ├── menu.js
 │   ├── evenements.js
 │   ├── actualites.js
 │   ├── reservation.js
-│   ├── login.js
-│   ├── admin/
-│   │   ├── index.js
-│   │   ├── reservations.js
-│   │   ├── tables.js
-│   │   ├── menu.js
-│   │   └── actualites.js
-│   └── api/
-│       ├── reservations/
-│       │   ├── create.js
-│       │   ├── confirm.js
-│       │   └── cancel.js
-│       ├── tables/
-│       │   ├── index.js
-│       │   └── update.js
-│       ├── menu/
-│       │   └── index.js      ← GET / POST / PUT / DELETE plats
-│       ├── actualites/
-│       │   └── index.js      ← GET / POST / PUT / DELETE articles
-│       └── devis.js
-├── components/
-│   ├── layout/
-│   │   ├── Header.jsx
-│   │   ├── Footer.jsx
-│   │   └── AdminLayout.jsx
-│   ├── reservation/
-│   │   ├── FloorPlan.jsx       ← plan de salle CSS pur
-│   │   ├── TableButton.jsx     ← bouton table individuel
-│   │   ├── DatePicker.jsx
-│   │   ├── TimePicker.jsx
-│   │   └── BookingForm.jsx
-│   ├── admin/
-│   │   ├── TableEditor.jsx     ← drag & drop éditeur
-│   │   ├── ReservationCard.jsx
-│   │   ├── Timeline.jsx
-│   │   ├── MenuItemModal.jsx   ← formulaire ajout / édition plat
-│   │   └── ArticleForm.jsx     ← formulaire ajout / édition article
-│   └── ui/
-│       ├── Modal.jsx
-│       ├── Button.jsx
-│       └── Badge.jsx
-├── lib/
-│   ├── supabase.js             ← client Supabase côté front (anon key)
-│   ├── supabaseAdmin.js        ← client Supabase côté serveur (service role)
-│   ├── brevo.js                ← client Brevo pour emails
-│   └── dateUtils.js            ← utilitaires créneaux horaires
-└── styles/
-    ├── globals.css
-    └── floorplan.css           ← styles du plan de salle
+│   └── admin.js
+├── controllers/
+│   ├── reservationController.js
+│   ├── menuController.js
+│   ├── actualitesController.js
+│   ├── tablesController.js
+│   └── adminController.js
+├── middleware/
+│   ├── auth.js
+│   └── upload.js
+├── views/
+│   ├── partials/
+│   │   ├── header.ejs
+│   │   ├── footer.ejs
+│   │   └── reservations-list.ejs
+│   ├── index.ejs
+│   ├── menu.ejs
+│   ├── evenements.ejs
+│   ├── actualites.ejs
+│   ├── actualite-detail.ejs
+│   ├── reservation.ejs
+│   ├── login.ejs
+│   └── admin/
+│       ├── dashboard.ejs
+│       ├── reservations.ejs
+│       ├── tables.ejs
+│       ├── menu.ejs
+│       └── actualites.ejs
+└── public/
+    ├── css/
+    │   ├── main.css
+    │   └── floorplan.css
+    ├── js/
+    │   ├── reservation.js
+    │   ├── admin-tables.js
+    │   ├── admin-menu.js
+    │   └── admin-poll.js
+    └── uploads/
 ```
 
 ---
 
-## Schéma Supabase (PostgreSQL)
+## Schéma PostgreSQL (8 tables)
 
-### Table `tables`
+### `tables`
 ```sql
-id          uuid PRIMARY KEY DEFAULT gen_random_uuid()
-code        text NOT NULL           -- "T-1", "T-2"...
-seats       integer NOT NULL        -- capacité
-zone        text NOT NULL           -- 'interieur' | 'terrasse'
-pos_x       numeric NOT NULL        -- position X en % (0-100)
-pos_y       numeric NOT NULL        -- position Y en % (0-100)
+id          serial PRIMARY KEY
+code        text NOT NULL
+seats       integer NOT NULL
+zone        text NOT NULL CHECK (zone IN ('interieur', 'terrasse'))
+pos_x       numeric NOT NULL DEFAULT 50
+pos_y       numeric NOT NULL DEFAULT 50
 is_active   boolean DEFAULT true
+live_status text DEFAULT 'free' CHECK (live_status IN ('free', 'walk_in', 'occupied'))
+-- 'free'     : table libre
+-- 'walk_in'  : walk-in sur place, bloqué manuellement par le serveur
+-- 'occupied' : client avec résa, arrivé et assis
+-- Libéré manuellement → repasse à 'free'
 created_at  timestamptz DEFAULT now()
 ```
 
-### Table `reservations`
+### `reservations`
 ```sql
-id           uuid PRIMARY KEY DEFAULT gen_random_uuid()
-table_ids    uuid[]                  -- support fusion de tables
-date         date NOT NULL
-time_start   time NOT NULL
-covers       integer NOT NULL
-name         text NOT NULL
-email        text NOT NULL
-phone        text NOT NULL
-message      text
-status       text DEFAULT 'pending'  -- 'pending' | 'confirmed' | 'cancelled'
-created_at   timestamptz DEFAULT now()
-```
-
-### Table `menu_items`
-```sql
-id              uuid PRIMARY KEY DEFAULT gen_random_uuid()
-category        text NOT NULL    -- 'entrees' | 'plats' | 'desserts' | 'boissons'
-subcategory     text             -- 'cocktails-classic' | 'bieres' | 'softs'...
-name            text NOT NULL    -- nom du plat en français
-description     text
-price           numeric(6,2)     -- null si prix non affiché
-tags            text[]           -- ['vegan', 'sans-gluten', 'épicé']
-is_available    boolean DEFAULT true
-sort_order      integer DEFAULT 0
-created_at      timestamptz DEFAULT now()
-```
-
-### Table `news_posts`
-```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-title         text NOT NULL
-content       text
-image_url     text              -- URL Supabase Storage (bucket: news-images)
-event_date    date              -- null si actualité générale (pas un événement daté)
-is_published  boolean DEFAULT false
-created_at    timestamptz DEFAULT now()
-```
-
-### Table `quote_requests`
-```sql
-id            uuid PRIMARY KEY DEFAULT gen_random_uuid()
-type          text             -- 'privatisation' | 'food_truck'
-event_date    date
-guests        integer
-name          text NOT NULL
-email         text NOT NULL
-phone         text
-message       text
-created_at    timestamptz DEFAULT now()
-```
-
-### Table `settings`
-```sql
-key   text PRIMARY KEY        -- identifiant du paramètre
-value text NOT NULL           -- valeur (toujours stockée en texte)
-```
-
-Valeur initiale :
-```sql
-INSERT INTO settings (key, value) VALUES ('terrasse_active', 'false');
-```
-
-### Table `floor_plans`
-```sql
-id         uuid PRIMARY KEY DEFAULT gen_random_uuid()
-name       text NOT NULL          -- "Normal", "Événement", "Hiver"...
-layout     jsonb NOT NULL         -- snapshot positions : [{ id, pos_x, pos_y }, ...]
-is_default boolean DEFAULT false  -- chargé automatiquement au démarrage de l'admin
+id         serial PRIMARY KEY
+table_id   integer REFERENCES tables(id)
+date       date NOT NULL
+time_start time NOT NULL
+covers     integer NOT NULL
+name       text NOT NULL
+email      text          -- NOT NULL si source='online', null si source='phone'
+phone      text          -- NOT NULL si source='online', null si source='phone'
+message    text          -- note interne pour les resas phone
+source     text DEFAULT 'online' CHECK (source IN ('online', 'phone'))
+-- 'online' : résa client depuis le site → email obligatoire
+-- 'phone'  : saisie par le serveur → pas d'email requis
+status     text DEFAULT 'confirmed' CHECK (status IN ('confirmed', 'cancelled'))
+-- annulation → email client uniquement si source='online'
 created_at timestamptz DEFAULT now()
 ```
 
-### Table `settings`
+### `menu_items`
 ```sql
-key   text PRIMARY KEY   -- ex: 'terrasse_active'
-value text NOT NULL      -- ex: 'true' | 'false'
+id           serial PRIMARY KEY
+category     text NOT NULL CHECK (category IN ('entrees', 'plats', 'desserts', 'boissons'))
+subcategory  text
+name         text NOT NULL
+description  text
+price        numeric(6,2)
+tags         text[] DEFAULT '{}'
+is_available boolean DEFAULT true
+sort_order   integer DEFAULT 0
+created_at   timestamptz DEFAULT now()
 ```
 
-Valeur initiale à insérer :
+### `news_posts`
 ```sql
-INSERT INTO settings (key, value) VALUES ('terrasse_active', 'false');
+id           serial PRIMARY KEY
+title        text NOT NULL
+content      text
+event_date   date             -- null si actualité générale
+is_published boolean DEFAULT false
+is_pinned    boolean DEFAULT false  -- épinglé = affiché en premier côté public
+created_at   timestamptz DEFAULT now()
+```
+
+### `news_images`
+```sql
+id         serial PRIMARY KEY
+post_id    integer REFERENCES news_posts(id) ON DELETE CASCADE
+url        text NOT NULL      -- chemin /uploads/xxx.jpg
+is_main    boolean DEFAULT false  -- photo principale (carte + header détail)
+sort_order integer DEFAULT 0
+```
+Max 10 images par article. Une seule `is_main = true` par article.
+Tri public : `ORDER BY is_pinned DESC, event_date DESC NULLS LAST, created_at DESC`
+
+### `quote_requests`
+```sql
+id         serial PRIMARY KEY
+type       text CHECK (type IN ('privatisation', 'food_truck'))
+event_date date
+guests     integer
+name       text NOT NULL
+email      text NOT NULL
+phone      text
+message    text
+created_at timestamptz DEFAULT now()
+```
+
+### `settings`
+```sql
+key   text PRIMARY KEY
+value text NOT NULL
+```
+Valeur initiale : `INSERT INTO settings (key, value) VALUES ('terrasse_active', 'false');`
+
+### `floor_plans`
+```sql
+id         serial PRIMARY KEY
+name       text NOT NULL
+layout     jsonb NOT NULL     -- [{ id, pos_x, pos_y }, ...]
+is_default boolean DEFAULT false
+created_at timestamptz DEFAULT now()
+```
+
+### `admin_users`
+```sql
+id            serial PRIMARY KEY
+email         text NOT NULL UNIQUE
+password_hash text NOT NULL
+created_at    timestamptz DEFAULT now()
 ```
 
 ---
 
-## Dispositions du plan de salle
+## Plan de salle — CSS pur
 
-Le gérant peut sauvegarder plusieurs **dispositions nommées** et en appliquer une en un clic.
-Exemples : "Normal", "Soirée événement", "Hiver (sans terrasse)".
-
-Depuis `/admin/tables` :
-- **Sauvegarder** → modale pour nommer → snapshot JSON des positions → INSERT dans `floor_plans`
-- **Charger** → liste des dispositions → applique les positions sur toutes les tables en BDD
-- **Définir par défaut** → `is_default = true` (false sur toutes les autres) → chargée automatiquement à l'ouverture
-
-Routes API :
-```
-pages/api/tables/
-├── index.js          → GET tables + état terrasse
-├── update.js         → PUT position / seats / code d'une table
-├── settings.js       → PUT terrasse_active
-└── floor-plans.js    → GET liste / POST créer / PUT is_default / DELETE
-```
-
----
-
-## Gestion de la terrasse
-
-La terrasse est **saisonnière et météo-dépendante**. Le gérant peut l'activer ou la
-désactiver en un clic depuis `/admin/tables` sans toucher au code.
-
-- L'état est stocké dans `settings` avec `key = 'terrasse_active'`, `value = 'true' | 'false'`
-- Terrasse **active** → le bloc terrasse s'affiche sur `/reservation`, les tables sont réservables
-- Terrasse **inactive** → le bloc terrasse est masqué côté client, les tables BDD restent intactes
-- Le toggle est un switch visible en haut de la page `/admin/tables`
-- `GET /api/tables` renvoie les tables **et** l'état terrasse dans la même réponse
-- `PUT /api/tables/settings` met à jour la valeur dans `settings`
-
-```jsx
-// FloorPlan.jsx — affichage conditionnel
-{terrasse_active && (
-  <div>
-    <h3>Terrasse</h3>
-    <div className="floor-plan">
-      {tables.filter(t => t.zone === 'terrasse').map(t => (
-        <TableButton key={t.id} table={t} status={getStatus(t)} onSelect={onSelect} />
-      ))}
-    </div>
-  </div>
-)}
-```
-
----
-
-## Plan de salle — Architecture CSS (IMPORTANT)
-
-Le plan de salle utilise du **CSS pur avec variables CSS** — PAS de Canvas, PAS de SVG library.
-
-Principe :
-- Chaque table = un `<button>` positionné en `position: absolute`
-- Les coordonnées viennent de Supabase et sont injectées via `style={{ "--x": "24%", "--y": "12%" }}`
-- Le conteneur est en `position: relative` avec `padding-bottom: 70%` pour le ratio
+Chaque table = un `<button>` en `position: absolute`.
+Coordonnées injectées via variables CSS `--x` et `--y` en %.
+Deux zones séparées : `interieur` et `terrasse`.
 
 ```css
-/* floorplan.css */
-.floor-plan {
-  position: relative;
-  width: 100%;
-  padding-bottom: 70%;
-}
-
-.table-btn {
-  position: absolute;
-  left: var(--x);
-  top: var(--y);
-  transform: translate(-50%, -50%);
-  width: 11%;
-  aspect-ratio: 1;
-}
-
+.floor-plan { position: relative; width: 100%; padding-bottom: 70%; }
+.table-btn  { position: absolute; left: var(--x); top: var(--y); transform: translate(-50%, -50%); }
 .table-btn.free     { background: #22c55e; }
-.table-btn.pending  { background: #f59e0b; }
+.table-btn.confirmed { background: #ef4444; }  /* réservée en ligne */
+.table-btn.free     { background: #22c55e; }
+.table-btn.upcoming { background: #f59e0b; }
+.table-btn.occupied { background: #ef4444; }
+.table-btn.walk_in  { background: #a855f7; }
 .table-btn.reserved { background: #ef4444; }
 ```
 
-Deux zones distinctes : `zone = 'interieur'` et `zone = 'terrasse'` — deux conteneurs séparés.
-
-L'admin peut **ajouter/déplacer/désactiver** des tables depuis `/admin/tables` :
-- Drag & drop via Pointer Events API
-- Position sauvegardée en % dans Supabase via `PUT /api/tables/update`
-- Ajout de table : formulaire (code, seats, zone) → insert Supabase
+Drag & drop admin : **Pointer Events obligatoires** (pas Mouse Events — ne fonctionnent pas sur tactile).
 
 ---
 
 ## Logique de réservation
 
-### Flux client
-1. Nombre de personnes
-2. Date (calendrier modal, jours fermés désactivés)
-3. Créneau horaire (30min, selon horaires d'ouverture)
-4. Plan de salle (tables colorées selon dispo temps réel via Supabase Realtime)
-5. Formulaire (nom, email, téléphone, message)
-6. Soumission → `status: pending` → emails envoyés
-
-### Flux admin
-1. Dashboard affiche les `pending`
-2. Valider → `confirmed` → email client
-3. Refuser → `cancelled` → email client
-4. Plan de salle sync temps réel (Supabase Realtime)
-
-### Règle de disponibilité
-Une table est occupée si une réservation `confirmed` ou `pending` existe pour cette
-table à la même date avec un chevauchement horaire (créneau de **2 heures**).
-
-```js
-// lib/dateUtils.js
-export function timesOverlap(startA, startB, durationMinutes = 120) {
-  const toMin = (t) => {
-    const [h, m] = t.split(':').map(Number)
-    return h * 60 + m
-  }
-  const endA = toMin(startA) + durationMinutes
-  const endB = toMin(startB) + durationMinutes
-  return toMin(startA) < endB && toMin(startB) < endA
-}
-```
+- Disponibilité : pas de résa `confirmed` qui chevauche ET `live_status = 'free'`
+- Flux client : GET formulaire → POST → INSERT confirmed → email confirmation client → redirect
+- L'admin ne valide pas les resas — confirmées automatiquement
+- Admin gère via clic sur table : walk-in, client arrivé, libérer
+- Pas de formulaire walk-in, juste un toggle sur la table
 
 ### Horaires d'ouverture
 ```js
-export const OPENING_HOURS = {
-  0: [],                                                          // Dimanche fermé
-  1: [{ start: '18:00', end: '22:00' }],                        // Lundi soir seulement
+const OPENING_HOURS = {
+  0: [],                                                            // Dimanche fermé
+  1: [{ start: '18:00', end: '22:00' }],
   2: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
   3: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
   4: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
@@ -350,210 +264,119 @@ export const OPENING_HOURS = {
 
 ---
 
-## Interface Admin — Gestion du menu (`/admin/menu`)
+## Polling admin
 
-L'admin voit la carte organisée par catégories (Entrées, Plats, Desserts, Boissons).
-
-### Fonctionnalités
-- **Toggle disponibilité** : switch on/off par plat — le plat disparaît/réapparaît
-  sur la page publique `/menu` instantanément (sans rechargement)
-- **Modifier** : modale pré-remplie avec nom, description, prix, tags, catégorie
-- **Ajouter** : même modale avec champs vides + choix catégorie/sous-catégorie
-- **Supprimer** : bouton supprimer avec modal de confirmation (évite les suppressions accidentelles)
-- **Réordonner** : drag & drop dans chaque catégorie → met à jour `sort_order` en BDD
-
-### API Route : `pages/api/menu/index.js`
-```js
-// GET    → liste tous les plats (triés par category + sort_order)
-// POST   → crée un nouveau plat
-// PUT    → modifie un plat existant (id requis dans le body)
-// DELETE → supprime un plat (id requis dans le body)
-```
-
-### Comportement front
-- Pas de rechargement de page : React met à jour l'état local (optimistic update)
-  puis confirme en BDD via l'API Route
-- Le toggle disponibilité fait un `PUT` immédiat et met à jour la couleur
-  de la card sans ouvrir de modale
+Pas de Realtime. La liste des réservations se rafraîchit toutes les 20s via fetch vanilla JS.
+Une route Express dédiée `/admin/reservations/fragment` renvoie uniquement le fragment HTML.
+La page admin ne se recharge jamais — seul le contenu de la liste est mis à jour.
 
 ---
 
-## Interface Admin — Gestion des actualités (`/admin/actualites`)
+## Gestion de la terrasse
 
-L'admin voit une liste de tous ses articles avec leur statut (publié / brouillon).
+Toggle on/off depuis `/admin/tables`. État dans `settings.terrasse_active`.
+Quand inactive : le bloc terrasse est masqué sur `/reservation`, les tables BDD restent intactes.
 
-### Fonctionnalités
-- **Créer un article** : formulaire avec titre, contenu (textarea), date d'événement
-  (optionnelle — null si actualité générale), upload image, statut publié/brouillon
-- **Modifier** : même formulaire pré-rempli
-- **Toggle publié/brouillon** : directement depuis la liste, sans ouvrir le formulaire
-- **Supprimer** : avec modal de confirmation
+---
 
-### Upload d'image
-- Upload vers **Supabase Storage** (bucket `news-images`, accès public)
-- L'URL publique est stockée dans `image_url`
-- Taille max recommandée : 2 Mo, formats acceptés : JPG, PNG, WebP
+## Dispositions du plan de salle
 
-### Affichage côté public (`/actualites`)
-- Seuls les articles `is_published = true` sont visibles
-- Triés par `event_date DESC` (événements à venir en premier)
-  puis `created_at DESC` pour les actualités sans date
+Sauvegarder/charger/définir par défaut des configurations nommées (snapshots JSON des positions).
+Stockées dans `floor_plans`. Accessibles depuis `/admin/tables`.
 
-### API Route : `pages/api/actualites/index.js`
-```js
-// GET    → liste les articles (publié uniquement côté public, tous côté admin)
-// POST   → crée un article
-// PUT    → modifie un article
-// DELETE → supprime un article
+---
+
+## Emails — Brevo
+
+**Pourquoi Brevo ?** Resend free = 100/jour. Samedi chargé = 90 emails. Trop risqué.
+Brevo free = 300/jour, hébergé en EU (RGPD natif).
+
+| Déclencheur | Destinataire |
+|---|---|
+| Résa soumise | Client (accusé) + Gérant (notification) |
+| Résa confirmée | Client |
+| Résa annulée | Client |
+| Devis soumis | Gérant |
+
+---
+
+## Auth admin
+
+Sessions Express stockées en PostgreSQL (`connect-pg-simple`).
+Login avec email + bcrypt. Session valide 24h.
+Middleware `isAuth` protège toutes les routes `/admin/*`.
+
+---
+
+## Design
+
+Inspiré du logo : fond noir chaud, texte crème, accent orange flamme.
+
+| Élément | Valeur |
+|---|---|
+| Fond principal | `#12100e` |
+| Fond cards | `#1c1916` |
+| Fond inputs | `#252119` |
+| Texte principal | `#ede0c4` (crème) |
+| Texte secondaire | `#a89880` |
+| Accent | `#e8621a` (orange flamme) |
+| Titre font | Bebas Neue (Google Fonts) |
+| Corps font | Manrope 400/500/700/800 (Google Fonts) |
+| Texture | noise CSS sur le body |
+
+---
+
+## Variables d'environnement
+
+```bash
+DATABASE_URL=
+SESSION_SECRET=
+BREVO_API_KEY=
+ADMIN_EMAIL=
+SITE_URL=http://localhost:3000
+PORT=3000
+NODE_ENV=development
 ```
 
 ---
 
-## Emails — Brevo (IMPORTANT : pas Resend)
+## Responsive & Admin tactile
 
-**Pourquoi Brevo et pas Resend ?**
-Resend free = 100 emails/jour. Un samedi chargé (30 résa × 3 emails) = 90 emails.
-Trop risqué. Brevo free = **300 emails/jour**, RGPD européen natif, gratuit.
-
-### Emails envoyés
-| Déclencheur | Destinataire | Template |
-|---|---|---|
-| Résa soumise | Client | Accusé de réception |
-| Résa soumise | Gérant | Notification + lien admin |
-| Résa confirmée | Client | Confirmation définitive |
-| Résa annulée | Client | Annulation |
-| Devis soumis | Gérant | Contenu formulaire privatisation |
-
-### Intégration
-```js
-// lib/brevo.js
-const SibApiV3Sdk = require('@getbrevo/brevo')
-const apiInstance = new SibApiV3Sdk.TransactionalEmailsApi()
-apiInstance.authentications['api-key'].apiKey = process.env.BREVO_API_KEY
-
-export async function sendEmail({ to, subject, html }) {
-  const mail = new SibApiV3Sdk.SendSmtpEmail()
-  mail.sender      = { name: 'NATA Bar', email: 'noreply@natabar.be' }
-  mail.to          = [{ email: to }]
-  mail.subject     = subject
-  mail.htmlContent = html
-  return apiInstance.sendTransacEmail(mail)
-}
-```
+Mobile-first (375px base). Admin conçu pour tablette (768px).
+Touch targets ≥ 48px. Pointer Events pour drag & drop. Pas de hover-only.
 
 ---
 
 ## Sécurité
 
-- **JAMAIS** de credentials en dur dans le code
-- Toutes les clés dans `.env.local` (dans `.gitignore`)
-- `SUPABASE_SERVICE_ROLE_KEY` utilisée UNIQUEMENT dans `lib/supabaseAdmin.js` (côté serveur)
-- `NEXT_PUBLIC_SUPABASE_ANON_KEY` uniquement pour le client front
-- Middleware Next.js protège toutes les routes `/admin/*`
-- RLS (Row Level Security) activé sur toutes les tables Supabase
-
-### Variables d'environnement requises
-```bash
-NEXT_PUBLIC_SUPABASE_URL=
-NEXT_PUBLIC_SUPABASE_ANON_KEY=
-SUPABASE_SERVICE_ROLE_KEY=
-BREVO_API_KEY=
-ADMIN_EMAIL=
-NEXT_PUBLIC_SITE_URL=
-```
+- `.env` dans `.gitignore`
+- Requêtes SQL paramétrées `$1, $2...`
+- Sessions httpOnly
+- Validation serveur sur chaque POST
 
 ---
 
-## Design (référence maquette)
+## État du projet
 
-Typographies (Google Fonts) :
-- Titres : **Bebas Neue**
-- Corps : **Manrope** (400, 500, 700, 800)
-
-Palette :
-- Fond principal : `#1a1a1a` (noir chaud)
-- Accent : `#e63946` (rouge)
-- Texte : blanc / gris clair
-- Cards : fond légèrement plus clair que le fond
-
-Effet texture noise (CSS) sur le body.
-
----
-
-## Responsive & Mobile-first (IMPORTANT)
-
-### Site public — 100% mobile
-Le site public est conçu **mobile en premier**. Chaque composant est pensé pour
-un écran de 375px et s'adapte ensuite aux écrans plus larges. Aucun élément ne
-doit être inaccessible ou cassé sur mobile.
-
-Points d'attention spécifiques :
-- **Plan de salle** (`/reservation`) : le conteneur doit rester lisible sur mobile.
-  Sur petit écran, permettre le scroll horizontal ou zoomer dans le plan si nécessaire.
-  Les boutons de table doivent rester cliquables (taille minimum touch target : 44×44px).
-- **Calendrier / créneaux** : pleine largeur sur mobile, pas de colonne flottante
-- **Formulaire de réservation** : champs empilés, pas de grid multi-colonnes sur mobile
-- **Navigation** : burger menu sur mobile, sticky header
-
-### Interface admin — pensée tablette tactile
-L'interface admin est utilisée **en situation réelle dans le restaurant** : le gérant
-a une tablette (iPad ou Android) posée sur le comptoir ou en salle. L'admin doit
-être **entièrement utilisable au doigt**, sans souris.
-
-Règles obligatoires pour toutes les pages admin :
-- **Touch targets minimum 48×48px** pour tous les boutons d'action (valider, refuser, toggle...)
-- **Pas de hover-only interactions** — tout ce qui est accessible au hover doit aussi
-  être accessible au tap
-- **Drag & drop du plan de salle** : utiliser les **Pointer Events API** (pas Mouse Events)
-  pour supporter le tactile nativement. `onPointerDown`, `onPointerMove`, `onPointerUp`
-  au lieu de `onMouseDown` etc.
-- **Drag & drop du menu** (réordonnancement) : idem, Pointer Events obligatoires
-- **Modales** : fermeture au tap en dehors de la modale, bouton de fermeture grand
-  et facilement atteignable
-- **Swipe** : sur la liste des réservations, un swipe gauche peut révéler les boutons
-  Valider / Refuser (pattern mobile natif)
-- **Formulaires admin** : inputs de grande taille (`h-12` minimum), pas de petits
-  champs difficiles à taper sur tactile
-- **Espacements** : `gap` et `padding` généreux dans les listes et cards admin
-
-### Breakpoints Tailwind à utiliser
-```
-Mobile    : défaut (pas de préfixe) → 375px+
-Tablette  : sm: → 640px+  /  md: → 768px+
-Desktop   : lg: → 1024px+
-```
-
-L'admin est conçu pour `md:` (768px, tablette portrait) comme écran de référence principal.
-Le desktop (`lg:`) est un bonus, pas la cible principale de l'admin.
-
----
-
-## État actuel du projet
-
-- [ ] Phase 1 — Setup : `create-next-app`, Supabase, variables env, layout
-- [ ] Phase 2 — Pages statiques : Accueil, Menu, Événements, Actualités
-- [ ] Phase 3 — Plan de salle + réservation
-- [ ] Phase 4 — Interface admin (réservations + menu + actualités + tables)
-- [ ] Phase 5 — Emails Brevo, SEO (meta, Open Graph, sitemap), RGPD
-- [ ] Phase 6 — Tests + mise en ligne
-
-**Prochaine tâche : Phase 1 — Setup initial**
-
-```bash
-npx create-next-app@14 nata-bar --js --no-app --no-src-dir --no-turbopack --tailwind --eslint
-```
+- [x] Setup repo Git + structure dossiers
+- [x] Dépendances npm installées
+- [ ] Phase 1 — server.js, db.js, auth, layout EJS
+- [ ] Phase 2 — Pages publiques
+- [ ] Phase 3 — Réservation + plan de salle
+- [ ] Phase 4 — Interface admin
+- [ ] Phase 5 — Emails, SEO, RGPD
+- [ ] Phase 6 — Déploiement Render
 
 ---
 
 ## Notes importantes pour Claude Code
 
-1. **Pages Router uniquement** — ne jamais utiliser `app/` directory ni Server Components
-2. **Site 100% en français** — pas de next-i18next, pas de colonnes `_en`, pas de `router.locale`
-3. **Mobile-first strict** — coder d'abord pour 375px, élargir ensuite avec `sm:`, `md:`, `lg:`
-4. **Admin sur tablette tactile** — Pointer Events (pas Mouse Events), touch targets ≥48px, pas de hover-only
-5. **Le plan de salle** est le composant le plus complexe — bien lire la section dédiée avant de commencer
-6. **Brevo et pas Resend** pour les emails
-7. Le contenu du menu est déjà connu (voir maquette) — à insérer en SQL dans Supabase
-8. La maquette HTML est une référence visuelle, pas du code à réutiliser
-9. Utiliser `supabaseAdmin` (service role) uniquement dans les fichiers `pages/api/`
-10. Les mises à jour admin (menu, actualités) sont optimistes côté front — pas de rechargement
+1. **Express + EJS** — pas de React, pas de Next.js
+2. **Vanilla JS** côté client uniquement
+3. **Mobile-first** — 375px d'abord
+4. **Pointer Events** pour tout drag & drop (jamais Mouse Events)
+5. **Polling** à la place du Realtime — simple fetch toutes les 20s
+6. **PostgreSQL** avec requêtes paramétrées — jamais de concaténation SQL
+7. **Brevo** pour les emails, pas Resend
+8. **Multer** pour les uploads, stockage dans `public/uploads/`
+9. La maquette est une référence visuelle, pas du code à réutiliser

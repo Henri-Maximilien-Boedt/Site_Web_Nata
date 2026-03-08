@@ -1,0 +1,415 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Gestion Menu - NATA Bar Admin</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      font-family: 'Manrope', sans-serif;
+    }
+
+    .admin-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+    }
+
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #e0e0e0;
+      padding: 1.5rem;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      width: 250px;
+    }
+
+    .sidebar-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: #e8621a;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .sidebar-menu a {
+      color: #333;
+      text-decoration: none;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+    }
+
+    .sidebar-menu a:hover,
+    .sidebar-menu a.active {
+      background-color: #e8621a;
+      color: white;
+    }
+
+    .main-content {
+      grid-column: 2;
+      padding: 2rem;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2rem;
+      color: #333;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .btn-add {
+      background-color: #e8621a;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      font-size: 0.9rem;
+      transition: opacity 0.3s;
+    }
+
+    .btn-add:hover {
+      opacity: 0.9;
+    }
+
+    .categories {
+      display: flex;
+      flex-direction: column;
+      gap: 2rem;
+    }
+
+    .category-section {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      overflow: hidden;
+    }
+
+    .category-header {
+      background-color: #e8621a;
+      color: white;
+      padding: 1rem;
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .category-items {
+      padding: 1rem;
+    }
+
+    .menu-item {
+      display: grid;
+      grid-template-columns: 1fr auto;
+      gap: 1rem;
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+      align-items: center;
+    }
+
+    .menu-item:last-child {
+      border-bottom: none;
+    }
+
+    .item-info {
+      text-align: left;
+    }
+
+    .item-name {
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 0.25rem;
+    }
+
+    .item-description {
+      font-size: 0.85rem;
+      color: #666;
+      margin-bottom: 0.5rem;
+    }
+
+    .item-price {
+      color: #e8621a;
+      font-weight: 700;
+      font-size: 0.95rem;
+    }
+
+    .item-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .toggle-switch {
+      width: 50px;
+      height: 28px;
+      background-color: #ccc;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative;
+      border: none;
+    }
+
+    .toggle-switch.active {
+      background-color: #22c55e;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background-color: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+    }
+
+    .toggle-switch.active::after {
+      left: 24px;
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.3s;
+    }
+
+    .btn-edit {
+      background-color: #3b82f6;
+      color: white;
+    }
+
+    .btn-delete {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn-small:hover {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      .admin-container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        width: 100%;
+      }
+
+      .main-content {
+        grid-column: 1;
+        padding: 1rem;
+      }
+
+      .menu-item {
+        grid-template-columns: 1fr;
+        gap: 0.75rem;
+      }
+
+      .item-actions {
+        justify-content: flex-start;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <aside class="sidebar">
+      <div class="sidebar-logo">NATA</div>
+      <nav class="sidebar-menu">
+        <a href="index.html">📊 Dashboard</a>
+        <a href="reservations.html">📋 Réservations</a>
+        <a href="tables.html">🪑 Tables</a>
+        <a href="menu.html" class="active">🍽️ Menu</a>
+        <a href="actualites.html">📰 Actualités</a>
+        <a href="../login.html" style="color: #e8621a; border: 2px solid #e8621a; margin-top: 2rem;">🚪 Déconnexion</a>
+      </nav>
+    </aside>
+
+    <main class="main-content">
+      <h1 class="page-title">
+        Gestion du Menu
+        <button class="btn-add" onclick="addNewItem()">➕ Nouveau plat</button>
+      </h1>
+
+      <div class="categories">
+        <!-- Entrées -->
+        <div class="category-section">
+          <div class="category-header">Entrées</div>
+          <div class="category-items">
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Tteokbokki</div>
+                <div class="item-description">Gâteaux de riz épicés à la sauce gochujang</div>
+                <div class="item-price">8,50€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Tteokbokki')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Tteokbokki')">Suppr</button>
+              </div>
+            </div>
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Edamame</div>
+                <div class="item-description">Fèves de soja fraîches cuites à la vapeur</div>
+                <div class="item-price">5,50€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Edamame')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Edamame')">Suppr</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Plats -->
+        <div class="category-section">
+          <div class="category-header">Plats Principaux</div>
+          <div class="category-items">
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Bulgogi</div>
+                <div class="item-description">Bœuf mariné sucré-salé avec légumes et riz</div>
+                <div class="item-price">15,00€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Bulgogi')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Bulgogi')">Suppr</button>
+              </div>
+            </div>
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Bibimbap Végétal</div>
+                <div class="item-description">Riz mélangé avec légumes variés et sauce gochujang</div>
+                <div class="item-price">12,00€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Bibimbap Végétal')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Bibimbap Végétal')">Suppr</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Desserts -->
+        <div class="category-section">
+          <div class="category-header">Desserts</div>
+          <div class="category-items">
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Bingsu</div>
+                <div class="item-description">Glace raclée avec fruits rouges et lait concentré sucré</div>
+                <div class="item-price">7,50€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Bingsu')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Bingsu')">Suppr</button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Boissons -->
+        <div class="category-section">
+          <div class="category-header">Boissons</div>
+          <div class="category-items">
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Hite (Corée)</div>
+                <div class="item-description">Bière blonde légère - 4,5°</div>
+                <div class="item-price">4,50€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Hite')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Hite')">Suppr</button>
+              </div>
+            </div>
+            <div class="menu-item">
+              <div class="item-info">
+                <div class="item-name">Séoul Sunset</div>
+                <div class="item-description">Rhum, gingembre frais, mangue, sauce sriracha</div>
+                <div class="item-price">11,00€</div>
+              </div>
+              <div class="item-actions">
+                <button class="toggle-switch active" onclick="toggleAvailability(this)"></button>
+                <button class="btn-small btn-edit" onclick="editItem('Séoul Sunset')">Modifier</button>
+                <button class="btn-small btn-delete" onclick="deleteItem('Séoul Sunset')">Suppr</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleAvailability(btn) {
+      btn.classList.toggle('active');
+    }
+
+    function editItem(name) {
+      alert(`Éditer "${name}" - Ouverture du formulaire de modification`);
+    }
+
+    function deleteItem(name) {
+      if (confirm(`Supprimer "${name}" ?`)) {
+        alert(`"${name}" supprimé(e) !`);
+      }
+    }
+
+    function addNewItem() {
+      alert('Ouverture du formulaire pour ajouter un nouveau plat');
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,528 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard Admin - NATA Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background-color: #f5f5f5;
+      color: #333;
+      font-family: 'Manrope', sans-serif;
+      font-weight: 400;
+      line-height: 1.6;
+    }
+
+    .admin-container {
+      display: grid;
+      grid-template-columns: 250px 1fr;
+      min-height: 100vh;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      background-color: #fff;
+      border-right: 1px solid #e0e0e0;
+      padding: 1.5rem;
+      position: fixed;
+      height: 100vh;
+      overflow-y: auto;
+      width: 250px;
+    }
+
+    .sidebar-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: #e8621a;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 2rem;
+    }
+
+    .sidebar-menu {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+    }
+
+    .sidebar-menu a {
+      color: #333;
+      text-decoration: none;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+      transition: all 0.3s;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-weight: 500;
+    }
+
+    .sidebar-menu a:hover,
+    .sidebar-menu a.active {
+      background-color: #e8621a;
+      color: white;
+    }
+
+    .sidebar-menu a.logout {
+      color: #e8621a;
+      border: 2px solid #e8621a;
+      margin-top: 2rem;
+    }
+
+    .sidebar-menu a.logout:hover {
+      background-color: #e8621a;
+      color: white;
+    }
+
+    /* Main content */
+    .main-content {
+      grid-column: 2;
+      padding: 2rem;
+    }
+
+    .page-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 2rem;
+      color: #333;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 3rem;
+    }
+
+    .stat-card {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 1.5rem;
+      text-align: center;
+    }
+
+    .stat-label {
+      color: #666;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 0.5rem;
+      font-weight: 600;
+    }
+
+    .stat-number {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.5rem;
+      color: #e8621a;
+      font-weight: bold;
+    }
+
+    /* Floor Plan Section */
+    .floor-plan-container {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+
+    .section-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 1.5rem;
+      color: #333;
+    }
+
+    .floor-plan-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .toggle-terrasse {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      background-color: #f5f5f5;
+      padding: 0.75rem 1rem;
+      border-radius: 4px;
+    }
+
+    .toggle-switch {
+      width: 50px;
+      height: 28px;
+      background-color: #ccc;
+      border-radius: 14px;
+      cursor: pointer;
+      transition: background-color 0.3s;
+      position: relative;
+      border: none;
+    }
+
+    .toggle-switch.active {
+      background-color: #22c55e;
+    }
+
+    .toggle-switch::after {
+      content: '';
+      position: absolute;
+      width: 24px;
+      height: 24px;
+      background-color: white;
+      border-radius: 50%;
+      top: 2px;
+      left: 2px;
+      transition: left 0.3s;
+    }
+
+    .toggle-switch.active::after {
+      left: 24px;
+    }
+
+    .floor-plan {
+      position: relative;
+      width: 100%;
+      padding-bottom: 60%;
+      background-color: #1a1a1a;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      overflow: hidden;
+      margin-bottom: 1rem;
+    }
+
+    .floor-plan-content {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      display: grid;
+      grid-template-columns: repeat(6, 1fr);
+      gap: 1rem;
+      padding: 1rem;
+      align-content: start;
+    }
+
+    .table-item {
+      aspect-ratio: 1;
+      background-color: #22c55e;
+      color: white;
+      border-radius: 8px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 0.25rem;
+      font-size: 0.7rem;
+      font-weight: 700;
+      text-align: center;
+      padding: 0.5rem;
+      cursor: grab;
+      transition: transform 0.2s;
+    }
+
+    .table-item:hover {
+      transform: scale(1.05);
+    }
+
+    .table-item.reserved {
+      background-color: #ef4444;
+    }
+
+    .table-item.pending {
+      background-color: #f59e0b;
+    }
+
+    /* Reservations Section */
+    .reservations-container {
+      background-color: white;
+      border: 1px solid #e0e0e0;
+      border-radius: 8px;
+      padding: 2rem;
+    }
+
+    .reservations-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+
+    .reservations-table thead {
+      background-color: #f5f5f5;
+    }
+
+    .reservations-table th {
+      text-align: left;
+      padding: 1rem;
+      font-weight: 600;
+      border-bottom: 2px solid #e0e0e0;
+      text-transform: uppercase;
+      font-size: 0.85rem;
+      letter-spacing: 0.5px;
+    }
+
+    .reservations-table td {
+      padding: 1rem;
+      border-bottom: 1px solid #e0e0e0;
+    }
+
+    .status-badge {
+      display: inline-block;
+      padding: 0.4rem 0.8rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .status-pending {
+      background-color: rgba(245, 158, 11, 0.15);
+      color: #d97706;
+    }
+
+    .status-confirmed {
+      background-color: rgba(34, 197, 94, 0.15);
+      color: #16a34a;
+    }
+
+    .status-cancelled {
+      background-color: rgba(239, 68, 68, 0.15);
+      color: #dc2626;
+    }
+
+    .action-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .btn-small {
+      padding: 0.4rem 0.8rem;
+      border: none;
+      border-radius: 4px;
+      font-weight: 600;
+      cursor: pointer;
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      transition: opacity 0.3s;
+    }
+
+    .btn-confirm {
+      background-color: #22c55e;
+      color: white;
+    }
+
+    .btn-cancel {
+      background-color: #ef4444;
+      color: white;
+    }
+
+    .btn-small:hover {
+      opacity: 0.8;
+    }
+
+    @media (max-width: 768px) {
+      .admin-container {
+        grid-template-columns: 1fr;
+      }
+
+      .sidebar {
+        position: relative;
+        height: auto;
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid #e0e0e0;
+      }
+
+      .main-content {
+        grid-column: 1;
+        padding: 1rem;
+      }
+
+      .sidebar-menu {
+        flex-direction: row;
+        flex-wrap: wrap;
+        gap: 0.5rem;
+      }
+
+      .sidebar-menu a {
+        flex: 1;
+        min-width: 150px;
+      }
+
+      .reservations-table {
+        font-size: 0.9rem;
+      }
+
+      .reservations-table th,
+      .reservations-table td {
+        padding: 0.75rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="admin-container">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-logo">NATA</div>
+      <nav class="sidebar-menu">
+        <a href="index.html" class="active">📊 Dashboard</a>
+        <a href="reservations.html">📋 Réservations</a>
+        <a href="tables.html">🪑 Tables</a>
+        <a href="menu.html">🍽️ Menu</a>
+        <a href="actualites.html">📰 Actualités</a>
+        <a href="../login.html" class="logout">🚪 Déconnexion</a>
+      </nav>
+    </aside>
+
+    <!-- Main Content -->
+    <main class="main-content">
+      <h1 class="page-title">Dashboard</h1>
+
+      <!-- Statistics -->
+      <div class="stats-grid">
+        <div class="stat-card">
+          <div class="stat-label">Réservations Aujourd'hui</div>
+          <div class="stat-number">5</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Réservations en Attente</div>
+          <div class="stat-number">2</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Tables Occupées</div>
+          <div class="stat-number">7 / 12</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-label">Taux d'Occupation</div>
+          <div class="stat-number">58%</div>
+        </div>
+      </div>
+
+      <!-- Floor Plan Preview -->
+      <div class="floor-plan-container">
+        <h2 class="section-title">Plan de Salle (Aperçu)</h2>
+        
+        <div class="floor-plan-controls">
+          <div class="toggle-terrasse">
+            <label>Terrasse active:</label>
+            <button class="toggle-switch active" id="terrarceToggle" onclick="toggleTerrasse()"></button>
+          </div>
+          <a href="tables.html" style="margin-left: auto; display: inline-block; padding: 0.75rem 1.5rem; background-color: #e8621a; color: white; text-decoration: none; border-radius: 4px; font-weight: 600;">Éditer →</a>
+        </div>
+
+        <h3 style="font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.5rem; color: #666;">🏠 Intérieur</h3>
+        <div class="floor-plan">
+          <div class="floor-plan-content">
+            <div class="table-item">T-1<br>4p</div>
+            <div class="table-item reserved">T-2<br>2p</div>
+            <div class="table-item">T-3<br>6p</div>
+            <div class="table-item">T-4<br>4p</div>
+            <div class="table-item pending">T-5<br>2p</div>
+            <div class="table-item">T-6<br>4p</div>
+          </div>
+        </div>
+
+        <h3 style="font-size: 0.95rem; font-weight: 600; margin: 1rem 0 0.5rem; color: #666;">🌳 Terrasse (Actif)</h3>
+        <div class="floor-plan">
+          <div class="floor-plan-content">
+            <div class="table-item">E-1<br>2p</div>
+            <div class="table-item">E-2<br>4p</div>
+            <div class="table-item reserved">E-3<br>4p</div>
+            <div class="table-item">E-4<br>6p</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Recent Reservations -->
+      <div class="reservations-container">
+        <h2 class="section-title">Dernières Réservations</h2>
+        <table class="reservations-table">
+          <thead>
+            <tr>
+              <th>Nom</th>
+              <th>Date/Heure</th>
+              <th>Couverts</th>
+              <th>Table</th>
+              <th>Statut</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Dupont, Jean</td>
+              <td>Aujourd'hui 12:00</td>
+              <td>4</td>
+              <td>T-3</td>
+              <td><span class="status-badge status-confirmed">Confirmée</span></td>
+              <td class="action-buttons">
+                <button class="btn-small btn-confirm">Valider</button>
+                <button class="btn-small btn-cancel">Annuler</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Martin, Sophie</td>
+              <td>Aujourd'hui 18:30</td>
+              <td>6</td>
+              <td>T-7</td>
+              <td><span class="status-badge status-pending">En attente</span></td>
+              <td class="action-buttons">
+                <button class="btn-small btn-confirm">Valider</button>
+                <button class="btn-small btn-cancel">Annuler</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Robison, Pierre</td>
+              <td>Demain 12:30</td>
+              <td>2</td>
+              <td>T-2</td>
+              <td><span class="status-badge status-pending">En attente</span></td>
+              <td class="action-buttons">
+                <button class="btn-small btn-confirm">Valider</button>
+                <button class="btn-small btn-cancel">Annuler</button>
+              </td>
+            </tr>
+            <tr>
+              <td>Laurent, Marie</td>
+              <td>Hier 19:00</td>
+              <td>4</td>
+              <td>E-2</td>
+              <td><span class="status-badge status-confirmed">Confirmée</span></td>
+              <td class="action-buttons">
+                <button class="btn-small btn-confirm">Valider</button>
+                <button class="btn-small btn-cancel">Annuler</button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </main>
+  </div>
+
+  <script>
+    function toggleTerrasse() {
+      const toggle = document.getElementById('terrarceToggle');
+      toggle.classList.toggle('active');
+    }
+  </script>
+</body>
+</html>

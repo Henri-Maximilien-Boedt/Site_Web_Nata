@@ -1,0 +1,168 @@
+/* ============================================================
+   NATA Bar — Plan de salle CSS pur
+   Technique : position absolute + variables CSS --x / --y
+   ============================================================ */
+
+.floor-plan {
+  position: relative;
+  width: 100%;
+  padding-bottom: 70%; /* ratio fixe de la salle */
+  background: #1c1916;
+  border-radius: 8px;
+  border: 1px solid rgba(168, 152, 128, 0.15);
+  overflow: hidden;
+}
+
+/* ============================================================
+   Bouton de table
+   ============================================================ */
+.table-btn {
+  position: absolute;
+  left: var(--x);
+  top: var(--y);
+  transform: translate(-50%, -50%);
+  width: 11%;
+  aspect-ratio: 1;
+  min-width: 44px;
+  min-height: 44px;
+
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+
+  border: none;
+  border-radius: 50%;
+  cursor: pointer;
+  color: #fff;
+  font-family: 'Manrope', sans-serif;
+  font-size: clamp(0.55rem, 1.5vw, 0.75rem);
+  font-weight: 700;
+  line-height: 1.1;
+  text-align: center;
+
+  transition: opacity 0.2s, transform 0.15s, box-shadow 0.2s;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
+}
+
+.table-btn:hover:not(:disabled) {
+  opacity: 0.9;
+  transform: translate(-50%, -50%) scale(1.08);
+}
+
+.table-btn:active:not(:disabled) {
+  transform: translate(-50%, -50%) scale(0.96);
+}
+
+.table-btn:disabled {
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+.table-btn span {
+  display: block;
+  line-height: 1;
+}
+
+/* ============================================================
+   Couleurs de statut
+   ============================================================ */
+
+/* Libre */
+.table-btn.free {
+  background: #22c55e;
+  box-shadow: 0 2px 8px rgba(34, 197, 94, 0.3);
+}
+
+/* Réservation confirmée, client pas encore arrivé */
+.table-btn.upcoming {
+  background: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.3);
+}
+
+/* Client assis (résa arrivée) */
+.table-btn.occupied {
+  background: #ef4444;
+  box-shadow: 0 2px 8px rgba(239, 68, 68, 0.3);
+}
+
+/* Walk-in sur place (pas de résa) */
+.table-btn.walk_in {
+  background: #a855f7;
+  box-shadow: 0 2px 8px rgba(168, 85, 247, 0.3);
+}
+
+/* Table désactivée / trop petite */
+.table-btn.inactive {
+  background: #6b7280;
+  box-shadow: 0 2px 8px rgba(107, 114, 128, 0.2);
+}
+
+/* ============================================================
+   Légende
+   ============================================================ */
+.floor-plan-legend {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin-top: 1rem;
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #a89880);
+  font-weight: 500;
+}
+
+.legend-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.legend-dot.free     { background: #22c55e; }
+.legend-dot.upcoming { background: #f59e0b; }
+.legend-dot.occupied { background: #ef4444; }
+.legend-dot.walk_in  { background: #a855f7; }
+.legend-dot.inactive { background: #6b7280; }
+
+/* ============================================================
+   Zone label (Intérieur / Terrasse)
+   ============================================================ */
+.floor-zone {
+  margin-bottom: 1.5rem;
+}
+
+.floor-zone-title {
+  font-family: 'Manrope', sans-serif;
+  font-size: 0.75rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--text-secondary, #a89880);
+  margin-bottom: 0.5rem;
+}
+
+/* ============================================================
+   Mode admin — drag & drop
+   Surchargé par admin-tables.js avec Pointer Events
+   ============================================================ */
+.floor-plan.admin-mode .table-btn {
+  cursor: grab;
+}
+
+.floor-plan.admin-mode .table-btn:active {
+  cursor: grabbing;
+}
+
+.floor-plan.admin-mode .table-btn.dragging {
+  opacity: 0.85;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.5);
+  transform: translate(-50%, -50%) scale(1.12);
+  z-index: 10;
+}

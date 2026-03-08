@@ -1,0 +1,511 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Article - NATA Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    :root {
+      --bg-main: #12100e;
+      --bg-card: #1c1916;
+      --bg-input: #252119;
+      --text-primary: #ede0c4;
+      --text-secondary: #a89880;
+      --accent: #e8621a;
+    }
+
+    body {
+      background-color: var(--bg-main);
+      color: var(--text-primary);
+      font-family: 'Manrope', sans-serif;
+      font-weight: 400;
+      line-height: 1.8;
+    }
+
+    header {
+      position: sticky;
+      top: 0;
+      background-color: rgba(18, 16, 14, 0.95);
+      backdrop-filter: blur(10px);
+      border-bottom: 1px solid var(--bg-input);
+      z-index: 100;
+      padding: 1rem;
+    }
+
+    .header-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+
+    .logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      color: var(--accent);
+      text-transform: uppercase;
+      letter-spacing: 2px;
+    }
+
+    .nav-menu {
+      display: none;
+      list-style: none;
+      gap: 2rem;
+      align-items: center;
+    }
+
+    .nav-menu a {
+      color: var(--text-primary);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.3s;
+    }
+
+    .nav-menu a:hover {
+      color: var(--accent);
+    }
+
+    .btn-reserve {
+      background-color: var(--accent);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 4px;
+      font-weight: 700;
+      cursor: pointer;
+      transition: opacity 0.3s;
+    }
+
+    .hamburger {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      background: none;
+      border: none;
+    }
+
+    .hamburger span {
+      width: 25px;
+      height: 2px;
+      background-color: var(--text-primary);
+    }
+
+    @media (min-width: 768px) {
+      .nav-menu {
+        display: flex;
+      }
+      .hamburger {
+        display: none;
+      }
+    }
+
+    .hero-image {
+      width: 100%;
+      height: 250px;
+      background: linear-gradient(135deg, rgba(232, 98, 26, 0.2) 0%, rgba(232, 98, 26, 0.05) 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 5rem;
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+    }
+
+    @media (min-width: 768px) {
+      .hero-image {
+        height: 400px;
+        margin-bottom: 3rem;
+      }
+    }
+
+    .container {
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    .back-button {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 700;
+      font-size: 0.95rem;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-bottom: 2rem;
+      transition: color 0.3s;
+    }
+
+    .back-button:hover {
+      color: #ff7a38;
+    }
+
+    .article-header {
+      margin-bottom: 2rem;
+    }
+
+    .article-meta {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    .article-date {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .article-type {
+      background-color: rgba(232, 98, 26, 0.15);
+      color: var(--accent);
+      font-size: 0.8rem;
+      padding: 0.3rem 0.75rem;
+      border-radius: 20px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .article-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 2.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      margin-bottom: 1rem;
+    }
+
+    .article-subtitle {
+      color: var(--text-secondary);
+      font-size: 1.05rem;
+      font-weight: 500;
+      margin-bottom: 1rem;
+    }
+
+    .article-content {
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+      line-height: 1.8;
+      margin-bottom: 3rem;
+    }
+
+    .article-content p {
+      margin-bottom: 1.5rem;
+    }
+
+    .article-content h3 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-primary);
+      margin: 2rem 0 1rem;
+    }
+
+    .article-content h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.1rem;
+      color: var(--accent);
+      margin: 1.5rem 0 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .article-content ul,
+    .article-content ol {
+      margin-left: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .article-content li {
+      margin-bottom: 0.5rem;
+    }
+
+    .gallery {
+      margin: 3rem 0;
+      background-color: var(--bg-card);
+      border: 1px solid var(--bg-input);
+      padding: 2rem;
+      border-radius: 8px;
+    }
+
+    .gallery-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.2rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .gallery-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 1rem;
+    }
+
+    .gallery-item {
+      width: 100%;
+      height: 150px;
+      background-color: var(--bg-input);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 2rem;
+      color: var(--text-secondary);
+      border-radius: 4px;
+      cursor: pointer;
+      transition: transform 0.3s, box-shadow 0.3s;
+    }
+
+    .gallery-item:hover {
+      transform: scale(1.05);
+      box-shadow: 0 4px 12px rgba(232, 98, 26, 0.15);
+    }
+
+    @media (min-width: 768px) {
+      .gallery-grid {
+        grid-template-columns: repeat(3, 1fr);
+      }
+    }
+
+    .article-divider {
+      border-top: 1px solid var(--bg-input);
+      margin: 2rem 0;
+    }
+
+    .related-articles {
+      margin-top: 4rem;
+      background-color: var(--bg-card);
+      border: 1px solid var(--bg-input);
+      padding: 2rem;
+      border-radius: 8px;
+    }
+
+    .related-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.35rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--accent);
+      margin-bottom: 1.5rem;
+    }
+
+    .related-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1rem;
+    }
+
+    .related-card {
+      display: grid;
+      grid-template-columns: 80px 1fr;
+      gap: 1rem;
+      align-items: start;
+      padding: 1rem;
+      background-color: rgba(28, 25, 22, 0.5);
+      border-radius: 4px;
+      text-decoration: none;
+      color: inherit;
+      transition: background-color 0.3s;
+    }
+
+    .related-card:hover {
+      background-color: rgba(232, 98, 26, 0.1);
+    }
+
+    .related-thumb {
+      width: 80px;
+      height: 80px;
+      background-color: var(--bg-input);
+      border-radius: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+    }
+
+    .related-info h4 {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-primary);
+      margin-bottom: 0.25rem;
+    }
+
+    .related-info p {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    @media (min-width: 768px) {
+      .related-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+
+    footer {
+      background-color: var(--bg-card);
+      border-top: 1px solid var(--bg-input);
+      padding: 3rem 2rem;
+      margin-top: 4rem;
+    }
+
+    .footer-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <div class="header-container">
+      <div class="logo">NATA</div>
+      <button class="hamburger" id="hamburger">
+        <span></span>
+        <span></span>
+        <span></span>
+      </button>
+      <nav class="nav-menu" id="navMenu">
+        <a href="index.html">Accueil</a>
+        <a href="menu.html">Menu</a>
+        <a href="evenements.html">Événements</a>
+        <a href="actualites.html">Actualités</a>
+        <button class="btn-reserve">Réserver</button>
+      </nav>
+    </div>
+  </header>
+
+  <div class="hero-image">📸</div>
+
+  <div class="container">
+    <a href="actualites.html" class="back-button">← Retour aux actualités</a>
+
+    <article class="article-header">
+      <div class="article-meta">
+        <span class="article-date">5 mars 2026</span>
+        <span class="article-type">Nouveau Produit</span>
+      </div>
+      <h1 class="article-title">Découvrez Notre Nouveau Cocktail Signature</h1>
+      <p class="article-subtitle">Le "Séoul Sunset" fusion audacieuse entre tradition coréenne et mixologie contemporaine</p>
+    </article>
+
+    <div class="article-content">
+      <p>
+        Chez NATA Bar, nous avons toujours cru que la gastronomie coréenne ne se limitait pas à l'assiette. C'est pourquoi nous sommes fiers de vous présenter le <strong>"Séoul Sunset"</strong>, notre nouveau cocktail signature qui incarne parfaitement cette philosophie.
+      </p>
+
+      <h3>La Naissance d'une Création</h3>
+      <p>
+        Après plusieurs mois de recherche et de tests, notre équipe de mixologues a réussi à créer un équilibre parfait entre les saveurs coréennes authentiques et les techniques de la mixologie moderne. Le résultat ? Un cocktail qui ravit tous les sens.
+      </p>
+
+      <h4>Composition</h4>
+      <ul>
+        <li><strong>Rhum blanc</strong> — base voluptueuse</li>
+        <li><strong>Gingembre frais maison</strong> — piquant et authentique</li>
+        <li><strong>Purée de mangue</strong> — douceur tropicale</li>
+        <li><strong>Sauce sriracha</strong> — épice coréenne signature</li>
+        <li><strong>Jus de citron frais</strong> — acidité balancée</li>
+        <li><strong>Sirop simple</strong> — harmonie gustative</li>
+      </ul>
+
+      <p>
+        Servi avec glaçons et décoré d'une tranche de gingembre caramélisée et une feuille de perilla, le "Séoul Sunset" offre une expérience visuelle et gustative inoubliable.
+      </p>
+
+      <h3>À Siroter Sur Place Ou À Découvrir Chez Vous</h3>
+      <p>
+        Le "Séoul Sunset" est disponible <strong>tous les jours à partir de 18h00</strong> à NATA Bar. Vous pouvez également commander notre menu de cocktails emportables pour vos événements privés.
+      </p>
+
+      <p>
+        Chaque gorgée vous transport à Séoul au coucher du soleil — une véritable invitation au voyage culinaire et olfactif. Prix : <strong>11,00€</strong>.
+      </p>
+
+      <div class="article-divider"></div>
+
+      <h3>Galerie Photos</h3>
+      <div class="gallery">
+        <h4 class="gallery-title">Plus de photos du cocktail</h4>
+        <div class="gallery-grid">
+          <div class="gallery-item">📸</div>
+          <div class="gallery-item">📸</div>
+          <div class="gallery-item">📸</div>
+          <div class="gallery-item">📸</div>
+          <div class="gallery-item">📸</div>
+          <div class="gallery-item">📸</div>
+        </div>
+      </div>
+
+      <div class="article-divider"></div>
+
+      <p>
+        Venez nous rendre visite et testez le "Séoul Sunset". Nous sommes convaincus qu'il deviendra rapidement votre cocktail préféré chez NATA. À bientôt ! 🍹
+      </p>
+    </div>
+
+    <div class="related-articles">
+      <h3 class="related-title">Articles Connexes</h3>
+      <div class="related-grid">
+        <a href="#" class="related-card">
+          <div class="related-thumb">📸</div>
+          <div class="related-info">
+            <h4>Menu de Printemps</h4>
+            <p>Découvrez nos nouvelles créations du printemps avec des produits locaux frais.</p>
+          </div>
+        </a>
+        <a href="#" class="related-card">
+          <div class="related-thumb">📸</div>
+          <div class="related-info">
+            <h4>Événement Festival</h4>
+            <p>NATA sera présent au festival de Louvain-la-Neuve avec son food truck.</p>
+          </div>
+        </a>
+      </div>
+    </div>
+  </div>
+
+  <footer>
+    <div class="footer-container">
+      <p>&copy; 2026 NATA Bar. Tous droits réservés.</p>
+    </div>
+  </footer>
+
+  <script>
+    const hamburger = document.getElementById('hamburger');
+    const navMenu = document.getElementById('navMenu');
+
+    hamburger.addEventListener('click', () => {
+      navMenu.style.display = navMenu.style.display === 'flex' ? 'none' : 'flex';
+      navMenu.style.flexDirection = 'column';
+      navMenu.style.position = 'absolute';
+      navMenu.style.top = '60px';
+      navMenu.style.left = '0';
+      navMenu.style.right = '0';
+      navMenu.style.backgroundColor = 'var(--bg-main)';
+      navMenu.style.borderBottom = '1px solid var(--bg-input)';
+      navMenu.style.padding = '1rem';
+      navMenu.style.gap = '1rem';
+    });
+  </script>
+</body>
+</html>

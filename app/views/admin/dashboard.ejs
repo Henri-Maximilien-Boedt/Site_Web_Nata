@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Tableau de bord - NATA Bar</title>
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/floorplan.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <!-- Sidebar -->
+    <aside class="admin-sidebar">
+      <div class="admin-logo">
+        <a href="/admin">NATA</a>
+      </div>
+      <nav class="admin-nav">
+        <a href="/admin" class="nav-link active">📊 Dashboard</a>
+        <a href="/admin/reservations" class="nav-link">📅 Réservations</a>
+        <a href="/admin/tables" class="nav-link">🏪 Tables</a>
+        <a href="/admin/menu" class="nav-link">🍜 Menu</a>
+        <a href="/admin/actualites" class="nav-link">📰 Actualités</a>
+        <a href="/admin/logout" class="nav-link danger">🚪 Déconnexion</a>
+      </nav>
+    </aside>
+
+    <!-- Main content -->
+    <div class="admin-main">
+      <div class="admin-container">
+        <h1>Tableau de bord</h1>
+
+        <!-- Stats cards -->
+        <div class="stats-grid">
+          <div class="stat-card">
+            <div class="stat-number">12</div>
+            <div class="stat-label">Réservations aujourd'hui</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">8</div>
+            <div class="stat-label">Tables disponibles</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">3</div>
+            <div class="stat-label">Demandes de devis</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number">5</div>
+            <div class="stat-label">Actualités publiées</div>
+          </div>
+        </div>
+
+        <!-- Floor plan preview -->
+        <div class="dashboard-section">
+          <h2>Plan de salle</h2>
+          <div class="floor-plan-preview">
+            <div class="floor-plan-interior">
+              <h3>Intérieur</h3>
+              <div class="floor-plan" style="background: #1c1916; height: 300px; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center;">
+                <p style="color: #a89880;">Plan de salle interactif</p>
+              </div>
+            </div>
+            <div class="floor-plan-terrasse">
+              <h3>Terrasse</h3>
+              <div class="floor-plan" style="background: #1c1916; height: 300px; border-radius: 8px; position: relative; display: flex; align-items: center; justify-content: center;">
+                <p style="color: #a89880;">Plan de salle interactif</p>
+              </div>
+            </div>
+          </div>
+          <a href="/admin/tables" class="btn btn-accent">Gérer les tables</a>
+        </div>
+
+        <!-- Recent reservations -->
+        <div class="dashboard-section">
+          <h2>Réservations récentes</h2>
+          <table class="admin-table">
+            <thead>
+              <tr>
+                <th>Heure</th>
+                <th>Client</th>
+                <th>Couverts</th>
+                <th>Table</th>
+                <th>Statut</th>
+                <th>Source</th>
+                <th>Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td>19:00</td>
+                <td>Jean Martin</td>
+                <td>4</td>
+                <td>A1</td>
+                <td><span class="badge badge-confirmed">Confirmée</span></td>
+                <td><span class="badge badge-online">En ligne</span></td>
+                <td>
+                  <button class="btn-small">Voir</button>
+                  <button class="btn-small">Éditer</button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+          <a href="/admin/reservations" class="btn btn-ghost">Voir toutes les réservations</a>
+        </div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
