@@ -1,7 +1,5 @@
 const express = require('express')
 const router = express.Router()
-const bcrypt = require('bcrypt')
-const pool = require('../db')
 const isAuth = require('../middleware/auth')
 const {
   deleteReservation,
@@ -36,33 +34,22 @@ router.get('/login', (req, res) => {
   res.render('login', { error: null })
 })
 
-router.post('/login', async (req, res) => {
+router.post('/login', (req, res) => {
   const { email, password } = req.body
 
   if (!email || !password) {
     return res.render('login', { error: 'Veuillez renseigner email et mot de passe.' })
   }
 
-  try {
-    const { rows } = await pool.query('SELECT * FROM admin_users WHERE email = $1', [
-      email.trim().toLowerCase()
-    ])
+  const validEmail = email.trim().toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()
+  const validPassword = password === process.env.ADMIN_PASSWORD
 
-    if (!rows[0]) {
-      return res.render('login', { error: 'Identifiants incorrects.' })
-    }
-
-    const valid = await bcrypt.compare(password, rows[0].password_hash)
-    if (!valid) {
-      return res.render('login', { error: 'Identifiants incorrects.' })
-    }
-
-    req.session.admin = { id: rows[0].id, email: rows[0].email }
-    res.redirect('/admin')
-  } catch (err) {
-    console.error('Erreur login :', err)
-    res.render('login', { error: 'Erreur serveur, veuillez réessayer.' })
+  if (!validEmail || !validPassword) {
+    return res.render('login', { error: 'Identifiants incorrects.' })
   }
+
+  req.session.admin = { email: email.trim().toLowerCase() }
+  res.redirect('/admin')
 })
 
 router.post('/logout', (req, res) => {
