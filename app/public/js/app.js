@@ -1531,6 +1531,8 @@ if (adminRoot) {
   const timeline = adminRoot.querySelector('[data-admin-timeline]');
   const actionFeedback = adminRoot.querySelector('[data-admin-action-feedback]');
   const mergeModeButton = adminRoot.querySelector('[data-admin-merge-mode]');
+  const splitQuickButton = adminRoot.querySelector('[data-admin-split-quick-btn]');
+  const splitQuickPanel = adminRoot.querySelector('[data-admin-split-quick]');
   const dateInput = adminRoot.querySelector('[data-admin-date]');
   const searchInput = adminRoot.querySelector('[data-admin-search]');
   const prevButton = adminRoot.querySelector('[data-admin-prev]');
@@ -1547,6 +1549,7 @@ if (adminRoot) {
     : EVENING_SLOTS[0];
   let quickMergeMode = false;
   let quickMergeSourceId = '';
+  let splitQuickOpen = false;
   const mergeMenu = document.createElement('div');
   mergeMenu.className = 'admin-merge-menu';
   mergeMenu.hidden = true;
@@ -1575,6 +1578,15 @@ if (adminRoot) {
     if (mergeModeButton) {
       mergeModeButton.textContent = `Mode fusion: ${quickMergeMode ? 'ON' : 'OFF'}`;
       mergeModeButton.classList.toggle('is-active', quickMergeMode);
+    }
+  };
+  const setSplitQuickOpen = (enabled) => {
+    splitQuickOpen = Boolean(enabled);
+    if (splitQuickButton) {
+      splitQuickButton.classList.toggle('is-active', splitQuickOpen);
+    }
+    if (splitQuickPanel) {
+      splitQuickPanel.hidden = !splitQuickOpen;
     }
   };
 
@@ -1929,6 +1941,41 @@ if (adminRoot) {
     `;
   };
 
+  const renderSplitQuickPanel = (units) => {
+    if (!splitQuickPanel) return;
+    if (!splitQuickOpen) {
+      splitQuickPanel.hidden = true;
+      return;
+    }
+
+    const mergedUnits = units.filter((unit) => unit.members.length > 1);
+    splitQuickPanel.hidden = false;
+
+    if (!mergedUnits.length) {
+      splitQuickPanel.innerHTML = '<p class="admin-empty">Aucune table fusionnée actuellement.</p>';
+      return;
+    }
+
+    splitQuickPanel.innerHTML = `
+      <p class="admin-help">Défusion rapide (mobile): choisis une table fusionnée.</p>
+      <div class="admin-split-quick__list">
+        ${mergedUnits
+          .map(
+            (unit) => `
+              <button
+                type="button"
+                class="btn btn-ghost"
+                data-admin-split-unit="${escapeHTML(unit.id)}"
+              >
+                Dissocier ${escapeHTML(unit.displayCode)} (${escapeHTML(String(unit.seats))})
+              </button>
+            `
+          )
+          .join('')}
+      </div>
+    `;
+  };
+
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
@@ -2030,6 +2077,7 @@ if (adminRoot) {
       `;
     }).join('')}`;
 
+    renderSplitQuickPanel(units);
     renderTimeline(selectedDate);
   };
 
@@ -2037,6 +2085,7 @@ if (adminRoot) {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
     setQuickMergeMode(false);
+    setSplitQuickOpen(false);
     setActionFeedback(getCurrentAdminHelp());
 
     if (isLoggedIn()) {
@@ -2071,6 +2120,41 @@ if (adminRoot) {
       setQuickMergeMode(!quickMergeMode);
       setActionFeedback(getCurrentAdminHelp());
       renderAdmin();
+    });
+  }
+
+  if (splitQuickButton) {
+    splitQuickButton.addEventListener('click', () => {
+      setSplitQuickOpen(!splitQuickOpen);
+      renderAdmin();
+    });
+  }
+
+  if (splitQuickPanel) {
+    splitQuickPanel.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-split-unit]');
+      if (!(button instanceof HTMLElement)) return;
+      const unitId = button.getAttribute('data-admin-split-unit');
+      if (!unitId) return;
+
+      const members = getMembersFromUnitId(unitId);
+      const sourceCode = getUnitDisplayCodeById(unitId);
+      if (members.length < 2) {
+        setActionFeedback('Cette table n\'est pas fusionnée.', 'error');
+        return;
+      }
+
+      if (splitGroupByMembers(members)) {
+        quickMergeSourceId = '';
+        closeMergeMenu();
+        setActionFeedback(`${sourceCode} dissociée.`);
+        renderAdmin();
+        return;
+      }
+
+      setActionFeedback('Dissociation impossible.', 'error');
     });
   }
 
@@ -2275,6 +2359,7 @@ if (adminRoot) {
       if (loginForm) loginForm.reset();
       if (feedback) feedback.textContent = '';
       setQuickMergeMode(false);
+      setSplitQuickOpen(false);
       setActionFeedback(getCurrentAdminHelp());
       closeMergeMenu();
       showLogin();
@@ -2337,6 +2422,7 @@ if (adminRoot) {
 
     if (!isLoggedIn()) {
       closeMergeMenu();
+      setSplitQuickOpen(false);
       showLogin();
       return;
     }

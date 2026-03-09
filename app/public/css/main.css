@@ -1213,6 +1213,37 @@ a.focus-card {
   color: #fff;
 }
 
+.admin-split-quick {
+  margin: 0.2rem 0 0.45rem;
+  border: 1px solid #d3e1ef;
+  border-radius: 12px;
+  background: #f7fbff;
+  padding: 0.65rem;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.admin-split-quick[hidden] {
+  display: none;
+}
+
+.admin-split-quick .admin-help {
+  margin: 0;
+  font-size: 0.82rem;
+}
+
+.admin-split-quick__list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.admin-split-quick__list .btn {
+  min-height: 34px;
+  padding: 0.4rem 0.65rem;
+  font-size: 0.8rem;
+}
+
 .admin-help.is-error {
   color: #bd2f2f;
 }
@@ -1951,6 +1982,11 @@ footer {
   }
 
   .admin-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-split-quick__list {
+    display: grid;
     grid-template-columns: 1fr;
   }
 
