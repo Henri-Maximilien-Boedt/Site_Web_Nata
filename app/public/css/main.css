@@ -2133,10 +2133,20 @@ footer {
 }
 
 @media (max-width: 560px) {
-  .table-modal__panel .table-layout,
+  .table-modal__panel {
+    padding: 0.25rem;
+  }
+
+  .table-modal__panel .table-layout {
+    width: 98vw !important;
+    max-width: 98vw !important;
+    aspect-ratio: 86 / 70;
+  }
+
   .table-modal__panel .table-layout.table-layout--terrace {
-    width: 94vw !important;
-    max-width: 94vw !important;
+    width: 98vw !important;
+    max-width: 98vw !important;
+    aspect-ratio: 86 / 48;
   }
 
   .time-grid {
