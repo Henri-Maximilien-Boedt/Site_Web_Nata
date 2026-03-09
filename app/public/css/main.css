@@ -2134,19 +2134,33 @@ footer {
 
 @media (max-width: 560px) {
   .table-modal__panel {
-    padding: 0.25rem;
+    padding: 0.2rem;
+    display: grid;
+    grid-template-rows: auto auto auto 1fr;
+    gap: 0.25rem;
   }
 
   .table-modal__panel .table-layout {
     width: 98vw !important;
     max-width: 98vw !important;
-    aspect-ratio: 86 / 70;
+    height: calc(100dvh - 135px);
+    aspect-ratio: auto;
   }
 
   .table-modal__panel .table-layout.table-layout--terrace {
     width: 98vw !important;
     max-width: 98vw !important;
-    aspect-ratio: 86 / 48;
+    height: calc(100dvh - 135px);
+    aspect-ratio: auto;
+  }
+
+  .table-modal__panel .table-info {
+    margin: 0;
+    font-size: 0.72rem;
+  }
+
+  .table-modal__panel .table-legend {
+    display: none;
   }
 
   .time-grid {
