@@ -477,6 +477,67 @@ const shiftISODate = (iso, deltaDays) => {
   return toISODate(base);
 };
 
+const DAY_LABEL_SHORT_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
+const SERVICE_LABELS = {
+  lunch: 'Midi',
+  evening: 'Soir',
+};
+
+const toPeopleCount = (value) => {
+  const parsed = Number.parseInt(String(value || '').trim(), 10);
+  if (!Number.isFinite(parsed) || parsed < 0) return 0;
+  return parsed;
+};
+
+const getServiceTypeFromTime = (timeValue) => (toMinutes(timeValue) < 17 * 60 ? 'lunch' : 'evening');
+
+const getOpeningServicesForDay = (day) => {
+  if (day === 0) return [];
+  if (day === 1) return ['evening'];
+  return ['lunch', 'evening'];
+};
+
+const getWeekStartISO = (iso) => {
+  const date = fromISODate(iso);
+  if (!date) return toISODate(new Date());
+  const deltaToMonday = (date.getDay() + 6) % 7;
+  date.setDate(date.getDate() - deltaToMonday);
+  return toISODate(date);
+};
+
+const formatISODateCompact = (iso) => {
+  const date = fromISODate(iso);
+  if (!date) return iso;
+  return `${pad2(date.getDate())}/${pad2(date.getMonth() + 1)}`;
+};
+
+const buildOpenServiceSlotsForWeek = (iso) => {
+  const weekStartISO = getWeekStartISO(iso);
+  const slots = [];
+
+  for (let offset = 0; offset < 7; offset += 1) {
+    const currentISO = shiftISODate(weekStartISO, offset);
+    const currentDate = fromISODate(currentISO);
+    if (!currentDate) continue;
+    const day = currentDate.getDay();
+    const services = getOpeningServicesForDay(day);
+    services.forEach((service) => {
+      slots.push({
+        dateISO: currentISO,
+        service,
+        dayLabel: DAY_LABEL_SHORT_FR[day] || '',
+        dateLabel: formatISODateCompact(currentISO),
+        serviceLabel: SERVICE_LABELS[service] || service,
+      });
+    });
+  }
+
+  return {
+    weekStartISO,
+    slots,
+  };
+};
+
 const escapeHTML = (value) =>
   String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -1463,6 +1524,7 @@ if (adminRoot) {
   const feedback = adminRoot.querySelector('[data-admin-feedback]');
   const countLabel = adminRoot.querySelector('[data-admin-count]');
   const list = adminRoot.querySelector('[data-admin-list]');
+  const serviceSummary = adminRoot.querySelector('[data-admin-service-summary]');
   const tableTimeLabel = adminRoot.querySelector('[data-admin-table-time]');
   const tableGrid = adminRoot.querySelector('[data-admin-table-grid]');
   const slotStrip = adminRoot.querySelector('[data-admin-slots]');
@@ -1827,6 +1889,46 @@ if (adminRoot) {
     `;
   };
 
+  const renderServiceSummary = (selectedDate) => {
+    if (!serviceSummary) return;
+    const { weekStartISO, slots } = buildOpenServiceSlotsForWeek(selectedDate);
+    const weekEndISO = shiftISODate(weekStartISO, 6);
+    const reservations = readReservations();
+    const selectedService = getServiceTypeFromTime(selectedTime);
+
+    const cards = slots
+      .map((slot) => {
+        const covers = reservations
+          .filter(
+            (item) => item.date === slot.dateISO && getServiceTypeFromTime(item.time) === slot.service
+          )
+          .reduce((sum, item) => sum + toPeopleCount(item.people), 0);
+        const selectedClass =
+          slot.dateISO === selectedDate && slot.service === selectedService ? ' is-selected' : '';
+
+        return `
+          <article class="admin-service-card${selectedClass}">
+            <p class="admin-service-card__label">${escapeHTML(
+              `${slot.dayLabel} ${slot.dateLabel} • ${slot.serviceLabel}`
+            )}</p>
+            <p class="admin-service-card__covers">${covers}</p>
+            <p class="admin-service-card__suffix">couverts</p>
+          </article>
+        `;
+      })
+      .join('');
+
+    serviceSummary.innerHTML = `
+      <div class="admin-service-summary__head">
+        <p class="admin-service-summary__title">Couverts par service</p>
+        <p class="admin-service-summary__meta">
+          Semaine du ${escapeHTML(formatISODateCompact(weekStartISO))} au ${escapeHTML(formatISODateCompact(weekEndISO))}
+        </p>
+      </div>
+      <div class="admin-service-summary__grid">${cards}</div>
+    `;
+  };
+
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
@@ -1838,8 +1940,8 @@ if (adminRoot) {
       quickMergeSourceId = '';
     }
     const term = (searchInput.value || '').trim().toLowerCase();
-
-    const filteredReservations = readReservations()
+    const reservations = readReservations();
+    const filteredReservations = reservations
       .filter((item) => item.date === selectedDate)
       .filter((item) => {
         if (!term) return true;
@@ -1853,8 +1955,11 @@ if (adminRoot) {
         return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
       });
     const dayBlocks = readAdminBlocks().filter((item) => item.date === selectedDate);
+    const selectedDateCovers = reservations
+      .filter((item) => item.date === selectedDate)
+      .reduce((sum, item) => sum + toPeopleCount(item.people), 0);
 
-    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} • ${dayBlocks.length} indisponibilité${dayBlocks.length > 1 ? 's' : ''} • ${formatISODateLong(selectedDate)}`;
+    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} • ${selectedDateCovers} couvert${selectedDateCovers > 1 ? 's' : ''} • ${dayBlocks.length} indisponibilité${dayBlocks.length > 1 ? 's' : ''} • ${formatISODateLong(selectedDate)}`;
 
     if (!filteredReservations.length) {
       list.innerHTML = '<p class="admin-empty">Aucune réservation trouvée pour cette date.</p>';
@@ -1882,6 +1987,7 @@ if (adminRoot) {
         .join('');
     }
 
+    renderServiceSummary(selectedDate);
     renderSlotStrip(selectedDate);
     tableTimeLabel.textContent = `État des tables le ${formatISODateLong(selectedDate)} à ${selectedTime}`;
     if (tableGrid) {
