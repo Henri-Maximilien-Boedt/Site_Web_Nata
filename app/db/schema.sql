@@ -88,8 +88,15 @@ CREATE TABLE IF NOT EXISTS quote_requests (
   event_date date,
   guests     integer,
   name       text NOT NULL,
+  request_kind text CHECK (request_kind IN ('particulier', 'entreprise')),
+  first_name text,
+  last_name  text,
   email      text NOT NULL,
   phone      text,
+  company_name text,
+  company_contact_name text,
+  vat_number text,
+  peppol_id text,
   message    text,
   created_at timestamptz DEFAULT now()
 );

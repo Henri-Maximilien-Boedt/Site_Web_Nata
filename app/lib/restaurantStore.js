@@ -53,6 +53,17 @@ const normalizeTime = (value) => {
   return `${pad2(hours)}:${pad2(minutes)}`
 }
 
+const normalizeEmail = (value) => {
+  const email = String(value || '').trim().toLowerCase()
+  if (!email || !email.includes('@')) return null
+  return email
+}
+
+const normalizePhone = (value) => {
+  const phone = String(value || '').trim()
+  return phone || null
+}
+
 const overlaps = (startA, endA, startB, endB) => startA < endB && startB < endA
 
 const getTableRectHeight = (seats) => clamp(8 + Number(seats || 0) * 1.6, 12, 30)
@@ -142,6 +153,17 @@ const ensureRuntimeSchema = async (client) => {
   await client.query(`
     CREATE INDEX IF NOT EXISTS idx_admin_blocks_date_table
     ON admin_blocks(date, table_id)
+  `)
+
+  await client.query(`
+    ALTER TABLE quote_requests
+    ADD COLUMN IF NOT EXISTS request_kind text,
+    ADD COLUMN IF NOT EXISTS first_name text,
+    ADD COLUMN IF NOT EXISTS last_name text,
+    ADD COLUMN IF NOT EXISTS company_name text,
+    ADD COLUMN IF NOT EXISTS company_contact_name text,
+    ADD COLUMN IF NOT EXISTS vat_number text,
+    ADD COLUMN IF NOT EXISTS peppol_id text
   `)
 }
 
@@ -589,6 +611,92 @@ const createReservation = async (payload) => {
   }
 }
 
+const createQuoteRequest = async (payload) => {
+  await ensureInitialized()
+
+  const requestKind = String(payload?.requestKind || '').trim().toLowerCase()
+  const firstName = String(payload?.firstName || '').trim()
+  const lastName = String(payload?.lastName || '').trim()
+  const email = normalizeEmail(payload?.email)
+  const phone = normalizePhone(payload?.phone)
+  const message = String(payload?.message || '').trim()
+
+  const companyName = String(payload?.companyName || '').trim()
+  const companyContactName = String(payload?.companyContactName || '').trim()
+  const vatNumber = String(payload?.vatNumber || '').trim()
+  const peppolId = String(payload?.peppolId || '').trim()
+
+  if (!['particulier', 'entreprise'].includes(requestKind)) {
+    throw createError(400, 'Type de demande invalide.')
+  }
+
+  if (!firstName || !lastName || !email || !phone || !message) {
+    throw createError(400, 'Merci de remplir tous les champs obligatoires.')
+  }
+
+  if (requestKind === 'entreprise') {
+    if (!companyName || !companyContactName || !vatNumber || !peppolId) {
+      throw createError(400, 'Champs entreprise incomplets.')
+    }
+  }
+
+  const fullName = `${firstName} ${lastName}`.trim()
+  const requestType = 'privatisation'
+
+  const { rows } = await pool.query(
+    `
+      INSERT INTO quote_requests (
+        type,
+        name,
+        email,
+        phone,
+        message,
+        request_kind,
+        first_name,
+        last_name,
+        company_name,
+        company_contact_name,
+        vat_number,
+        peppol_id
+      )
+      VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10, $11, $12)
+      RETURNING id, created_at
+    `,
+    [
+      requestType,
+      fullName,
+      email,
+      phone,
+      message,
+      requestKind,
+      firstName,
+      lastName,
+      companyName || null,
+      companyContactName || null,
+      vatNumber || null,
+      peppolId || null
+    ]
+  )
+
+  return {
+    id: String(rows?.[0]?.id || ''),
+    requestKind,
+    firstName,
+    lastName,
+    email,
+    phone,
+    message,
+    companyName: companyName || '',
+    companyContactName: companyContactName || '',
+    vatNumber: vatNumber || '',
+    peppolId: peppolId || '',
+    createdAt:
+      rows?.[0]?.created_at instanceof Date
+        ? rows[0].created_at.toISOString()
+        : new Date().toISOString()
+  }
+}
+
 const deleteReservation = async (reservationId) => {
   await ensureInitialized()
 
@@ -734,6 +842,7 @@ const replaceAdminBlocks = async (blocks) => {
 }
 
 module.exports = {
+  createQuoteRequest,
   createReservation,
   deleteReservation,
   getClientState,
