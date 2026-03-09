@@ -1817,6 +1817,10 @@ footer {
   padding: 2.2rem 0;
 }
 
+#boissons {
+  scroll-margin-top: 86px;
+}
+
 .menu-page .menu-cards {
   display: grid;
   grid-template-columns: repeat(2, minmax(280px, 1fr));
@@ -2055,14 +2059,6 @@ footer {
     padding: 0.85rem;
   }
 
-  .table-layout {
-    height: 560px;
-  }
-
-  .table-layout--admin {
-    height: 500px;
-  }
-
   .admin-tools {
     grid-template-columns: 1fr;
   }
@@ -2111,14 +2107,6 @@ footer {
 @media (max-width: 560px) {
   .time-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
-  .table-layout {
-    height: 460px;
-  }
-
-  .table-layout--admin {
-    height: 410px;
   }
 
   .admin-time-strip {
