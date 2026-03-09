@@ -2067,17 +2067,21 @@ footer {
     max-height: 100vh;
     border-radius: 0;
     padding: 0.85rem;
+    overflow-x: hidden;
+    overflow-y: auto;
   }
 
   .table-modal__panel .table-layout {
-    width: 860px;
-    min-width: 860px;
-    height: 640px;
-    aspect-ratio: auto;
+    width: min(100%, calc((max(220px, 100vh - 280px)) * 86 / 64));
+    max-width: 100%;
+    height: auto;
+    aspect-ratio: 86 / 64;
+    margin-inline: auto;
   }
 
   .table-modal__panel .table-layout.table-layout--terrace {
-    height: 420px;
+    width: min(100%, calc((max(220px, 100vh - 280px)) * 86 / 42));
+    aspect-ratio: 86 / 42;
   }
 
   .admin-tools {
