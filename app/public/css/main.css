@@ -806,7 +806,9 @@ a.focus-card {
 
 .table-layout {
   position: relative;
-  height: 640px;
+  width: 100%;
+  height: auto;
+  aspect-ratio: 86 / 64;
   border: 1px solid #454b57;
   border-radius: 14px;
   overflow: hidden;
@@ -814,17 +816,17 @@ a.focus-card {
 }
 
 .table-layout--admin {
-  height: 700px;
+  aspect-ratio: 86 / 70;
 }
 
 .table-layout.table-layout--terrace {
-  height: 420px;
+  aspect-ratio: 86 / 42;
   background: linear-gradient(165deg, #2f3f3b, #26352f);
   border-color: #4d6760;
 }
 
 .table-layout--admin.table-layout--terrace {
-  height: 460px;
+  aspect-ratio: 86 / 46;
 }
 
 .table-layout.table-layout--terrace::before {
