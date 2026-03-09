@@ -2066,21 +2066,24 @@ footer {
     height: 100vh;
     max-height: 100vh;
     border-radius: 0;
-    padding: 0.85rem;
+    padding: 0.55rem;
     overflow-x: hidden;
     overflow-y: auto;
   }
 
   .table-modal__panel .table-layout {
-    width: min(100%, calc((max(220px, 100vh - 280px)) * 86 / 64));
-    max-width: 100%;
+    width: 96vw !important;
+    min-width: 0 !important;
+    max-width: 96vw !important;
     height: auto;
     aspect-ratio: 86 / 64;
     margin-inline: auto;
   }
 
   .table-modal__panel .table-layout.table-layout--terrace {
-    width: min(100%, calc((max(220px, 100vh - 280px)) * 86 / 42));
+    width: 96vw !important;
+    min-width: 0 !important;
+    max-width: 96vw !important;
     aspect-ratio: 86 / 42;
   }
 
@@ -2130,6 +2133,12 @@ footer {
 }
 
 @media (max-width: 560px) {
+  .table-modal__panel .table-layout,
+  .table-modal__panel .table-layout.table-layout--terrace {
+    width: 94vw !important;
+    max-width: 94vw !important;
+  }
+
   .time-grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
   }
