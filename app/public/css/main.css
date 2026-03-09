@@ -741,6 +741,45 @@ a.focus-card {
   margin-bottom: 0.55rem;
 }
 
+.table-zone-switch,
+.admin-zone-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 0.65rem;
+}
+
+.admin-zone-switch {
+  margin-bottom: 0;
+}
+
+.table-zone-switch button,
+.admin-zone-switch button {
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #1b120d;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.8rem;
+  font-weight: 700;
+  padding: 0.35rem 0.7rem;
+  cursor: pointer;
+}
+
+.admin-page .table-zone-switch button,
+.admin-page .admin-zone-switch button {
+  border-color: #bfd3e8;
+  background: #edf5ff;
+  color: #21405f;
+}
+
+.table-zone-switch button.is-active,
+.admin-zone-switch button.is-active {
+  border-color: #2e7cc9;
+  background: linear-gradient(145deg, #2e7cc9, #5797d8);
+  color: #fff;
+}
+
 .legend-dot {
   display: inline-block;
   width: 10px;
@@ -776,6 +815,20 @@ a.focus-card {
 
 .table-layout--admin {
   height: 700px;
+}
+
+.table-layout.table-layout--terrace {
+  height: 420px;
+  background: linear-gradient(165deg, #2f3f3b, #26352f);
+  border-color: #4d6760;
+}
+
+.table-layout--admin.table-layout--terrace {
+  height: 460px;
+}
+
+.table-layout.table-layout--terrace::before {
+  border-color: #4d6760;
 }
 
 .table-layout::before {
@@ -892,6 +945,39 @@ a.focus-card {
   font-size: 1rem;
   font-weight: 900;
   line-height: 1;
+}
+
+.table-layout--terrace .table-floor__bar,
+.table-layout--terrace .table-floor__entrance {
+  display: none;
+}
+
+.table-terrace__edge {
+  position: absolute;
+  left: 3%;
+  right: 3%;
+  height: 18px;
+  border-radius: 999px;
+  background: linear-gradient(180deg, rgba(138, 108, 76, 0.95), rgba(101, 74, 49, 0.95));
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.22);
+  z-index: 1;
+}
+
+.table-terrace__edge--top {
+  top: 3.5%;
+}
+
+.table-terrace__bar-label {
+  position: absolute;
+  top: 6.5%;
+  left: 50%;
+  transform: translateX(-50%);
+  font-weight: 900;
+  letter-spacing: 0.14em;
+  color: #111;
+  text-shadow: none;
+  font-size: 0.74rem;
+  z-index: 1;
 }
 
 .table-seat {

@@ -16,16 +16,7 @@
   <body class="admin-page">
     <div class="noise"></div>
 
-    <header class="topbar">
-      <a class="brand" href="/">NATA Bar</a>
-      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
-      <nav class="nav">
-        <a href="/">Accueil</a>
-        <a href="/menu">Menu</a>
-        <a href="/reservation">Réservation</a>
-        <a href="/admin" class="active">Admin</a>
-      </nav>
-    </header>
+    <%- include('../partials/header', { currentPath: '/admin' }) %>
 
     <main>
       <section class="story reveal">
@@ -95,10 +86,14 @@
               </div>
               <div class="admin-merge-controls">
                 <button type="button" class="btn btn-ghost" data-admin-merge-mode>Mode fusion: OFF</button>
+                <div class="admin-zone-switch" data-admin-zone-switch>
+                  <button type="button" class="btn btn-ghost is-active" data-admin-zone="interieur">Intérieur</button>
+                  <button type="button" class="btn btn-ghost" data-admin-zone="terrasse">Terrasse</button>
+                </div>
                 <button type="button" class="btn btn-ghost" data-admin-split-quick-btn>Défusionner (mobile)</button>
               </div>
               <div class="admin-split-quick" data-admin-split-quick hidden></div>
-              <p class="admin-help" data-admin-action-feedback>Glisse-dépose les tables pour réorganiser le plan. Active le mode fusion pour cliquer table 1 puis table 2, ou fais clic droit sur une table.</p>
+              <p class="admin-help" data-admin-action-feedback>Glisse-dépose les tables pour réorganiser le plan. Utilise le switch Intérieur/Terrasse. Active le mode fusion pour cliquer table 1 puis table 2, ou fais clic droit sur une table.</p>
               <div class="table-layout table-layout--admin" data-admin-table-grid></div>
             </div>
           </div>
@@ -111,9 +106,7 @@
       </section>
     </main>
 
-    <footer>
-      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
-    </footer>
+    <%- include('../partials/footer') %>
 
     <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
     <div

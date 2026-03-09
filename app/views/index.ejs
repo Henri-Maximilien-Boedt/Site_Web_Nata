@@ -16,17 +16,7 @@
   <body>
     <div class="noise"></div>
 
-    <header class="topbar">
-      <a class="brand" href="/">NATA Bar</a>
-      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
-      <nav class="nav">
-        <a href="/">Accueil</a>
-        <a href="/menu">Menu</a>
-        <a href="/reservation">Réservation</a>
-        <a href="/admin/login">Admin</a>
-        <a href="#contact">Contact</a>
-      </nav>
-    </header>
+    <%- include('partials/header', { currentPath: '/' }) %>
 
     <main>
       <section id="accueil" class="hero reveal">
@@ -134,7 +124,7 @@
                 readonly
                 required
               />
-              <p class="date-help">Plan interactif: 5 tables de 2, 4 tables de 4, 1 table de 10.</p>
+              <p class="date-help">Plan interactif avec switch Intérieur/Terrasse.</p>
             </div>
           </label>
           <label>
@@ -146,9 +136,7 @@
       </section>
     </main>
 
-    <footer>
-      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
-    </footer>
+    <%- include('partials/footer') %>
 
     <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
     <script src="/js/app.js"></script>

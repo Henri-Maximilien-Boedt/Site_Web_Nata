@@ -1,8 +1,11 @@
 const pool = require('../db')
 
 const SETTINGS_KEYS = {
-  tableMerges: 'table_merges_v1'
+  tableMerges: 'table_merges_v1',
+  terraceLayoutVersion: 'terrace_layout_version_v1'
 }
+
+const TERRACE_LAYOUT_VERSION_TARGET = '3'
 
 const DEFAULT_TABLES = [
   { id: 'T2-1', code: 'T-1', seats: 2, zone: 'interieur', x: 7, y: 12 },
@@ -14,7 +17,18 @@ const DEFAULT_TABLES = [
   { id: 'T4-2', code: 'T-7', seats: 4, zone: 'interieur', x: 54, y: 12 },
   { id: 'T4-3', code: 'T-8', seats: 4, zone: 'interieur', x: 24, y: 31 },
   { id: 'T4-4', code: 'T-9', seats: 4, zone: 'interieur', x: 24, y: 50 },
-  { id: 'T10-1', code: 'T-10', seats: 10, zone: 'interieur', x: 82, y: 82 }
+  { id: 'T10-1', code: 'T-10', seats: 10, zone: 'interieur', x: 82, y: 82 },
+  { id: 'TR2-1', code: 'T-11', seats: 2, zone: 'terrasse', x: 16, y: 22 },
+  { id: 'TR2-2', code: 'T-12', seats: 2, zone: 'terrasse', x: 30, y: 22 },
+  { id: 'TR2-3', code: 'T-13', seats: 2, zone: 'terrasse', x: 44, y: 22 },
+  { id: 'TR2-4', code: 'T-14', seats: 2, zone: 'terrasse', x: 58, y: 22 },
+  { id: 'TR2-5', code: 'T-15', seats: 2, zone: 'terrasse', x: 72, y: 22 },
+  { id: 'TR2-6', code: 'T-16', seats: 2, zone: 'terrasse', x: 86, y: 22 },
+  { id: 'TR4-1', code: 'T-17', seats: 4, zone: 'terrasse', x: 24, y: 48 },
+  { id: 'TR4-2', code: 'T-18', seats: 4, zone: 'terrasse', x: 44, y: 48 },
+  { id: 'TR4-3', code: 'T-19', seats: 4, zone: 'terrasse', x: 64, y: 48 },
+  { id: 'TR4-4', code: 'T-20', seats: 4, zone: 'terrasse', x: 84, y: 48 },
+  { id: 'TR6-1', code: 'T-21', seats: 6, zone: 'terrasse', x: 54, y: 76 }
 ]
 
 const DEFAULT_TABLE_BY_CODE = Object.fromEntries(DEFAULT_TABLES.map((table) => [table.code, table]))
@@ -67,25 +81,39 @@ const normalizePhone = (value) => {
 const overlaps = (startA, endA, startB, endB) => startA < endB && startB < endA
 
 const getTableRectHeight = (seats) => clamp(8 + Number(seats || 0) * 1.6, 12, 30)
+const getTableRoundDiameter = (seats) => clamp(8 + Number(seats || 0) * 1.7, 11, 20)
 
 const hasSameMembers = (a, b) => {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false
   return a.every((id, index) => id === b[index])
 }
 
-const normalizeMergeGroups = (groups, validIds) => {
+const normalizeMergeGroups = (groups, validIds, tableZonesById = null) => {
   const validSet = validIds instanceof Set ? validIds : new Set(validIds || [])
+  const zoneMap = tableZonesById && typeof tableZonesById === 'object' ? tableZonesById : null
   const validGroups = (Array.isArray(groups) ? groups : [])
     .filter((group) => Array.isArray(group))
-    .map((group) =>
-      Array.from(
+    .flatMap((group) => {
+      const deduped = Array.from(
         new Set(
           group
             .map((id) => String(id || '').trim())
             .filter((id) => id && validSet.has(id))
         )
       )
-    )
+      if (!zoneMap) return [deduped]
+
+      const byZone = deduped.reduce(
+        (acc, id) => {
+          const zone = String(zoneMap[id] || '').trim().toLowerCase() === 'terrasse' ? 'terrasse' : 'interieur'
+          acc[zone].push(id)
+          return acc
+        },
+        { interieur: [], terrasse: [] }
+      )
+
+      return [byZone.interieur, byZone.terrasse]
+    })
     .filter((group) => group.length > 1)
 
   const merged = []
@@ -107,8 +135,8 @@ const normalizeMergeGroups = (groups, validIds) => {
   })
 
   return merged
-    .map((group) => group.sort((a, b) => Number(a) - Number(b)))
-    .sort((a, b) => Number(a[0]) - Number(b[0]))
+    .map((group) => group.sort((a, b) => a.localeCompare(b)))
+    .sort((a, b) => a[0].localeCompare(b[0]))
 }
 
 const getMergedUnitCode = (sortedMembers, mergedGroups) => {
@@ -168,10 +196,11 @@ const ensureRuntimeSchema = async (client) => {
 }
 
 const ensureDefaultTables = async (client) => {
-  const { rows } = await client.query('SELECT COUNT(*)::int AS count FROM tables')
-  if (Number(rows?.[0]?.count || 0) > 0) return
+  const { rows } = await client.query('SELECT code FROM tables')
+  const existingCodes = new Set((rows || []).map((row) => String(row.code || '').trim()))
 
   for (const table of DEFAULT_TABLES) {
+    if (existingCodes.has(table.code)) continue
     await client.query(
       `
         INSERT INTO tables (code, seats, zone, pos_x, pos_y, is_active, live_status)
@@ -193,6 +222,35 @@ const ensureSettingsDefaults = async (client) => {
   )
 }
 
+const ensureTerraceLayoutVersion = async (client) => {
+  const { rows } = await client.query('SELECT value FROM settings WHERE key = $1', [
+    SETTINGS_KEYS.terraceLayoutVersion
+  ])
+
+  const currentVersion = String(rows?.[0]?.value || '')
+  if (currentVersion === TERRACE_LAYOUT_VERSION_TARGET) return
+
+  const terraceDefaults = DEFAULT_TABLES.filter((table) => table.zone === 'terrasse')
+
+  for (const table of terraceDefaults) {
+    await client.query('UPDATE tables SET pos_x = $1, pos_y = $2 WHERE code = $3', [
+      table.x,
+      table.y,
+      table.code
+    ])
+  }
+
+  await client.query(
+    `
+      INSERT INTO settings (key, value)
+      VALUES ($1, $2)
+      ON CONFLICT (key)
+      DO UPDATE SET value = EXCLUDED.value
+    `,
+    [SETTINGS_KEYS.terraceLayoutVersion, TERRACE_LAYOUT_VERSION_TARGET]
+  )
+}
+
 const ensureInitialized = async () => {
   if (initPromise) return initPromise
 
@@ -204,6 +262,7 @@ const ensureInitialized = async () => {
       await ensureRuntimeSchema(client)
       await ensureDefaultTables(client)
       await ensureSettingsDefaults(client)
+      await ensureTerraceLayoutVersion(client)
       await client.query('COMMIT')
     } catch (error) {
       await client.query('ROLLBACK').catch(() => {})
@@ -219,18 +278,32 @@ const ensureInitialized = async () => {
 const listTables = async () => {
   await ensureInitialized()
 
-  const { rows } = await pool.query(`
-    SELECT
-      id,
-      code,
-      seats,
-      zone,
-      pos_x::float8 AS pos_x,
-      pos_y::float8 AS pos_y,
-      is_active
-    FROM tables
-    ORDER BY id ASC
-  `)
+  const client = await pool.connect()
+  let rows = []
+
+  try {
+    await client.query('BEGIN')
+    await ensureDefaultTables(client)
+    const result = await client.query(`
+      SELECT
+        id,
+        code,
+        seats,
+        zone,
+        pos_x::float8 AS pos_x,
+        pos_y::float8 AS pos_y,
+        is_active
+      FROM tables
+      ORDER BY id ASC
+    `)
+    rows = result.rows || []
+    await client.query('COMMIT')
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally {
+    client.release()
+  }
 
   return rows.map((row) => {
     const defaults = DEFAULT_TABLE_BY_CODE[row.code] || { id: String(row.id), x: 10, y: 10 }
@@ -255,19 +328,22 @@ const getTableLayoutMap = (tables) => {
   const layout = {}
 
   tables.forEach((table) => {
+    const isTerrace = table.zone === 'terrasse'
+    const width = isTerrace ? getTableRoundDiameter(table.seats) : 11
+    const height = isTerrace ? width : getTableRectHeight(table.seats)
     layout[table.id] = {
       x: table.x,
       y: table.y,
-      w: 11,
-      h: getTableRectHeight(table.seats),
-      shape: 'rect'
+      w: width,
+      h: height,
+      shape: isTerrace ? 'round' : 'rect'
     }
   })
 
   return layout
 }
 
-const getTableMerges = async (validIds) => {
+const getTableMerges = async (validIds, tableZonesById = null) => {
   await ensureInitialized()
 
   const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [
@@ -278,16 +354,16 @@ const getTableMerges = async (validIds) => {
 
   try {
     const parsed = JSON.parse(raw)
-    return normalizeMergeGroups(parsed, validIds)
+    return normalizeMergeGroups(parsed, validIds, tableZonesById)
   } catch {
     return []
   }
 }
 
-const setTableMerges = async (groups, validIds) => {
+const setTableMerges = async (groups, validIds, tableZonesById = null) => {
   await ensureInitialized()
 
-  const normalized = normalizeMergeGroups(groups, validIds)
+  const normalized = normalizeMergeGroups(groups, validIds, tableZonesById)
 
   await pool.query(
     `
@@ -342,7 +418,7 @@ const listReservations = async (tables, tableMerges) => {
     const fallbackMember = row.table_id ? [dbIdToUiId[String(row.table_id)]].filter(Boolean) : []
     const members = (memberIds.length ? memberIds : fallbackMember)
       .filter((memberId) => Boolean(tableByUiId[memberId]))
-      .sort((a, b) => Number(a) - Number(b))
+      .sort((a, b) => a.localeCompare(b))
 
     const seats = members.reduce((sum, memberId) => sum + (tableByUiId[memberId]?.seats || 0), 0)
 
@@ -420,7 +496,8 @@ const listAdminBlocks = async (tables) => {
 const getClientState = async () => {
   const tables = await listTables()
   const validIds = new Set(tables.map((table) => table.id))
-  const tableMerges = await getTableMerges(validIds)
+  const tableZonesById = Object.fromEntries(tables.map((table) => [table.id, table.zone]))
+  const tableMerges = await getTableMerges(validIds, tableZonesById)
   const reservations = await listReservations(tables, tableMerges)
   const adminBlocks = await listAdminBlocks(tables)
 
@@ -456,7 +533,7 @@ const parseMemberIds = (tableMembers, tableId, tablesById) => {
   return merged
     .map((id) => String(id || '').trim())
     .filter((id) => Boolean(tablesById[id]))
-    .sort((a, b) => Number(a) - Number(b))
+    .sort((a, b) => a.localeCompare(b))
 }
 
 const hasConflict = ({ members, date, time, reservations, adminBlocks }) => {
@@ -752,7 +829,8 @@ const updateTableLayout = async (layout) => {
 const updateTableMerges = async (groups) => {
   const tables = await listTables()
   const validIds = new Set(tables.map((table) => table.id))
-  return setTableMerges(groups, validIds)
+  const tableZonesById = Object.fromEntries(tables.map((table) => [table.id, table.zone]))
+  return setTableMerges(groups, validIds, tableZonesById)
 }
 
 const replaceAdminBlocks = async (blocks) => {

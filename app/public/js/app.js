@@ -81,16 +81,27 @@ const ADMIN_CREDENTIALS = {
 };
 
 const TABLES = [
-  { id: 'T2-1', code: 'T-1', seats: 2, label: 'T-1' },
-  { id: 'T2-2', code: 'T-2', seats: 2, label: 'T-2' },
-  { id: 'T2-3', code: 'T-3', seats: 2, label: 'T-3' },
-  { id: 'T2-4', code: 'T-4', seats: 2, label: 'T-4' },
-  { id: 'T2-5', code: 'T-5', seats: 2, label: 'T-5' },
-  { id: 'T4-1', code: 'T-6', seats: 4, label: 'T-6' },
-  { id: 'T4-2', code: 'T-7', seats: 4, label: 'T-7' },
-  { id: 'T4-3', code: 'T-8', seats: 4, label: 'T-8' },
-  { id: 'T4-4', code: 'T-9', seats: 4, label: 'T-9' },
-  { id: 'T10-1', code: 'T-10', seats: 10, label: 'T-10' },
+  { id: 'T2-1', code: 'T-1', seats: 2, label: 'T-1', zone: 'interieur' },
+  { id: 'T2-2', code: 'T-2', seats: 2, label: 'T-2', zone: 'interieur' },
+  { id: 'T2-3', code: 'T-3', seats: 2, label: 'T-3', zone: 'interieur' },
+  { id: 'T2-4', code: 'T-4', seats: 2, label: 'T-4', zone: 'interieur' },
+  { id: 'T2-5', code: 'T-5', seats: 2, label: 'T-5', zone: 'interieur' },
+  { id: 'T4-1', code: 'T-6', seats: 4, label: 'T-6', zone: 'interieur' },
+  { id: 'T4-2', code: 'T-7', seats: 4, label: 'T-7', zone: 'interieur' },
+  { id: 'T4-3', code: 'T-8', seats: 4, label: 'T-8', zone: 'interieur' },
+  { id: 'T4-4', code: 'T-9', seats: 4, label: 'T-9', zone: 'interieur' },
+  { id: 'T10-1', code: 'T-10', seats: 10, label: 'T-10', zone: 'interieur' },
+  { id: 'TR2-1', code: 'T-11', seats: 2, label: 'T-11', zone: 'terrasse' },
+  { id: 'TR2-2', code: 'T-12', seats: 2, label: 'T-12', zone: 'terrasse' },
+  { id: 'TR2-3', code: 'T-13', seats: 2, label: 'T-13', zone: 'terrasse' },
+  { id: 'TR2-4', code: 'T-14', seats: 2, label: 'T-14', zone: 'terrasse' },
+  { id: 'TR2-5', code: 'T-15', seats: 2, label: 'T-15', zone: 'terrasse' },
+  { id: 'TR2-6', code: 'T-16', seats: 2, label: 'T-16', zone: 'terrasse' },
+  { id: 'TR4-1', code: 'T-17', seats: 4, label: 'T-17', zone: 'terrasse' },
+  { id: 'TR4-2', code: 'T-18', seats: 4, label: 'T-18', zone: 'terrasse' },
+  { id: 'TR4-3', code: 'T-19', seats: 4, label: 'T-19', zone: 'terrasse' },
+  { id: 'TR4-4', code: 'T-20', seats: 4, label: 'T-20', zone: 'terrasse' },
+  { id: 'TR6-1', code: 'T-21', seats: 6, label: 'T-21', zone: 'terrasse' },
 ];
 
 const TABLE_PLAN = {
@@ -104,9 +115,30 @@ const TABLE_PLAN = {
   'T4-3': { x: 24, y: 31, w: 11, h: 22, shape: 'rect' },
   'T4-4': { x: 24, y: 50, w: 11, h: 22, shape: 'rect' },
   'T10-1': { x: 82, y: 82, w: 11, h: 24, shape: 'rect' },
+  'TR2-1': { x: 16, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR2-2': { x: 30, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR2-3': { x: 44, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR2-4': { x: 58, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR2-5': { x: 72, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR2-6': { x: 86, y: 22, w: 12, h: 12, shape: 'round' },
+  'TR4-1': { x: 24, y: 48, w: 14, h: 14, shape: 'round' },
+  'TR4-2': { x: 44, y: 48, w: 14, h: 14, shape: 'round' },
+  'TR4-3': { x: 64, y: 48, w: 14, h: 14, shape: 'round' },
+  'TR4-4': { x: 84, y: 48, w: 14, h: 14, shape: 'round' },
+  'TR6-1': { x: 54, y: 76, w: 17, h: 17, shape: 'round' },
 };
 
 const TABLE_BY_ID = Object.fromEntries(TABLES.map((table) => [table.id, table]));
+const ZONE_LABELS = {
+  interieur: 'Intérieur',
+  terrasse: 'Terrasse',
+};
+const TABLE_ZONES = ['interieur', 'terrasse'];
+
+const normalizeZone = (value) =>
+  TABLE_ZONES.includes(String(value || '').trim().toLowerCase())
+    ? String(value || '').trim().toLowerCase()
+    : 'interieur';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const getTableCode = (tableId) => TABLE_BY_ID[tableId]?.code || tableId;
@@ -114,6 +146,10 @@ const getTableRectSize = (seats) => ({
   w: 11,
   h: clamp(8 + seats * 1.6, 12, 30),
 });
+const getTableRoundSize = (seats) => {
+  const diameter = clamp(8 + seats * 1.7, 11, 20);
+  return { w: diameter, h: diameter };
+};
 
 const readTableLayout = () => {
   try {
@@ -176,15 +212,24 @@ const persistTableMerges = async () => {
 const normalizeMergeGroups = (groups) => {
   const validGroups = groups
     .filter((group) => Array.isArray(group))
-    .map((group) =>
-      Array.from(
+    .flatMap((group) => {
+      const deduped = Array.from(
         new Set(
           group
             .map((id) => String(id || '').trim())
             .filter((id) => id && TABLE_BY_ID[id])
         )
-      )
-    )
+      );
+      const byZone = deduped.reduce(
+        (acc, id) => {
+          const zone = normalizeZone(TABLE_BY_ID[id]?.zone);
+          acc[zone].push(id);
+          return acc;
+        },
+        { interieur: [], terrasse: [] }
+      );
+      return [byZone.interieur, byZone.terrasse];
+    })
     .filter((group) => group.length > 1);
 
   const merged = [];
@@ -212,9 +257,16 @@ const getTableLayout = () => {
   const layout = {};
 
   TABLES.forEach((table) => {
-    const base = TABLE_PLAN[table.id] || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
+    const base = TABLE_PLAN[table.id] || {
+      x: 10,
+      y: 10,
+      w: 12,
+      h: 10,
+      shape: table.zone === 'terrasse' ? 'round' : 'rect',
+    };
     const custom = saved[table.id] && typeof saved[table.id] === 'object' ? saved[table.id] : {};
-    const size = getTableRectSize(table.seats);
+    const shape = base.shape === 'round' ? 'round' : 'rect';
+    const size = shape === 'round' ? getTableRoundSize(table.seats) : getTableRectSize(table.seats);
     const x = Number(custom.x ?? base.x);
     const y = Number(custom.y ?? base.y);
     layout[table.id] = {
@@ -222,7 +274,7 @@ const getTableLayout = () => {
       y: clamp(Number.isFinite(y) ? y : base.y, 3, 97),
       w: size.w,
       h: size.h,
-      shape: 'rect',
+      shape,
     };
   });
 
@@ -236,6 +288,11 @@ const getTableGroups = () => {
     .filter((id) => !linked.has(id))
     .map((id) => [id]);
   return [...mergeGroups, ...singles];
+};
+
+const getZoneFromMembers = (members) => {
+  const firstMember = Array.isArray(members) && members.length ? TABLE_BY_ID[members[0]] : null;
+  return normalizeZone(firstMember?.zone || 'interieur');
 };
 
 const hasSameMembers = (a, b) => {
@@ -328,6 +385,11 @@ const getTableUnits = (layout = getTableLayout()) => {
   return groups.map((members) => buildTableUnitFromMembers(members, layout, mergedGroups));
 };
 
+const getTableUnitsByZone = (zone, layout = getTableLayout()) => {
+  const targetZone = normalizeZone(zone);
+  return getTableUnits(layout).filter((unit) => getZoneFromMembers(unit.members) === targetZone);
+};
+
 const getUnitById = (unitId, layout = getTableLayout()) =>
   getTableUnits(layout).find((unit) => unit.id === unitId);
 
@@ -336,6 +398,9 @@ const getGroupForMember = (memberId, groups = normalizeMergeGroups(readTableMerg
 
 const mergeTablesById = (sourceId, targetId) => {
   if (!TABLE_BY_ID[sourceId] || !TABLE_BY_ID[targetId] || sourceId === targetId) return null;
+  if (normalizeZone(TABLE_BY_ID[sourceId].zone) !== normalizeZone(TABLE_BY_ID[targetId].zone)) {
+    return null;
+  }
   const groups = normalizeMergeGroups(readTableMerges());
   const sourceGroup = getGroupForMember(sourceId, groups);
   const targetGroup = getGroupForMember(targetId, groups);
@@ -561,6 +626,11 @@ const TABLE_FLOOR_DECORATIONS = `
   </div>
 `;
 
+const TABLE_TERRACE_DECORATIONS = `
+  <div class="table-terrace__edge table-terrace__edge--top" aria-hidden="true"></div>
+  <div class="table-terrace__bar-label" aria-hidden="true">BAR</div>
+`;
+
 if (year) {
   year.textContent = new Date().getFullYear();
 }
@@ -584,7 +654,8 @@ const observer = new IntersectionObserver(
       }
     });
   },
-  { threshold: 0.15 }
+  // Keep reveals working on very tall mobile sections (e.g. drinks list in one column).
+  { threshold: 0.01 }
 );
 
 document.querySelectorAll('.reveal').forEach((el) => observer.observe(el));
@@ -788,21 +859,48 @@ const readAdminBlocks = () => {
 };
 
 const writeAdminBlocks = (blocks) => {
+  adminBlocksRevision += 1;
   localStorage.setItem(STORAGE_KEYS.adminBlocks, JSON.stringify(blocks));
-  if (isAdminPage()) void persistAdminBlocks();
+  if (isAdminPage()) void queueAdminBlocksPersist(adminBlocksRevision);
 };
 
-const persistAdminBlocks = async () => {
+let adminBlocksRevision = 0;
+let adminBlocksPersistInFlight = false;
+let adminBlocksPersistNeedsReplay = false;
+
+const persistAdminBlocks = async (requestedRevision = adminBlocksRevision) => {
+  const snapshot = readAdminBlocks();
   try {
     const payload = await requestJSON(ADMIN_API.updateBlocks, {
       method: 'PUT',
-      body: JSON.stringify({ adminBlocks: readAdminBlocks() }),
+      body: JSON.stringify({ adminBlocks: snapshot }),
     });
-    if (Array.isArray(payload?.adminBlocks)) {
+    if (Array.isArray(payload?.adminBlocks) && requestedRevision === adminBlocksRevision) {
       localStorage.setItem(STORAGE_KEYS.adminBlocks, JSON.stringify(payload.adminBlocks));
     }
   } catch (error) {
     console.error('Erreur sync indisponibilités:', error.message);
+  }
+};
+
+const queueAdminBlocksPersist = async (requestedRevision = adminBlocksRevision) => {
+  if (adminBlocksPersistInFlight) {
+    adminBlocksPersistNeedsReplay = true;
+    return;
+  }
+
+  adminBlocksPersistInFlight = true;
+  let revisionToSync = requestedRevision;
+
+  try {
+    while (true) {
+      adminBlocksPersistNeedsReplay = false;
+      await persistAdminBlocks(revisionToSync);
+      if (!adminBlocksPersistNeedsReplay && adminBlocksRevision <= revisionToSync) break;
+      revisionToSync = adminBlocksRevision;
+    }
+  } finally {
+    adminBlocksPersistInFlight = false;
   }
 };
 
@@ -873,6 +971,16 @@ const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
       form.appendChild(tableMembersHidden);
     }
 
+    let tableZoneHidden = form.querySelector('[data-table-zone]');
+    if (!tableZoneHidden) {
+      tableZoneHidden = document.createElement('input');
+      tableZoneHidden.type = 'hidden';
+      tableZoneHidden.name = 'tableZone';
+      tableZoneHidden.value = 'interieur';
+      tableZoneHidden.setAttribute('data-table-zone', '');
+      form.appendChild(tableZoneHidden);
+    }
+
     return {
       form,
       dateHidden: form.querySelector('[data-date-value]'),
@@ -881,6 +989,7 @@ const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
       timeTrigger: form.querySelector('[data-time-trigger]'),
       tableHidden: form.querySelector('[data-table-value]'),
       tableMembersHidden,
+      tableZoneHidden,
       tableTrigger: form.querySelector('[data-table-trigger]'),
       peopleInput: form.querySelector('input[name="people"]'),
     };
@@ -893,6 +1002,7 @@ const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
       entry.timeTrigger &&
       entry.tableHidden &&
       entry.tableMembersHidden &&
+      entry.tableZoneHidden &&
       entry.tableTrigger &&
       entry.peopleInput
   );
@@ -989,6 +1099,10 @@ if (bookingForms.length) {
         <h3 id="table-modal-title" class="table-modal__title">Choisis ta table</h3>
         <button type="button" class="date-close" data-table-close>Fermer</button>
       </div>
+      <div class="table-zone-switch" data-table-zone-switch>
+        <button type="button" class="is-active" data-table-zone="interieur">Intérieur</button>
+        <button type="button" data-table-zone="terrasse">Terrasse</button>
+      </div>
       <p class="table-info" data-table-info></p>
       <div class="table-legend">
         <span><i class="legend-dot is-free"></i> Disponible</span>
@@ -1013,11 +1127,13 @@ if (bookingForms.length) {
   const tableInfo = tableModal.querySelector('[data-table-info]');
   const tableLayout = tableModal.querySelector('[data-table-layout]');
   const tableCloseButtons = tableModal.querySelectorAll('[data-table-close]');
+  const tableZoneSwitch = tableModal.querySelector('[data-table-zone-switch]');
 
   let activeBooking = null;
   let visibleMonth = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
   let selectedISO = '';
   let selectedTime = '';
+  let activeTableZone = 'interieur';
 
   const showFeedback = (booking, message, type = 'ok') => {
     let feedback = booking.form.querySelector('[data-booking-feedback]');
@@ -1038,9 +1154,29 @@ if (bookingForms.length) {
     return Number.isNaN(value) ? 0 : value;
   };
 
+  const syncTableZoneSwitch = () => {
+    if (!tableZoneSwitch) return;
+    const buttons = tableZoneSwitch.querySelectorAll('[data-table-zone]');
+    buttons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      const zone = normalizeZone(button.getAttribute('data-table-zone'));
+      button.classList.toggle('is-active', zone === activeTableZone);
+    });
+  };
+
+  const setActiveTableZone = (zone, booking, resetSelection = true) => {
+    activeTableZone = normalizeZone(zone);
+    if (booking?.tableZoneHidden) {
+      booking.tableZoneHidden.value = activeTableZone;
+    }
+    syncTableZoneSwitch();
+    if (resetSelection && booking) resetTable(booking);
+  };
+
   const resetTable = (booking) => {
     booking.tableHidden.value = '';
     booking.tableMembersHidden.value = '';
+    booking.tableZoneHidden.value = activeTableZone;
     booking.tableTrigger.value = '';
     booking.tableTrigger.classList.remove('is-filled');
     booking.tableTrigger.placeholder = 'Choisis d\'abord une date et une heure';
@@ -1055,6 +1191,7 @@ if (bookingForms.length) {
     booking.timeTrigger.classList.remove('is-filled');
     booking.dateTrigger.placeholder = 'Cliquez pour choisir une date';
     booking.timeTrigger.placeholder = 'Sélectionnez d\'abord une date';
+    activeTableZone = 'interieur';
     resetTable(booking);
   };
 
@@ -1100,6 +1237,7 @@ if (bookingForms.length) {
     }
 
     activeBooking = booking;
+    setActiveTableZone(booking.tableZoneHidden.value || 'interieur', booking, false);
     renderTablePlan(booking);
     tableModal.hidden = false;
   };
@@ -1124,10 +1262,13 @@ if (bookingForms.length) {
     const date = booking.dateHidden.value;
     const time = booking.timeHidden.value;
     const people = getPeopleCount(booking);
-    const units = getTableUnits();
-    tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (2h) - ${people} personne${people > 1 ? 's' : ''}`;
+    const units = getTableUnitsByZone(activeTableZone);
+    const activeZoneLabel = ZONE_LABELS[activeTableZone] || ZONE_LABELS.interieur;
+    tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (2h) - ${people} personne${people > 1 ? 's' : ''} - ${activeZoneLabel}`;
+    tableLayout.classList.toggle('table-layout--terrace', activeTableZone === 'terrasse');
+    const decorations = activeTableZone === 'terrasse' ? TABLE_TERRACE_DECORATIONS : TABLE_FLOOR_DECORATIONS;
 
-    tableLayout.innerHTML = `${TABLE_FLOOR_DECORATIONS}${units.map((unit) => {
+    tableLayout.innerHTML = `${decorations}${units.map((unit) => {
       const occupied = isUnitBooked(unit.members, date, time);
       const tooSmall = !occupied && people > unit.seats;
       const selected = booking.tableHidden.value === unit.id;
@@ -1163,7 +1304,9 @@ if (bookingForms.length) {
 
     activeBooking.tableHidden.value = unit.id;
     activeBooking.tableMembersHidden.value = unit.members.join(',');
-    activeBooking.tableTrigger.value = `${unit.label} (${unit.seats} pers.)`;
+    const zoneLabel = ZONE_LABELS[getZoneFromMembers(unit.members)] || ZONE_LABELS.interieur;
+    activeBooking.tableZoneHidden.value = getZoneFromMembers(unit.members);
+    activeBooking.tableTrigger.value = `${unit.label} (${unit.seats} pers.) - ${zoneLabel}`;
     activeBooking.tableTrigger.classList.add('is-filled');
     closeTableModal();
   };
@@ -1273,13 +1416,18 @@ if (bookingForms.length) {
       const fallbackTable = getTableById(booking.tableHidden.value);
       if (selectedUnit) {
         booking.tableMembersHidden.value = selectedUnit.members.join(',');
-        booking.tableTrigger.value = `${selectedUnit.label} (${selectedUnit.seats} pers.)`;
+        const zone = getZoneFromMembers(selectedUnit.members);
+        booking.tableZoneHidden.value = zone;
+        booking.tableTrigger.value = `${selectedUnit.label} (${selectedUnit.seats} pers.) - ${ZONE_LABELS[zone] || ZONE_LABELS.interieur}`;
         booking.tableTrigger.classList.add('is-filled');
       } else if (fallbackTable) {
         booking.tableMembersHidden.value = fallbackTable.id;
-        booking.tableTrigger.value = `${fallbackTable.label} (${fallbackTable.seats} pers.)`;
+        booking.tableZoneHidden.value = normalizeZone(fallbackTable.zone);
+        booking.tableTrigger.value = `${fallbackTable.label} (${fallbackTable.seats} pers.) - ${ZONE_LABELS[normalizeZone(fallbackTable.zone)] || ZONE_LABELS.interieur}`;
         booking.tableTrigger.classList.add('is-filled');
       }
+    } else {
+      booking.tableZoneHidden.value = normalizeZone(booking.tableZoneHidden.value || 'interieur');
     }
 
     booking.dateTrigger.addEventListener('click', () => openDateModal(booking));
@@ -1452,6 +1600,19 @@ if (bookingForms.length) {
     selectTable(tableId);
   });
 
+  if (tableZoneSwitch) {
+    tableZoneSwitch.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-table-zone]');
+      if (!(button instanceof HTMLButtonElement)) return;
+      if (!activeBooking) return;
+      const zone = normalizeZone(button.getAttribute('data-table-zone'));
+      setActiveTableZone(zone, activeBooking);
+      renderTablePlan(activeBooking);
+    });
+  }
+
   prevBtn.addEventListener('click', () => {
     visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
     renderCalendar();
@@ -1505,7 +1666,9 @@ if (bookingForms.length) {
         resetTable(activeBooking);
       } else {
         activeBooking.tableMembersHidden.value = refreshedUnit.members.join(',');
-        activeBooking.tableTrigger.value = `${refreshedUnit.label} (${refreshedUnit.seats} pers.)`;
+        const zone = getZoneFromMembers(refreshedUnit.members);
+        activeBooking.tableZoneHidden.value = zone;
+        activeBooking.tableTrigger.value = `${refreshedUnit.label} (${refreshedUnit.seats} pers.) - ${ZONE_LABELS[zone] || ZONE_LABELS.interieur}`;
       }
     }
 
@@ -1527,6 +1690,7 @@ if (adminRoot) {
   const serviceSummary = adminRoot.querySelector('[data-admin-service-summary]');
   const tableTimeLabel = adminRoot.querySelector('[data-admin-table-time]');
   const tableGrid = adminRoot.querySelector('[data-admin-table-grid]');
+  const adminZoneSwitch = adminRoot.querySelector('[data-admin-zone-switch]');
   const slotStrip = adminRoot.querySelector('[data-admin-slots]');
   const timeline = adminRoot.querySelector('[data-admin-timeline]');
   const actionFeedback = adminRoot.querySelector('[data-admin-action-feedback]');
@@ -1541,12 +1705,13 @@ if (adminRoot) {
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
   const EVENING_SLOTS = Array.from({ length: 9 }, (_, index) => fromMinutes(18 * 60 + index * 30));
   const ADMIN_HELP_DEFAULT =
-    'Glisse une table pour la déplacer. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
+    'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
   const ADMIN_HELP_MERGE =
     'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
   let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
     ? roundCurrentTimeToHalfHour()
     : EVENING_SLOTS[0];
+  let activeAdminZone = 'interieur';
   let quickMergeMode = false;
   let quickMergeSourceId = '';
   let splitQuickOpen = false;
@@ -1579,6 +1744,16 @@ if (adminRoot) {
       mergeModeButton.textContent = `Mode fusion: ${quickMergeMode ? 'ON' : 'OFF'}`;
       mergeModeButton.classList.toggle('is-active', quickMergeMode);
     }
+  };
+  const setActiveAdminZone = (zone) => {
+    activeAdminZone = normalizeZone(zone);
+    if (!adminZoneSwitch) return;
+    const buttons = adminZoneSwitch.querySelectorAll('[data-admin-zone]');
+    buttons.forEach((button) => {
+      if (!(button instanceof HTMLButtonElement)) return;
+      const value = normalizeZone(button.getAttribute('data-admin-zone'));
+      button.classList.toggle('is-active', value === activeAdminZone);
+    });
   };
   const setSplitQuickOpen = (enabled) => {
     splitQuickOpen = Boolean(enabled);
@@ -1618,7 +1793,8 @@ if (adminRoot) {
     const sourceUnit = getUnitById(unitId);
     const sourceMembers = sourceUnit ? sourceUnit.members : getMembersFromUnitId(unitId);
     if (!sourceMembers.length) return;
-    const units = getTableUnits();
+    const sourceZone = getZoneFromMembers(sourceMembers);
+    const units = getTableUnitsByZone(sourceZone);
     const mergeTargets = units.filter(
       (unit) => !unit.members.some((memberId) => sourceMembers.includes(memberId))
     );
@@ -1826,7 +2002,7 @@ if (adminRoot) {
 
   const renderSlotStrip = (selectedDate) => {
     if (!slotStrip) return;
-    const units = getTableUnits();
+    const units = getTableUnitsByZone(activeAdminZone);
     slotStrip.innerHTML = EVENING_SLOTS.map((slot) => {
       const busyCount = units.filter((unit) => {
         const status = getUnitStatusAt(unit, selectedDate, slot);
@@ -1847,7 +2023,7 @@ if (adminRoot) {
 
   const renderTimeline = (selectedDate) => {
     if (!timeline) return;
-    const units = getTableUnits();
+    const units = getTableUnitsByZone(activeAdminZone);
     const header = EVENING_SLOTS.map(
       (slot) => `<div class="admin-timeline__head${slot === selectedTime ? ' is-selected' : ''}">${slot}</div>`
     ).join('');
@@ -1979,7 +2155,7 @@ if (adminRoot) {
   const renderAdmin = () => {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
-    const units = getTableUnits(currentLayout);
+    const units = getTableUnitsByZone(activeAdminZone, currentLayout);
     if (!EVENING_SLOTS.includes(selectedTime)) {
       selectedTime = EVENING_SLOTS[0];
     }
@@ -2036,14 +2212,16 @@ if (adminRoot) {
 
     renderServiceSummary(selectedDate);
     renderSlotStrip(selectedDate);
-    tableTimeLabel.textContent = `État des tables le ${formatISODateLong(selectedDate)} à ${selectedTime}`;
+    tableTimeLabel.textContent = `État des tables (${ZONE_LABELS[activeAdminZone] || ZONE_LABELS.interieur}) le ${formatISODateLong(selectedDate)} à ${selectedTime}`;
     if (tableGrid) {
       tableGrid.classList.toggle('is-merge-mode', quickMergeMode);
+      tableGrid.classList.toggle('table-layout--terrace', activeAdminZone === 'terrasse');
     }
 
     const sourceMembers = quickMergeSourceId ? getMembersFromUnitId(quickMergeSourceId) : [];
+    const decorations = activeAdminZone === 'terrasse' ? TABLE_TERRACE_DECORATIONS : TABLE_FLOOR_DECORATIONS;
 
-    tableGrid.innerHTML = `${TABLE_FLOOR_DECORATIONS}${units.map((unit) => {
+    tableGrid.innerHTML = `${decorations}${units.map((unit) => {
       const status = getUnitStatusAt(unit, selectedDate, selectedTime);
       const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
       const leftChairs = Math.max(1, Math.ceil(unit.seats / 2));
@@ -2084,6 +2262,7 @@ if (adminRoot) {
   const initAdmin = () => {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
+    setActiveAdminZone('interieur');
     setQuickMergeMode(false);
     setSplitQuickOpen(false);
     setActionFeedback(getCurrentAdminHelp());
@@ -2118,6 +2297,24 @@ if (adminRoot) {
   if (mergeModeButton) {
     mergeModeButton.addEventListener('click', () => {
       setQuickMergeMode(!quickMergeMode);
+      setActionFeedback(getCurrentAdminHelp());
+      renderAdmin();
+    });
+  }
+
+  if (adminZoneSwitch) {
+    adminZoneSwitch.addEventListener('click', (event) => {
+      const target = event.target;
+      if (!(target instanceof HTMLElement)) return;
+      const button = target.closest('[data-admin-zone]');
+      if (!(button instanceof HTMLButtonElement)) return;
+      const zone = normalizeZone(button.getAttribute('data-admin-zone'));
+      if (zone === activeAdminZone) return;
+      setQuickMergeMode(false);
+      quickMergeSourceId = '';
+      closeMergeMenu();
+      setSplitQuickOpen(false);
+      setActiveAdminZone(zone);
       setActionFeedback(getCurrentAdminHelp());
       renderAdmin();
     });
