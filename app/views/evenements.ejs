@@ -1,5 +1,49 @@
-<%- include('partials/header') %>
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <header class="topbar">
+      <a class="brand" href="/">NATA Bar</a>
+      <button class="menu-btn" aria-label="Ouvrir le menu">☰</button>
+      <nav class="nav">
+        <a href="/">Accueil</a>
+        <a href="/menu">Menu</a>
+        <a href="/reservation">Réservation</a>
+        <a href="/admin/login">Admin</a>
+      </nav>
+    </header>
 
-<h1><%= title %></h1>
+    <main>
+      <section class="story reveal" style="padding-top: 4rem;">
+        <div class="story-card">
+          <p class="eyebrow">Événements</p>
+          <h2>Privatisations et collaborations</h2>
+          <p>
+            Cette page reste disponible, mais la présentation principale de la maquette est intégrée sur
+            l'accueil.
+          </p>
+        </div>
+      </section>
+    </main>
 
-<%- include('partials/footer') %>
+    <footer>
+      <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    </footer>
+
+    <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
