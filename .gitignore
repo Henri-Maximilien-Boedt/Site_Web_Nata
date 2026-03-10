@@ -1,0 +1,21 @@
+# Environnement
+.env
+.env.*
+
+# Dépendances
+node_modules/
+
+# Uploads utilisateurs
+public/uploads/
+
+# Logs
+*.log
+npm-debug.log*
+
+# OS
+.DS_Store
+Thumbs.db
+
+# IDE
+.vscode/
+.idea/
