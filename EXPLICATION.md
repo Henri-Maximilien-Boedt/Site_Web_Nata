@@ -77,7 +77,7 @@ psql nata_bar < db/schema.sql
 # 5. Créer un admin (une seule fois)
 node db/create-admin.js gerant@natabar.be Password123!
 ```
-
+# woula jai eu des problemes de connection mtn le mdp cest  admin123
 ---
 
 ## ⚡ Lancer le serveur
