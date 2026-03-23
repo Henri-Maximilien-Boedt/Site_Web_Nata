@@ -1,0 +1,23 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Admin Dashboard - NATA Bar</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body>
+  <div class="admin-layout">
+    <%- include('partials/admin-sidebar') %>
+    <main class="admin-main">
+      <div class="admin-container">
+        <h1>Admin Dashboard</h1>
+        <p>Bienvenue, <%= adminEmail %></p>
+      </div>
+    </main>
+  </div>
+</body>
+</html>

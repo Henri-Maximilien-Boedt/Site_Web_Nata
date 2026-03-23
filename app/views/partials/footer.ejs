@@ -1,0 +1,44 @@
+<footer class="site-footer">
+  <div class="footer-grid">
+    <div class="footer-col">
+      <a class="footer-brand" href="/">NATA Bar</a>
+      <p class="footer-tagline">Korean Food &amp; Bar<br>Louvain-la-Neuve</p>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-label">Navigation</p>
+      <nav class="footer-nav">
+        <a href="/">Accueil</a>
+        <a href="/menu">Menu</a>
+        <a href="/evenements">Événements</a>
+        <a href="/actualites">Actualités</a>
+        <a href="/reservation">Réserver</a>
+      </nav>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-label">Horaires</p>
+      <ul class="footer-hours">
+        <li><span>Lundi</span> 18:00 – 22:00</li>
+        <li><span>Mar – Sam</span> 12:00 – 14:30 &amp; 18:00 – 22:00</li>
+        <li><span>Dimanche</span> Fermé</li>
+      </ul>
+    </div>
+
+    <div class="footer-col">
+      <p class="footer-label">Nous trouver</p>
+      <address class="footer-address">
+        Grand-Place 51<br>
+        1348 Louvain-la-Neuve<br>
+        Belgique
+      </address>
+    </div>
+  </div>
+
+  <div class="footer-bottom">
+    <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
+    <a href="/admin/login" class="footer-admin-link">Accès espace gérant</a>
+  </div>
+</footer>
+
+<script>document.getElementById('year').textContent = new Date().getFullYear()</script>

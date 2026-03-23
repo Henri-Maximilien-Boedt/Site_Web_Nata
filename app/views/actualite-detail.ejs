@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <%- include('partials/header', { currentPath: '/actualites' }) %>
+
+    <%
+      const mainImage = images.find(i => i.is_main) || images[0] || null
+      const gallery = mainImage ? images.filter(i => i.id !== mainImage.id) : images
+    %>
+
+    <% if (mainImage) { %>
+      <div class="news-hero">
+        <img src="<%= mainImage.url %>" alt="<%= post.title %>" />
+        <div class="news-hero__overlay"></div>
+      </div>
+    <% } %>
+
+    <main>
+      <article class="news-article reveal">
+        <header class="news-article__header">
+          <a href="/actualites" class="news-back">← Actualités</a>
+
+          <div class="news-article__meta">
+            <% if (post.event_date) { %>
+              <span class="news-badge news-badge--event">Événement</span>
+              <time>
+                <%
+                  const evtDate = new Date(post.event_date)
+                  const evtFormatted = evtDate.toLocaleDateString('fr-BE', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })
+                %>
+                <%= evtFormatted %>
+              </time>
+            <% } else { %>
+              <time>
+                <%
+                  const pubDate = new Date(post.created_at)
+                  const pubFormatted = pubDate.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                %>
+                Publié le <%= pubFormatted %>
+              </time>
+            <% } %>
+          </div>
+
+          <h1 class="news-article__title"><%= post.title %></h1>
+        </header>
+
+        <% if (post.content) { %>
+          <div class="news-article__content"><%- post.content.replace(/\n/g, '<br>') %></div>
+        <% } %>
+
+        <% if (gallery.length > 0) { %>
+          <div class="news-gallery">
+            <% gallery.forEach(img => { %>
+              <div class="news-gallery__item">
+                <img src="<%= img.url %>" alt="<%= post.title %>" loading="lazy" />
+              </div>
+            <% }) %>
+          </div>
+        <% } %>
+
+        <footer class="news-article__footer">
+          <a href="/actualites" class="btn btn-ghost">← Retour aux actualités</a>
+        </footer>
+      </article>
+    </main>
+
+    <%- include('partials/footer') %>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

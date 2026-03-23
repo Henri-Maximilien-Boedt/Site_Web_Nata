@@ -1,0 +1,152 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <%- include('partials/header', { currentPath: '/evenements' }) %>
+
+    <main class="menu-main">
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Événements</p>
+          <h2>Privatisation, anniversaires, entreprise</h2>
+          <p>
+            NATA Bar accueille vos événements privés et professionnels: ambiance sur mesure, cocktails,
+            restauration assise ou format plus libre selon votre demande.
+          </p>
+        </div>
+      </section>
+
+      <section class="events-showcase reveal">
+        <article class="events-showcase__intro">
+          <h3>Ce que nous organisons</h3>
+          <ul>
+            <li>Anniversaires et soirées privées</li>
+            <li>Repas d'équipe et afterworks</li>
+            <li>Privatisation partielle ou totale</li>
+            <li>Formules food & drinks personnalisées</li>
+          </ul>
+        </article>
+        <div class="events-showcase__photos">
+          <div class="event-photo-slot">Photo </div>
+          <div class="event-photo-slot">Photo </div>
+          <div class="event-photo-slot">Photo </div>
+          <div class="event-photo-slot">Photo </div>
+        </div>
+      </section>
+
+      <section class="events-devis reveal">
+        <div class="events-devis__head">
+          <p class="eyebrow">Demande de devis</p>
+          <h2>Parle-nous de ton projet</h2>
+          <p>Le formulaire est enregistré en base de données et transmis par email à l'admin.</p>
+        </div>
+
+        <% if (quoteStatus === 'ok') { %>
+          <p class="devis-feedback devis-feedback--ok">
+            Devis envoyé et email admin transmis avec succès.
+          </p>
+        <% } %>
+        <% if (quoteStatus === 'saved') { %>
+          <p class="devis-feedback devis-feedback--warn">
+            Devis enregistré en base. Email admin non envoyé (configuration email à vérifier).
+          </p>
+        <% } %>
+        <% if (quoteStatus === 'error') { %>
+          <p class="devis-feedback devis-feedback--error">
+            Erreur lors de l'envoi du devis. Vérifie les champs et réessaie.
+          </p>
+        <% } %>
+
+        <div class="events-devis__forms">
+          <form class="booking-form booking-form--devis" method="POST" action="/evenements/devis">
+            <input type="hidden" name="requestKind" value="particulier" />
+            <h3>Particulier</h3>
+            <label>
+              Prénom
+              <input type="text" name="firstName" required />
+            </label>
+            <label>
+              Nom
+              <input type="text" name="lastName" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              Téléphone
+              <input type="tel" name="phone" required />
+            </label>
+            <label>
+              Message
+              <textarea name="message" rows="5" required></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Envoyer le devis</button>
+          </form>
+
+          <form class="booking-form booking-form--devis" method="POST" action="/evenements/devis">
+            <input type="hidden" name="requestKind" value="entreprise" />
+            <h3>Entreprise</h3>
+            <label>
+              Prénom
+              <input type="text" name="firstName" required />
+            </label>
+            <label>
+              Nom
+              <input type="text" name="lastName" required />
+            </label>
+            <label>
+              Email
+              <input type="email" name="email" required />
+            </label>
+            <label>
+              Téléphone
+              <input type="tel" name="phone" required />
+            </label>
+            <label>
+              Responsable
+              <input type="text" name="companyContactName" required />
+            </label>
+            <label>
+              Nom de l'entreprise
+              <input type="text" name="companyName" required />
+            </label>
+            <label>
+              Numéro de TVA
+              <input type="text" name="vatNumber" required />
+            </label>
+            <label>
+              PEPPOL
+              <input type="text" name="peppolId" required />
+            </label>
+            <label>
+              Message
+              <textarea name="message" rows="5" required></textarea>
+            </label>
+            <button type="submit" class="btn btn-primary">Envoyer le devis</button>
+          </form>
+        </div>
+      </section>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
+    <script src="/js/app.js"></script>
+  </body>
+</html>
+

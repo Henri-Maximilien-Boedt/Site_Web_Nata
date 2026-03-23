@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <%- include('partials/header', { currentPath: '/reservation' }) %>
+
+    <main>
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Réservation</p>
+          <h2>Réserve ta table</h2>
+          <p>Choisis ta date et envoie-nous ta demande de réservation.</p>
+        </div>
+      </section>
+
+      <section class="contact reveal">
+        <div>
+          <p class="eyebrow">Contact</p>
+          <h2>NATA Bar</h2>
+          <p>Ouvert le : <br />Lundi de 18:00–22:00 et du<br />mardi au samedi, 12:00–14:30 18:00–22:00.</p>
+          <p>Grand-Place 51, 1348 Ottignies-Louvain-la-Neuve</p>
+          <p>Tél: 01 23 45 67 89</p>
+        </div>
+        <form class="booking-form" action="/reservation" method="post">
+          <label>
+            Nom
+            <input type="text" name="name" placeholder="Ton nom" required />
+          </label>
+          <label>
+            Email
+            <input type="email" name="email" placeholder="nom@email.com" required />
+          </label>
+          <label>
+            Téléphone
+            <input type="tel" name="phone" placeholder="Ex: 0470 12 34 56" required />
+          </label>
+          <label>
+            Nombre de personnes
+            <input type="number" name="people" min="1" max="10" placeholder="Ex: 4" required />
+          </label>
+          <label>
+            Date
+            <div class="date-picker" data-date-picker>
+              <input type="hidden" name="date" data-date-value />
+              <input
+                type="text"
+                class="date-trigger"
+                data-date-trigger
+                placeholder="Cliquez pour choisir une date"
+                readonly
+                required
+              />
+              <p class="date-help">Cliquez sur le champ pour ouvrir le sélecteur grand format.</p>
+            </div>
+          </label>
+          <label>
+            Heure
+            <div class="time-picker" data-time-picker>
+              <input type="hidden" name="time" data-time-value />
+              <input
+                type="text"
+                class="time-trigger"
+                data-time-trigger
+                placeholder="Sélectionnez d'abord une date"
+                readonly
+                required
+              />
+              <p class="date-help"></p>
+            </div>
+          </label>
+          <label>
+            Table
+            <div class="table-picker" data-table-picker>
+              <input type="hidden" name="tableId" data-table-value />
+              <input
+                type="text"
+                class="table-trigger"
+                data-table-trigger
+                placeholder="Choisis d'abord une date et une heure"
+                readonly
+                required
+              />
+              <p class="date-help">Plan interactif avec switch Intérieur/Terrasse.</p>
+            </div>
+          </label>
+          <label>
+            Message
+            <textarea name="message" rows="4" placeholder="Nombre de personnes, heure..."></textarea>
+          </label>
+          <button type="submit" class="btn btn-primary">Envoyer</button>
+        </form>
+      </section>
+    </main>
+
+    <%- include('partials/footer') %>
+
+    <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

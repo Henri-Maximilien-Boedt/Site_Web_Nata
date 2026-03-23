@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="Accès administrateur aux réservations NATA Bar." />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body class="admin-page">
+    <div class="noise"></div>
+
+    <%- include('../partials/admin-topbar', { currentSection: currentSection || 'reservations' }) %>
+
+    <main>
+      <section class="admin-section reveal" data-admin-page>
+        <div class="admin-auth" data-admin-auth hidden>
+          <form class="booking-form" data-admin-login>
+            <label>
+              Identifiant
+              <input type="text" name="username" placeholder="admin" required />
+            </label>
+            <label>
+              Mot de passe
+              <input type="password" name="password" placeholder="••••••••" required />
+            </label>
+            <button type="submit" class="btn btn-primary">Se connecter</button>
+            <p class="admin-help">Identifiants par défaut: <strong>admin</strong> / <strong>Nata2026!</strong></p>
+            <p class="admin-feedback" data-admin-feedback aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div class="admin-dashboard" data-admin-dashboard>
+          <div class="admin-dashboard__head">
+            <div>
+              <p class="eyebrow">Réservations</p>
+              <h3>Vue globale du service <span class="admin-live-clock" data-admin-clock></span></h3>
+            </div>
+          </div>
+          <div class="admin-tools">
+            <label>
+              Date
+              <input type="date" data-admin-date />
+            </label>
+            <label>
+              Recherche
+              <input type="search" data-admin-search placeholder="Nom, email ou table..." />
+            </label>
+            <div class="admin-tools__quick">
+              <button type="button" class="btn btn-ghost" data-admin-prev>Jour précédent</button>
+              <button type="button" class="btn btn-ghost" data-admin-today>Aujourd'hui</button>
+              <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
+            </div>
+          </div>
+          <div class="admin-time-strip" data-admin-slots></div>
+          <div class="admin-service-summary" data-admin-service-summary></div>
+
+          <div class="admin-grid">
+            <div class="admin-panel">
+              <p class="admin-count" data-admin-count>0 réservation</p>
+              <div class="admin-list" data-admin-list></div>
+            </div>
+            <div class="admin-panel">
+              <p class="admin-count" data-admin-table-time>État des tables</p>
+              <div class="table-legend table-legend--admin">
+                <span><i class="legend-dot is-free"></i> Libre</span>
+                <span><i class="legend-dot is-busy"></i> Réservée</span>
+                <span><i class="legend-dot is-manual"></i> Indispo (arrivée)</span>
+              </div>
+              <div class="admin-merge-controls">
+                <button type="button" class="btn btn-ghost" data-admin-merge-mode>Mode fusion: OFF</button>
+                <div class="admin-zone-switch" data-admin-zone-switch>
+                  <button type="button" class="btn btn-ghost is-active" data-admin-zone="interieur">Intérieur</button>
+                  <button type="button" class="btn btn-ghost" data-admin-zone="terrasse">Terrasse</button>
+                </div>
+                <button type="button" class="btn btn-ghost" data-admin-split-quick-btn>Défusionner (mobile)</button>
+              </div>
+              <div class="admin-split-quick" data-admin-split-quick hidden></div>
+              <p class="admin-help" data-admin-action-feedback>Glisse-dépose les tables pour réorganiser le plan. Utilise le switch Intérieur/Terrasse. Active le mode fusion pour cliquer table 1 puis table 2, ou fais clic droit sur une table.</p>
+              <div class="table-layout table-layout--admin" data-admin-table-grid></div>
+            </div>
+          </div>
+
+          <div class="admin-panel admin-panel--timeline">
+            <p class="admin-count">Vue soirée par table (30 minutes)</p>
+            <div class="admin-timeline" data-admin-timeline></div>
+          </div>
+        </div>
+      </section>
+    </main>
+
+    <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
+    <div
+      id="nata-admin-api"
+      data-delete-reservation="/admin/api/reservations"
+      data-update-layout="/admin/api/layout"
+      data-update-merges="/admin/api/merges"
+      data-update-blocks="/admin/api/blocks"
+      data-state="/admin/api/state"
+      hidden
+    ></div>
+    <div id="nata-booking-api" data-url="/reservation/api/reservations" hidden></div>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

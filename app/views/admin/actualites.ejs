@@ -1,0 +1,98 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="admin-page">
+  <div class="noise"></div>
+  <%- include('../partials/admin-topbar', { currentSection: 'actualites' }) %>
+
+  <div class="admin-standalone">
+    <div class="admin-page-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Actualités</h1>
+      </div>
+      <a href="/admin/actualites/create" class="btn btn-primary">+ Nouvel article</a>
+    </div>
+
+    <% if (flash) { %>
+      <div class="admin-flash admin-flash--<%= flash.type %>"><%= flash.text %></div>
+    <% } %>
+
+    <% if (!posts || posts.length === 0) { %>
+      <div class="admin-empty">
+        <p>Aucun article pour l'instant.</p>
+        <a href="/admin/actualites/create" class="btn btn-primary">Créer le premier article</a>
+      </div>
+    <% } else { %>
+      <div class="admin-news-list">
+        <% posts.forEach(post => { %>
+          <div class="admin-news-item">
+            <div class="admin-news-item__info">
+              <div class="admin-news-item__badges">
+                <% if (post.is_published) { %>
+                  <span class="badge badge--published">Publié</span>
+                <% } else { %>
+                  <span class="badge badge--draft">Brouillon</span>
+                <% } %>
+                <% if (post.is_pinned) { %>
+                  <span class="badge badge--pinned">À la une</span>
+                <% } %>
+                <% if (post.event_date) { %>
+                  <span class="badge badge--event">Événement</span>
+                <% } %>
+              </div>
+              <h3 class="admin-news-item__title"><%= post.title %></h3>
+              <p class="admin-news-item__meta">
+                <% if (post.event_date) { %>
+                  <%
+                    const evtD = new Date(post.event_date)
+                    const evtF = evtD.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                  %>
+                  Événement : <%= evtF %> ·
+                <% } %>
+                <%= post.image_count %> image<%= post.image_count !== 1 ? 's' : '' %>
+                ·
+                <%
+                  const createdD = new Date(post.created_at)
+                  const createdF = createdD.toLocaleDateString('fr-BE', { day: 'numeric', month: 'short', year: 'numeric' })
+                %>
+                Créé le <%= createdF %>
+              </p>
+            </div>
+            <div class="admin-news-item__actions">
+              <a href="/admin/actualites/<%= post.id %>/edit" class="btn btn-ghost btn-sm">Modifier</a>
+
+              <form method="POST" action="/admin/actualites/<%= post.id %>/toggle-published">
+                <button type="submit" class="btn btn-ghost btn-sm">
+                  <%= post.is_published ? 'Dépublier' : 'Publier' %>
+                </button>
+              </form>
+
+              <form method="POST" action="/admin/actualites/<%= post.id %>/toggle-pinned">
+                <button type="submit" class="btn btn-ghost btn-sm">
+                  <%= post.is_pinned ? 'Désépingler' : 'Épingler' %>
+                </button>
+              </form>
+
+              <form method="POST" action="/admin/actualites/<%= post.id %>/delete"
+                    onsubmit="return confirm('Supprimer cet article et toutes ses images ?')">
+                <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
+              </form>
+            </div>
+          </div>
+        <% }) %>
+      </div>
+    <% } %>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

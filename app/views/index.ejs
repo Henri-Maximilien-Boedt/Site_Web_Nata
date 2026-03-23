@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+
+    <%- include('partials/header', { currentPath: '/' }) %>
+
+    <!-- ── Hero plein écran ───────────────────────────────── -->
+    <section class="home-hero">
+      <div class="home-hero__bg"></div>
+      <div class="home-hero__content">
+        <p class="eyebrow home-hero__eyebrow">Korean Food & Bar · Louvain-la-Neuve</p>
+        <h1 class="home-hero__title">NATA</h1>
+        <p class="home-hero__sub">Saveurs coréennes, esprit de bar.</p>
+        <div class="home-hero__actions">
+          <a href="/reservation" class="btn btn-primary">Réserver une table</a>
+          <a href="/menu" class="btn btn-ghost">Voir le menu</a>
+        </div>
+      </div>
+      <a href="#decouvrir" class="home-hero__scroll" aria-label="Défiler">↓</a>
+    </section>
+
+    <main id="decouvrir">
+
+      <!-- ── Bande photos ───────────────────────────────────── -->
+      <section class="food-strip reveal">
+        <div class="food-strip__track">
+          <div class="food-strip__item">
+            <img src="/media/img/plat-nata.jpg" alt="Plat NATA" loading="lazy" />
+          </div>
+          <div class="food-strip__item">
+            <img src="/media/img/Plats1.jpg" alt="Plats coréens" loading="lazy" />
+          </div>
+          <div class="food-strip__item">
+            <img src="/media/img/cocktail1.jpg" alt="Cocktail signature" loading="lazy" />
+          </div>
+          <div class="food-strip__item">
+            <img src="/media/img/Plats2.jpg" alt="Assiette coréenne" loading="lazy" />
+          </div>
+          <div class="food-strip__item">
+            <img src="/media/img/plats3.jpg" alt="Spécialités maison" loading="lazy" />
+          </div>
+        </div>
+      </section>
+
+      <!-- ── Carte d'intro ──────────────────────────────────── -->
+      <section class="story reveal">
+        <div class="story-card">
+          <p class="eyebrow">Notre cuisine</p>
+          <h2>Coréen généreux, bar chaleureux</h2>
+          <p>
+            Bibimbap, tteokbokki, poulet frit coréen — des recettes authentiques revisitées
+            avec des produits frais, dans une ambiance conviviale. Ouvert du lundi au samedi.
+          </p>
+          <a href="/menu" class="btn btn-ghost" style="margin-top: 1rem; display: inline-flex;">Découvrir la carte →</a>
+        </div>
+      </section>
+
+      <!-- ── Focus événements / food truck / menu ───────────── -->
+      <section class="home-focus reveal">
+        <a class="focus-card focus-card--events" href="/evenements">
+          <p class="eyebrow">Privatisation</p>
+          <h2>NOS ÉVÉNEMENTS</h2>
+          <p class="focus-card__hint">Anniversaires, repas d'affaires, soirées privées → demander un devis</p>
+        </a>
+
+        <a class="focus-card focus-card--truck" href="/evenements">
+          <p class="eyebrow">NATA Street Vibes</p>
+          <h2>NOS FOOD TRUCKS</h2>
+          <p class="focus-card__hint">On se déplace pour votre événement → demander un devis</p>
+        </a>
+
+        <a class="focus-card focus-card--menu" href="/menu">
+          <p class="eyebrow">Découvrir</p>
+          <h2>NATA BAR MENU</h2>
+          <p class="focus-card__hint">Entrées, plats, desserts et boissons → accéder à la carte</p>
+        </a>
+      </section>
+
+      <!-- ── Actualités récentes (si données dispo) ─────────── -->
+      <% if (typeof recentPosts !== 'undefined' && recentPosts && recentPosts.length > 0) { %>
+        <section class="home-news reveal">
+          <div class="home-news__head">
+            <div>
+              <p class="eyebrow">Actualités</p>
+              <h2>Les dernières nouvelles</h2>
+            </div>
+            <a href="/actualites" class="btn btn-ghost">Voir tout →</a>
+          </div>
+          <div class="news-grid">
+            <% recentPosts.forEach(post => { %>
+              <a class="news-card" href="/actualites/<%= post.id %>">
+                <div class="news-card__img">
+                  <% if (post.main_image_url) { %>
+                    <img src="<%= post.main_image_url %>" alt="<%= post.title %>" loading="lazy" />
+                  <% } else { %>
+                    <div class="news-card__img-placeholder">NATA</div>
+                  <% } %>
+                  <% if (post.event_date) { %>
+                    <span class="news-badge news-badge--event">Événement</span>
+                  <% } %>
+                </div>
+                <div class="news-card__body">
+                  <p class="news-card__date">
+                    <%
+                      const d = new Date(post.event_date || post.created_at)
+                      const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                    %>
+                    <%= formatted %>
+                  </p>
+                  <h3 class="news-card__title"><%= post.title %></h3>
+                  <span class="news-card__cta">Lire la suite →</span>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        </section>
+      <% } %>
+
+      <!-- ── Infos pratiques ────────────────────────────────── -->
+      <section class="home-info reveal">
+        <div class="home-info__block">
+          <p class="eyebrow">Nous trouver</p>
+          <h2>Viens nous voir</h2>
+          <address class="home-info__address">
+            Grand-Place 51<br />
+            1348 Louvain-la-Neuve<br />
+            Belgique
+          </address>
+          <div class="home-info__hours">
+            <p><strong>Lundi</strong> 18:00 – 22:00</p>
+            <p><strong>Mar – Sam</strong> 12:00 – 14:30 &amp; 18:00 – 22:00</p>
+            <p><strong>Dimanche</strong> Fermé</p>
+          </div>
+          <a href="/reservation" class="btn btn-primary" style="margin-top: 1.4rem; display: inline-flex;">Réserver une table</a>
+        </div>
+        <div class="home-info__map">
+          <img src="/media/img/restaurant_bg_image.webp" alt="NATA Bar" loading="lazy" />
+        </div>
+      </section>
+
+    </main>
+
+    <%- include('partials/footer') %>
+    <script src="/js/app.js"></script>
+  </body>
+</html>

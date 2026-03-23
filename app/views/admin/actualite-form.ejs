@@ -1,0 +1,172 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+</head>
+<body class="admin-page">
+  <div class="noise"></div>
+  <%- include('../partials/admin-topbar', { currentSection: 'actualites' }) %>
+
+  <div class="admin-standalone">
+    <div class="admin-page-head">
+      <div>
+        <a href="/admin/actualites" class="admin-back">← Actualités</a>
+        <h1><%= post ? 'Modifier l\'article' : 'Nouvel article' %></h1>
+      </div>
+      <% if (post) { %>
+        <a href="/actualites/<%= post.id %>" target="_blank" class="btn btn-ghost btn-sm">Voir sur le site →</a>
+      <% } %>
+    </div>
+
+    <% if (flash) { %>
+      <div class="admin-flash admin-flash--<%= flash.type %>"><%= flash.text %></div>
+    <% } %>
+    <% if (error) { %>
+      <div class="admin-flash admin-flash--error"><%= error %></div>
+    <% } %>
+
+    <!-- ── Formulaire article ─────────────────────────────── -->
+    <form
+      method="POST"
+      action="/admin/actualites/<%= post ? post.id + '/edit' : 'create' %>"
+      class="admin-form"
+    >
+      <div class="admin-form__group">
+        <label for="title">Titre <span class="required">*</span></label>
+        <input
+          type="text"
+          id="title"
+          name="title"
+          value="<%= post ? post.title : '' %>"
+          required
+          placeholder="Titre de l'article"
+        />
+      </div>
+
+      <div class="admin-form__group">
+        <label for="content">Contenu</label>
+        <textarea
+          id="content"
+          name="content"
+          rows="10"
+          placeholder="Écris ton article ici..."
+        ><%= post ? (post.content || '') : '' %></textarea>
+        <p class="admin-form__hint">Le texte sera affiché tel quel. Sauts de ligne respectés.</p>
+      </div>
+
+      <div class="admin-form__row">
+        <div class="admin-form__group">
+          <label for="event_date">Date d'événement <span class="admin-form__hint-inline">(optionnel)</span></label>
+          <input
+            type="date"
+            id="event_date"
+            name="event_date"
+            value="<%= post && post.event_date ? post.event_date : '' %>"
+          />
+        </div>
+
+        <div class="admin-form__group">
+          <label>Options</label>
+          <div class="admin-form__checks">
+            <label class="admin-check">
+              <input
+                type="checkbox"
+                name="is_published"
+                value="1"
+                <%= (post && post.is_published) ? 'checked' : '' %>
+              />
+              Publié (visible sur le site)
+            </label>
+            <label class="admin-check">
+              <input
+                type="checkbox"
+                name="is_pinned"
+                value="1"
+                <%= (post && post.is_pinned) ? 'checked' : '' %>
+              />
+              À la une (épinglé en tête de liste)
+            </label>
+          </div>
+        </div>
+      </div>
+
+      <div class="admin-form__actions">
+        <button type="submit" class="btn btn-primary">
+          <%= post ? 'Enregistrer les modifications' : 'Créer l\'article' %>
+        </button>
+        <a href="/admin/actualites" class="btn btn-ghost">Annuler</a>
+      </div>
+    </form>
+
+    <!-- ── Images (uniquement si article existant) ────────── -->
+    <% if (post) { %>
+      <div class="admin-images-section">
+        <h2 class="admin-images-section__title">Images <span class="admin-form__hint-inline">(<%= images.length %>/10)</span></h2>
+
+        <% if (images.length > 0) { %>
+          <div class="admin-images-grid">
+            <% images.forEach(img => { %>
+              <div class="admin-img-card<%= img.is_main ? ' admin-img-card--main' : '' %>">
+                <img src="<%= img.url %>" alt="Image" loading="lazy" />
+                <% if (img.is_main) { %>
+                  <span class="admin-img-card__main-badge">Photo principale</span>
+                <% } %>
+                <div class="admin-img-card__actions">
+                  <% if (!img.is_main) { %>
+                    <form method="POST" action="/admin/actualites/<%= post.id %>/images/<%= img.id %>/set-main">
+                      <button type="submit" class="btn btn-ghost btn-xs">Définir principale</button>
+                    </form>
+                  <% } %>
+                  <form method="POST" action="/admin/actualites/<%= post.id %>/images/<%= img.id %>/delete"
+                        onsubmit="return confirm('Supprimer cette image ?')">
+                    <button type="submit" class="btn btn-danger btn-xs">Supprimer</button>
+                  </form>
+                </div>
+              </div>
+            <% }) %>
+          </div>
+        <% } else { %>
+          <p class="admin-empty-text">Aucune image. Ajoutes-en ci-dessous.</p>
+        <% } %>
+
+        <% if (images.length < 10) { %>
+          <form
+            method="POST"
+            action="/admin/actualites/<%= post.id %>/images"
+            enctype="multipart/form-data"
+            class="admin-upload-form"
+          >
+            <label class="admin-upload-label" for="images">
+              <span>Ajouter des images</span>
+              <span class="admin-form__hint-inline">JPG, PNG ou WebP · max 2 Mo chacune · <%= 10 - images.length %> restante(s)</span>
+            </label>
+            <div class="admin-upload-row">
+              <input
+                type="file"
+                id="images"
+                name="images"
+                accept=".jpg,.jpeg,.png,.webp"
+                multiple
+                class="admin-upload-input"
+              />
+              <button type="submit" class="btn btn-primary">Uploader</button>
+            </div>
+          </form>
+        <% } else { %>
+          <p class="admin-form__hint">Limite de 10 images atteinte.</p>
+        <% } %>
+      </div>
+    <% } else { %>
+      <p class="admin-form__hint" style="margin-top: 1rem;">Tu pourras ajouter des images après avoir créé l'article.</p>
+    <% } %>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

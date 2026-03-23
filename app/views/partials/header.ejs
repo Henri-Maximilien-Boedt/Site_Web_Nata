@@ -1,0 +1,18 @@
+<%
+  const path = typeof currentPath === 'string' ? currentPath : ''
+  const isExactActive = (href) => path === href
+  const isPrefixActive = (href) => path === href || path.startsWith(`${href}/`)
+%>
+<header class="topbar">
+  <a class="brand" href="/">NATA Bar</a>
+
+  <button class="menu-btn" aria-label="Ouvrir le menu" aria-expanded="false" aria-controls="main-nav">☰</button>
+
+  <nav class="nav" id="main-nav">
+    <a href="/" class="<%= isExactActive('/') ? 'active' : '' %>">Accueil</a>
+    <a href="/menu" class="<%= isPrefixActive('/menu') ? 'active' : '' %>">Menu</a>
+    <a href="/evenements" class="<%= isPrefixActive('/evenements') ? 'active' : '' %>">Événements</a>
+    <a href="/actualites" class="<%= isPrefixActive('/actualites') ? 'active' : '' %>">Actualités</a>
+    <a href="/reservation" class="btn btn-primary nav-cta<%= isPrefixActive('/reservation') ? ' active' : '' %>">Réserver</a>
+  </nav>
+</header>
