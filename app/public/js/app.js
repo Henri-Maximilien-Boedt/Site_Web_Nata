@@ -86,11 +86,16 @@ const TABLES = [
   { id: 'T2-3', code: 'T-3', seats: 2, label: 'T-3', zone: 'interieur' },
   { id: 'T2-4', code: 'T-4', seats: 2, label: 'T-4', zone: 'interieur' },
   { id: 'T2-5', code: 'T-5', seats: 2, label: 'T-5', zone: 'interieur' },
-  { id: 'T4-1', code: 'T-6', seats: 4, label: 'T-6', zone: 'interieur' },
-  { id: 'T4-2', code: 'T-7', seats: 4, label: 'T-7', zone: 'interieur' },
-  { id: 'T4-3', code: 'T-8', seats: 4, label: 'T-8', zone: 'interieur' },
-  { id: 'T4-4', code: 'T-9', seats: 4, label: 'T-9', zone: 'interieur' },
-  { id: 'T10-1', code: 'T-10', seats: 10, label: 'T-10', zone: 'interieur' },
+  { id: 'T4-1', code: 'T-6', seats: 2, label: 'T-6', zone: 'interieur' },
+  { id: 'T4-2', code: 'T-7', seats: 2, label: 'T-7', zone: 'interieur' },
+  { id: 'T4-3', code: 'T-8', seats: 2, label: 'T-8', zone: 'interieur' },
+  { id: 'T4-4', code: 'T-9', seats: 2, label: 'T-9', zone: 'interieur' },
+  { id: 'T10-1', code: 'T-10', seats: 2, label: 'T-10', zone: 'interieur' },
+  { id: 'T2-6', code: 'T-22', seats: 2, label: 'T-22', zone: 'interieur' },
+  { id: 'T2-7', code: 'T-23', seats: 6, label: 'T-23', zone: 'interieur' },
+  { id: 'T2-9', code: 'T-25', seats: 2, label: 'T-25', zone: 'interieur' },
+  { id: 'T2-10', code: 'T-26', seats: 2, label: 'T-26', zone: 'interieur' },
+  { id: 'T2-11', code: 'T-27', seats: 6, label: 'T-27', zone: 'interieur' },
   { id: 'TR2-1', code: 'T-11', seats: 2, label: 'T-11', zone: 'terrasse' },
   { id: 'TR2-2', code: 'T-12', seats: 2, label: 'T-12', zone: 'terrasse' },
   { id: 'TR2-3', code: 'T-13', seats: 2, label: 'T-13', zone: 'terrasse' },
@@ -105,16 +110,21 @@ const TABLES = [
 ];
 
 const TABLE_PLAN = {
-  'T2-1': { x: 7, y: 12, w: 11, h: 12, shape: 'rect' },
-  'T2-2': { x: 7, y: 31, w: 11, h: 12, shape: 'rect' },
-  'T2-3': { x: 7, y: 50, w: 11, h: 12, shape: 'rect' },
-  'T2-4': { x: 8, y: 74, w: 11, h: 12, shape: 'rect' },
-  'T2-5': { x: 21, y: 74, w: 11, h: 12, shape: 'rect' },
-  'T4-1': { x: 24, y: 12, w: 11, h: 22, shape: 'rect' },
-  'T4-2': { x: 54, y: 12, w: 11, h: 22, shape: 'rect' },
-  'T4-3': { x: 24, y: 31, w: 11, h: 22, shape: 'rect' },
-  'T4-4': { x: 24, y: 50, w: 11, h: 22, shape: 'rect' },
-  'T10-1': { x: 82, y: 82, w: 11, h: 24, shape: 'rect' },
+  'T2-1': { x: 28, y: 17, w: 11, h: 12, shape: 'rect' },
+  'T2-2': { x: 38, y: 17, w: 11, h: 12, shape: 'rect' },
+  'T2-3': { x: 48, y: 17, w: 11, h: 12, shape: 'rect' },
+  'T2-4': { x: 58, y: 17, w: 11, h: 12, shape: 'rect' },
+  'T2-5': { x: 68, y: 17, w: 11, h: 12, shape: 'rect' },
+  'T4-1': { x: 18, y: 42, w: 11, h: 12, shape: 'rect' },
+  'T4-2': { x: 44, y: 45, w: 11, h: 12, shape: 'rect' },
+  'T4-3': { x: 54, y: 45, w: 11, h: 12, shape: 'rect' },
+  'T4-4': { x: 80, y: 34, w: 11, h: 12, shape: 'rect' },
+  'T10-1': { x: 80, y: 49, w: 11, h: 12, shape: 'rect' },
+  'T2-6': { x: 40, y: 36, w: 11, h: 12, shape: 'rect' },
+  'T2-7': { x: 55, y: 36, w: 11, h: 12, shape: 'rect' },
+  'T2-9': { x: 40, y: 52, w: 11, h: 12, shape: 'rect' },
+  'T2-10': { x: 50, y: 52, w: 11, h: 12, shape: 'rect' },
+  'T2-11': { x: 55, y: 56, w: 11, h: 12, shape: 'rect' },
   'TR2-1': { x: 16, y: 22, w: 12, h: 12, shape: 'round' },
   'TR2-2': { x: 30, y: 22, w: 12, h: 12, shape: 'round' },
   'TR2-3': { x: 44, y: 22, w: 12, h: 12, shape: 'round' },
@@ -141,13 +151,26 @@ const normalizeZone = (value) =>
     : 'interieur';
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
+const TABLE_SIZE_SCALE = 0.7;
+const BASE_RECT_TABLE_WIDTH = 11 * TABLE_SIZE_SCALE;
+const BASE_RECT_TABLE_HEIGHT = clamp((8 + 2 * 1.6) * TABLE_SIZE_SCALE, 12 * TABLE_SIZE_SCALE, 30 * TABLE_SIZE_SCALE);
+const WIDE_INTERIOR_TABLE_IDS = new Set(['T2-7', 'T2-11']);
 const getTableCode = (tableId) => TABLE_BY_ID[tableId]?.code || tableId;
-const getTableRectSize = (seats) => ({
-  w: 11,
-  h: clamp(8 + seats * 1.6, 12, 30),
-});
+const getTableRectSize = (table) => {
+  const seats = Number(table?.seats || 0);
+  if (WIDE_INTERIOR_TABLE_IDS.has(table?.id)) {
+    return {
+      w: BASE_RECT_TABLE_WIDTH * 1.8,
+      h: BASE_RECT_TABLE_HEIGHT,
+    };
+  }
+  return {
+    w: BASE_RECT_TABLE_WIDTH,
+    h: clamp((8 + seats * 1.6) * TABLE_SIZE_SCALE, 12 * TABLE_SIZE_SCALE, 30 * TABLE_SIZE_SCALE),
+  };
+};
 const getTableRoundSize = (seats) => {
-  const diameter = clamp(8 + seats * 1.7, 11, 20);
+  const diameter = clamp((8 + seats * 1.7) * TABLE_SIZE_SCALE, 11 * TABLE_SIZE_SCALE, 20 * TABLE_SIZE_SCALE);
   return { w: diameter, h: diameter };
 };
 
@@ -163,7 +186,10 @@ const readTableLayout = () => {
 
 const writeTableLayout = (layout) => {
   localStorage.setItem(STORAGE_KEYS.tableLayout, JSON.stringify(layout));
-  if (isAdminPage()) void persistTableLayout();
+  if (isAdminPage()) {
+    tableLayoutRevision += 1;
+    void queueTableLayoutPersist(tableLayoutRevision);
+  }
 };
 
 const readTableMerges = () => {
@@ -181,17 +207,42 @@ const writeTableMerges = (groups) => {
   if (isAdminPage()) void persistTableMerges();
 };
 
-const persistTableLayout = async () => {
+let tableLayoutRevision = 0;
+let tableLayoutPersistInFlight = false;
+let tableLayoutPersistNeedsReplay = false;
+
+const persistTableLayout = async (requestedRevision = tableLayoutRevision) => {
   try {
+    const snapshot = readTableLayout();
     const payload = await requestJSON(ADMIN_API.updateLayout, {
       method: 'PUT',
-      body: JSON.stringify({ layout: readTableLayout() }),
+      body: JSON.stringify({ layout: snapshot }),
     });
-    if (payload?.tableLayout && typeof payload.tableLayout === 'object') {
+    if (payload?.tableLayout && typeof payload.tableLayout === 'object' && requestedRevision === tableLayoutRevision) {
       localStorage.setItem(STORAGE_KEYS.tableLayout, JSON.stringify(payload.tableLayout));
     }
   } catch (error) {
     console.error('Erreur sync layout:', error.message);
+  }
+};
+
+const queueTableLayoutPersist = async (requestedRevision = tableLayoutRevision) => {
+  if (tableLayoutPersistInFlight) {
+    tableLayoutPersistNeedsReplay = true;
+    return;
+  }
+
+  tableLayoutPersistInFlight = true;
+  let revisionToSync = requestedRevision;
+  try {
+    while (true) {
+      tableLayoutPersistNeedsReplay = false;
+      await persistTableLayout(revisionToSync);
+      if (!tableLayoutPersistNeedsReplay && tableLayoutRevision <= revisionToSync) break;
+      revisionToSync = tableLayoutRevision;
+    }
+  } finally {
+    tableLayoutPersistInFlight = false;
   }
 };
 
@@ -266,7 +317,7 @@ const getTableLayout = () => {
     };
     const custom = saved[table.id] && typeof saved[table.id] === 'object' ? saved[table.id] : {};
     const shape = base.shape === 'round' ? 'round' : 'rect';
-    const size = shape === 'round' ? getTableRoundSize(table.seats) : getTableRectSize(table.seats);
+    const size = shape === 'round' ? getTableRoundSize(table.seats) : getTableRectSize(table);
     const x = Number(custom.x ?? base.x);
     const y = Number(custom.y ?? base.y);
     layout[table.id] = {
@@ -620,6 +671,8 @@ const TABLE_FLOOR_DECORATIONS = `
     <span class="table-floor__bar-obj table-floor__bar-obj--glass"></span>
     <span class="table-floor__bar-obj table-floor__bar-obj--shaker"></span>
   </div>
+  <span class="table-floor__divider-main" aria-hidden="true"></span>
+  <span class="table-floor__divider-leg" aria-hidden="true"></span>
   <div class="table-floor__entrance" aria-hidden="true">
     <span class="table-floor__entrance-label">ENTREE</span>
     <span class="table-floor__entrance-arrow">↓</span>
@@ -673,6 +726,92 @@ const initHomeFeatureCards = () => {
 };
 
 initHomeFeatureCards();
+
+const initImageLightbox = () => {
+  if (!document.body || document.querySelector('.image-lightbox')) return;
+
+  const modal = document.createElement('div');
+  modal.className = 'image-lightbox';
+  modal.hidden = true;
+  modal.innerHTML = `
+    <div class="image-lightbox__backdrop" data-image-lightbox-close></div>
+    <div class="image-lightbox__dialog" role="dialog" aria-modal="true" aria-label="Image agrandie">
+      <button type="button" class="image-lightbox__close" data-image-lightbox-close>Fermer</button>
+      <img class="image-lightbox__img" alt="" />
+    </div>
+  `;
+  document.body.appendChild(modal);
+
+  const modalImage = modal.querySelector('.image-lightbox__img');
+  let lastFocusedElement = null;
+
+  const isEligibleImage = (img) => {
+    if (!(img instanceof HTMLImageElement)) return false;
+    if (img.closest('.image-lightbox')) return false;
+    if (img.closest('[data-no-lightbox]')) return false;
+    if (!img.currentSrc && !img.src) return false;
+    return true;
+  };
+
+  const refreshTargets = () => {
+    document.querySelectorAll('img').forEach((img) => {
+      if (isEligibleImage(img)) {
+        img.classList.add('image-lightbox-trigger');
+      } else {
+        img.classList.remove('image-lightbox-trigger');
+      }
+    });
+  };
+
+  const closeLightbox = () => {
+    if (modal.hidden) return;
+    modal.hidden = true;
+    document.body.classList.remove('image-lightbox-open');
+    modalImage.removeAttribute('src');
+    modalImage.removeAttribute('srcset');
+    modalImage.alt = '';
+    if (lastFocusedElement instanceof HTMLElement) lastFocusedElement.focus();
+  };
+
+  const openLightbox = (img) => {
+    if (!isEligibleImage(img)) return;
+    const source = img.currentSrc || img.src;
+    if (!source) return;
+
+    lastFocusedElement = document.activeElement;
+    modalImage.src = source;
+    modalImage.alt = img.alt || 'Image agrandie';
+    modal.hidden = false;
+    document.body.classList.add('image-lightbox-open');
+  };
+
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLElement)) return;
+    const clickedImage = target.closest('img');
+    if (!clickedImage || !isEligibleImage(clickedImage)) return;
+    event.preventDefault();
+    event.stopPropagation();
+    openLightbox(clickedImage);
+  });
+
+  modal.querySelectorAll('[data-image-lightbox-close]').forEach((el) => {
+    el.addEventListener('click', closeLightbox);
+  });
+
+  document.addEventListener('keydown', (event) => {
+    if (event.key === 'Escape' && !modal.hidden) closeLightbox();
+  });
+
+  if (window.MutationObserver) {
+    const observer = new MutationObserver(() => refreshTargets());
+    observer.observe(document.body, { childList: true, subtree: true });
+  }
+
+  refreshTargets();
+};
+
+initImageLightbox();
 
 const MENU_DESCRIPTIONS = {
   Gyoza: 'Raviolis japonais grillés, croustillants dehors et fondants dedans.',
@@ -1689,14 +1828,6 @@ if (adminRoot) {
   const list = adminRoot.querySelector('[data-admin-list]');
   const serviceSummary = adminRoot.querySelector('[data-admin-service-summary]');
   const tableTimeLabel = adminRoot.querySelector('[data-admin-table-time]');
-  const clockEl = adminRoot.querySelector('[data-admin-clock]');
-  const updateClock = () => {
-    if (!clockEl) return;
-    const now = new Date();
-    clockEl.textContent = `— ${pad2(now.getHours())}:${pad2(now.getMinutes())}`;
-  };
-  updateClock();
-  setInterval(updateClock, 30000);
   const tableGrid = adminRoot.querySelector('[data-admin-table-grid]');
   const adminZoneSwitch = adminRoot.querySelector('[data-admin-zone-switch]');
   const slotStrip = adminRoot.querySelector('[data-admin-slots]');
@@ -1712,21 +1843,11 @@ if (adminRoot) {
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
   const EVENING_SLOTS = Array.from({ length: 9 }, (_, index) => fromMinutes(18 * 60 + index * 30));
-  const LUNCH_SLOTS = Array.from({ length: 6 }, (_, index) => fromMinutes(12 * 60 + index * 30));
-  const getSlotsForDate = (dateISO) => {
-    const d = fromISODate(dateISO);
-    if (!d) return EVENING_SLOTS;
-    const day = d.getDay();
-    if (day === 0) return [];
-    if (day === 1) return EVENING_SLOTS;
-    return [...LUNCH_SLOTS, ...EVENING_SLOTS];
-  };
   const ADMIN_HELP_DEFAULT =
     'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
   const ADMIN_HELP_MERGE =
     'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
-  const allKnownSlots = [...LUNCH_SLOTS, ...EVENING_SLOTS];
-  let selectedTime = allKnownSlots.includes(roundCurrentTimeToHalfHour())
+  let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
     ? roundCurrentTimeToHalfHour()
     : EVENING_SLOTS[0];
   let activeAdminZone = 'interieur';
@@ -2020,42 +2141,34 @@ if (adminRoot) {
 
   const renderSlotStrip = (selectedDate) => {
     if (!slotStrip) return;
-    const slots = getSlotsForDate(selectedDate);
     const units = getTableUnitsByZone(activeAdminZone);
-    const hasLunch = slots.some((s) => LUNCH_SLOTS.includes(s));
-    const hasEvening = slots.some((s) => EVENING_SLOTS.includes(s));
-    const parts = [];
-    if (hasLunch) {
-      parts.push(`<span class="admin-slot-label">Midi</span>`);
-      parts.push(
-        ...LUNCH_SLOTS.filter((s) => slots.includes(s)).map((slot) => {
-          const busyCount = units.filter((u) => getUnitStatusAt(u, selectedDate, slot).type !== 'free').length;
-          return `<button type="button" class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}" data-admin-slot="${slot}"><span>${slot}</span><strong>${busyCount}</strong></button>`;
-        })
-      );
-    }
-    if (hasEvening) {
-      parts.push(`<span class="admin-slot-label">Soir</span>`);
-      parts.push(
-        ...EVENING_SLOTS.filter((s) => slots.includes(s)).map((slot) => {
-          const busyCount = units.filter((u) => getUnitStatusAt(u, selectedDate, slot).type !== 'free').length;
-          return `<button type="button" class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}" data-admin-slot="${slot}"><span>${slot}</span><strong>${busyCount}</strong></button>`;
-        })
-      );
-    }
-    slotStrip.innerHTML = parts.join('');
+    slotStrip.innerHTML = EVENING_SLOTS.map((slot) => {
+      const busyCount = units.filter((unit) => {
+        const status = getUnitStatusAt(unit, selectedDate, slot);
+        return status.type !== 'free';
+      }).length;
+      return `
+        <button
+          type="button"
+          class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}"
+          data-admin-slot="${slot}"
+        >
+          <span>${slot}</span>
+          <strong>${busyCount}</strong>
+        </button>
+      `;
+    }).join('');
   };
 
   const renderTimeline = (selectedDate) => {
     if (!timeline) return;
-    const slots = getSlotsForDate(selectedDate);
     const units = getTableUnitsByZone(activeAdminZone);
-    const header = slots.map(
+    const header = EVENING_SLOTS.map(
       (slot) => `<div class="admin-timeline__head${slot === selectedTime ? ' is-selected' : ''}">${slot}</div>`
     ).join('');
 
     const rows = units.map((unit) => {
-      const cells = slots.map((slot) => {
+      const cells = EVENING_SLOTS.map((slot) => {
         const status = getUnitStatusAt(unit, selectedDate, slot);
         const isSelected = slot === selectedTime;
         const cellLabel =
@@ -2089,16 +2202,15 @@ if (adminRoot) {
       return `
         <div class="admin-timeline__row">
           <div class="admin-timeline__label">${unit.displayCode}</div>
-          <div class="admin-timeline__cells" style="grid-template-columns: repeat(${slots.length}, minmax(58px, 1fr))">${cells}</div>
+          <div class="admin-timeline__cells">${cells}</div>
         </div>
       `;
     }).join('');
 
-    const colStyle = `grid-template-columns: repeat(${slots.length}, minmax(58px, 1fr))`;
     timeline.innerHTML = `
       <div class="admin-timeline__row admin-timeline__row--head">
         <div class="admin-timeline__label">Tables</div>
-        <div class="admin-timeline__heads" style="${colStyle}">${header}</div>
+        <div class="admin-timeline__heads">${header}</div>
       </div>
       ${rows}
     `;
@@ -2183,9 +2295,8 @@ if (adminRoot) {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
     const units = getTableUnitsByZone(activeAdminZone, currentLayout);
-    const slots = getSlotsForDate(selectedDate);
-    if (!slots.includes(selectedTime)) {
-      selectedTime = slots[0] || EVENING_SLOTS[0];
+    if (!EVENING_SLOTS.includes(selectedTime)) {
+      selectedTime = EVENING_SLOTS[0];
     }
     if (quickMergeSourceId && !units.some((unit) => unit.id === quickMergeSourceId)) {
       quickMergeSourceId = '';
@@ -2620,11 +2731,9 @@ if (adminRoot) {
   if (todayButton) {
     todayButton.addEventListener('click', () => {
       dateInput.value = toISODate(new Date());
-      const todaySlots = getSlotsForDate(dateInput.value);
-      const currentRounded = roundCurrentTimeToHalfHour();
-      selectedTime = todaySlots.includes(currentRounded)
-        ? currentRounded
-        : todaySlots[0] || EVENING_SLOTS[0];
+      selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
+        ? roundCurrentTimeToHalfHour()
+        : EVENING_SLOTS[0];
       renderAdmin();
     });
   }

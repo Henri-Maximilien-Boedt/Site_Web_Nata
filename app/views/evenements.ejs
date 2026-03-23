@@ -18,41 +18,125 @@
 
     <%- include('partials/header', { currentPath: '/evenements' }) %>
 
-    <main class="menu-main">
-      <section class="story reveal">
-        <div class="story-card">
-          <p class="eyebrow">Événements</p>
-          <h2>Privatisation, anniversaires, entreprise</h2>
+    <main class="events-main">
+      <section class="events-hero reveal">
+        <article class="events-hero__intro">
+          <p class="eyebrow">Événements &amp; Food Truck</p>
+          <h1>Crée ton moment NATA</h1>
           <p>
-            NATA Bar accueille vos événements privés et professionnels: ambiance sur mesure, cocktails,
-            restauration assise ou format plus libre selon votre demande.
+            Anniversaire, soirée privée, afterwork ou événement d'entreprise: on compose une
+            formule claire, stylée et adaptée à ton budget.
           </p>
-        </div>
-      </section>
-
-      <section class="events-showcase reveal">
-        <article class="events-showcase__intro">
-          <h3>Ce que nous organisons</h3>
-          <ul>
-            <li>Anniversaires et soirées privées</li>
-            <li>Repas d'équipe et afterworks</li>
-            <li>Privatisation partielle ou totale</li>
-            <li>Formules food & drinks personnalisées</li>
+          <div class="events-hero__actions">
+            <a href="#devis" class="btn btn-primary">Demander un devis</a>
+            <a href="#offres" class="btn btn-ghost">Voir nos formules</a>
+          </div>
+          <ul class="events-hero__tags">
+            <li>Privatisation totale ou partielle</li>
+            <li>Format assis ou cocktail</li>
+            <li>Particulier et entreprise</li>
           </ul>
         </article>
-        <div class="events-showcase__photos">
-          <div class="event-photo-slot">Photo </div>
-          <div class="event-photo-slot">Photo </div>
-          <div class="event-photo-slot">Photo </div>
-          <div class="event-photo-slot">Photo </div>
+
+        <div class="events-hero__visuals" aria-hidden="true">
+          <figure class="events-hero__visual events-hero__visual--main">
+            <img src="/media/img/évenements/PHOTO-2026-03-23-12-13-25.jpg" alt="" loading="lazy" />
+          </figure>
+          <figure class="events-hero__visual">
+            <img src="/media/img/food%20truck/PHOTO-2026-03-23-12-13-20.jpg" alt="" loading="lazy" />
+          </figure>
+          <figure class="events-hero__visual">
+            <img src="/media/img/évenements/PHOTO-2026-03-23-12-13-18.jpg" alt="" loading="lazy" />
+          </figure>
         </div>
       </section>
 
-      <section class="events-devis reveal">
+      <section class="events-offers reveal" id="offres">
+        <article class="events-offer-card">
+          <div class="events-offer-card__head">
+            <p class="eyebrow">Sur place</p>
+            <h2>Privatisation NATA Bar</h2>
+            <p class="events-offer-card__lead">
+              Un espace chaleureux au centre de Louvain-la-Neuve avec ambiance, service et rythme adaptés à ton groupe.
+            </p>
+          </div>
+          <ul class="events-offer-card__list">
+            <li>Anniversaires et soirées privées</li>
+            <li>Repas d'équipe et afterworks</li>
+            <li>Cocktails signatures et menu sur mesure</li>
+            <li>Option privatisation partielle ou totale</li>
+          </ul>
+          <div class="events-offer-card__strip">
+            <figure class="events-offer-photo">
+              <img src="/media/img/évenements/PHOTO-2026-03-23-12-13-18.jpg" alt="Ambiance événement NATA" loading="lazy" />
+            </figure>
+            <figure class="events-offer-photo">
+              <img src="/media/img/évenements/PHOTO-2026-03-23-12-13-25.jpg" alt="Service événement NATA" loading="lazy" />
+            </figure>
+            <figure class="events-offer-photo">
+              <img src="/media/img/évenements/PHOTO-2026-03-23-12-13-18.jpg" alt="Soirée privée au NATA Bar" loading="lazy" />
+            </figure>
+          </div>
+          <a href="#devis" class="btn btn-ghost">Je veux privatiser →</a>
+        </article>
+
+        <article class="events-offer-card">
+          <div class="events-offer-card__head">
+            <p class="eyebrow">En déplacement</p>
+            <h2>Food Truck NATA</h2>
+            <p class="events-offer-card__lead">
+              Le style NATA en version mobile: parfait pour festivals, événements corporate et grandes fêtes privées.
+            </p>
+          </div>
+          <ul class="events-offer-card__list">
+            <li>Festivals et événements publics</li>
+            <li>Mariages, soirées privées et lancements</li>
+            <li>Service rapide avec installation fluide</li>
+            <li>Formules food + drinks personnalisables</li>
+          </ul>
+          <div class="events-offer-card__strip">
+            <figure class="events-offer-photo">
+              <img src="/media/img/food%20truck/PHOTO-2026-03-23-12-13-20.jpg" alt="Food truck NATA" loading="lazy" />
+            </figure>
+            <figure class="events-offer-photo">
+              <img src="/media/img/food%20truck/PHOTO-2026-03-23-12-13-23.jpg" alt="Cuisine food truck NATA" loading="lazy" />
+            </figure>
+            <figure class="events-offer-photo">
+              <img src="/media/img/food%20truck/PHOTO-2026-03-23-12-13-24.jpg" alt="Service food truck NATA" loading="lazy" />
+            </figure>
+          </div>
+          <a href="#devis" class="btn btn-ghost">Je veux le food truck →</a>
+        </article>
+      </section>
+
+      <section class="events-flow reveal">
+        <article class="events-flow__step">
+          <span>1</span>
+          <h3>Tu expliques ton besoin</h3>
+          <p>Date, nombre de personnes, style de service, budget cible.</p>
+        </article>
+        <article class="events-flow__step">
+          <span>2</span>
+          <h3>On te propose une formule</h3>
+          <p>Format clair avec options food, boissons et logistique.</p>
+        </article>
+        <article class="events-flow__step">
+          <span>3</span>
+          <h3>On lance l'organisation</h3>
+          <p>Validation rapide et coordination jusqu'au jour J.</p>
+        </article>
+      </section>
+
+      <section class="events-devis reveal" id="devis">
         <div class="events-devis__head">
           <p class="eyebrow">Demande de devis</p>
           <h2>Parle-nous de ton projet</h2>
           <p>Le formulaire est enregistré en base de données et transmis par email à l'admin.</p>
+          <div class="events-devis__meta">
+            <span>Réponse rapide</span>
+            <span>Offre personnalisée</span>
+            <span>Particulier &amp; entreprise</span>
+          </div>
         </div>
 
         <% if (quoteStatus === 'ok') { %>
@@ -72,9 +156,10 @@
         <% } %>
 
         <div class="events-devis__forms">
-          <form class="booking-form booking-form--devis" method="POST" action="/evenements/devis">
+          <form class="booking-form booking-form--devis events-quote-form" method="POST" action="/evenements/devis">
             <input type="hidden" name="requestKind" value="particulier" />
             <h3>Particulier</h3>
+            <p class="events-quote-form__hint">Pour anniversaires, fêtes, soirées privées, mariages.</p>
             <label>
               Prénom
               <input type="text" name="firstName" required />
@@ -98,9 +183,10 @@
             <button type="submit" class="btn btn-primary">Envoyer le devis</button>
           </form>
 
-          <form class="booking-form booking-form--devis" method="POST" action="/evenements/devis">
+          <form class="booking-form booking-form--devis events-quote-form" method="POST" action="/evenements/devis">
             <input type="hidden" name="requestKind" value="entreprise" />
             <h3>Entreprise</h3>
+            <p class="events-quote-form__hint">Pour afterworks, team dinners, événements clients et corporate.</p>
             <label>
               Prénom
               <input type="text" name="firstName" required />
@@ -149,4 +235,3 @@
     <script src="/js/app.js"></script>
   </body>
 </html>
-

@@ -2,22 +2,29 @@ const pool = require('../db')
 
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
-  terraceLayoutVersion: 'terrace_layout_version_v1'
+  terraceLayoutVersion: 'terrace_layout_version_v1',
+  interiorLayoutVersion: 'interior_layout_version_v1'
 }
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
+const INTERIOR_LAYOUT_VERSION_TARGET = '3'
 
 const DEFAULT_TABLES = [
-  { id: 'T2-1', code: 'T-1', seats: 2, zone: 'interieur', x: 7, y: 12 },
-  { id: 'T2-2', code: 'T-2', seats: 2, zone: 'interieur', x: 7, y: 31 },
-  { id: 'T2-3', code: 'T-3', seats: 2, zone: 'interieur', x: 7, y: 50 },
-  { id: 'T2-4', code: 'T-4', seats: 2, zone: 'interieur', x: 8, y: 74 },
-  { id: 'T2-5', code: 'T-5', seats: 2, zone: 'interieur', x: 21, y: 74 },
-  { id: 'T4-1', code: 'T-6', seats: 4, zone: 'interieur', x: 24, y: 12 },
-  { id: 'T4-2', code: 'T-7', seats: 4, zone: 'interieur', x: 54, y: 12 },
-  { id: 'T4-3', code: 'T-8', seats: 4, zone: 'interieur', x: 24, y: 31 },
-  { id: 'T4-4', code: 'T-9', seats: 4, zone: 'interieur', x: 24, y: 50 },
-  { id: 'T10-1', code: 'T-10', seats: 10, zone: 'interieur', x: 82, y: 82 },
+  { id: 'T2-1', code: 'T-1', seats: 2, zone: 'interieur', x: 28, y: 17 },
+  { id: 'T2-2', code: 'T-2', seats: 2, zone: 'interieur', x: 38, y: 17 },
+  { id: 'T2-3', code: 'T-3', seats: 2, zone: 'interieur', x: 48, y: 17 },
+  { id: 'T2-4', code: 'T-4', seats: 2, zone: 'interieur', x: 58, y: 17 },
+  { id: 'T2-5', code: 'T-5', seats: 2, zone: 'interieur', x: 68, y: 17 },
+  { id: 'T4-1', code: 'T-6', seats: 2, zone: 'interieur', x: 18, y: 42 },
+  { id: 'T4-2', code: 'T-7', seats: 2, zone: 'interieur', x: 44, y: 45 },
+  { id: 'T4-3', code: 'T-8', seats: 2, zone: 'interieur', x: 54, y: 45 },
+  { id: 'T4-4', code: 'T-9', seats: 2, zone: 'interieur', x: 80, y: 34 },
+  { id: 'T10-1', code: 'T-10', seats: 2, zone: 'interieur', x: 80, y: 49 },
+  { id: 'T2-6', code: 'T-22', seats: 2, zone: 'interieur', x: 40, y: 36 },
+  { id: 'T2-7', code: 'T-23', seats: 6, zone: 'interieur', x: 55, y: 36 },
+  { id: 'T2-9', code: 'T-25', seats: 2, zone: 'interieur', x: 40, y: 52 },
+  { id: 'T2-10', code: 'T-26', seats: 2, zone: 'interieur', x: 50, y: 52 },
+  { id: 'T2-11', code: 'T-27', seats: 6, zone: 'interieur', x: 55, y: 56 },
   { id: 'TR2-1', code: 'T-11', seats: 2, zone: 'terrasse', x: 16, y: 22 },
   { id: 'TR2-2', code: 'T-12', seats: 2, zone: 'terrasse', x: 30, y: 22 },
   { id: 'TR2-3', code: 'T-13', seats: 2, zone: 'terrasse', x: 44, y: 22 },
@@ -36,6 +43,10 @@ const DEFAULT_TABLE_BY_CODE = Object.fromEntries(DEFAULT_TABLES.map((table) => [
 let initPromise = null
 
 const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
+const TABLE_SIZE_SCALE = 0.7
+const BASE_RECT_TABLE_WIDTH = 11 * TABLE_SIZE_SCALE
+const BASE_RECT_TABLE_HEIGHT = clamp((8 + 2 * 1.6) * TABLE_SIZE_SCALE, 12 * TABLE_SIZE_SCALE, 30 * TABLE_SIZE_SCALE)
+const WIDE_INTERIOR_TABLE_CODES = new Set(['T-23', 'T-27'])
 const pad2 = (value) => String(value).padStart(2, '0')
 
 const toMinutes = (value) => {
@@ -80,8 +91,32 @@ const normalizePhone = (value) => {
 
 const overlaps = (startA, endA, startB, endB) => startA < endB && startB < endA
 
-const getTableRectHeight = (seats) => clamp(8 + Number(seats || 0) * 1.6, 12, 30)
-const getTableRoundDiameter = (seats) => clamp(8 + Number(seats || 0) * 1.7, 11, 20)
+const getTableRectHeight = (seats) =>
+  clamp(
+    (8 + Number(seats || 0) * 1.6) * TABLE_SIZE_SCALE,
+    12 * TABLE_SIZE_SCALE,
+    30 * TABLE_SIZE_SCALE
+  )
+const getTableRoundDiameter = (seats) =>
+  clamp(
+    (8 + Number(seats || 0) * 1.7) * TABLE_SIZE_SCALE,
+    11 * TABLE_SIZE_SCALE,
+    20 * TABLE_SIZE_SCALE
+  )
+
+const getInteriorRectSize = (table) => {
+  if (WIDE_INTERIOR_TABLE_CODES.has(String(table?.code || ''))) {
+    return {
+      width: BASE_RECT_TABLE_WIDTH * 1.8,
+      height: BASE_RECT_TABLE_HEIGHT
+    }
+  }
+
+  return {
+    width: BASE_RECT_TABLE_WIDTH,
+    height: getTableRectHeight(table?.seats)
+  }
+}
 
 const hasSameMembers = (a, b) => {
   if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) return false
@@ -193,28 +228,6 @@ const ensureRuntimeSchema = async (client) => {
     ADD COLUMN IF NOT EXISTS vat_number text,
     ADD COLUMN IF NOT EXISTS peppol_id text
   `)
-
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS news_posts (
-      id           serial PRIMARY KEY,
-      title        text NOT NULL,
-      content      text,
-      event_date   date,
-      is_published boolean DEFAULT false,
-      is_pinned    boolean DEFAULT false,
-      created_at   timestamptz DEFAULT now()
-    )
-  `)
-
-  await client.query(`
-    CREATE TABLE IF NOT EXISTS news_images (
-      id         serial PRIMARY KEY,
-      post_id    integer REFERENCES news_posts(id) ON DELETE CASCADE,
-      url        text NOT NULL,
-      is_main    boolean DEFAULT false,
-      sort_order integer DEFAULT 0
-    )
-  `)
 }
 
 const ensureDefaultTables = async (client) => {
@@ -273,6 +286,43 @@ const ensureTerraceLayoutVersion = async (client) => {
   )
 }
 
+const ensureInteriorLayoutVersion = async (client) => {
+  const { rows } = await client.query('SELECT value FROM settings WHERE key = $1', [
+    SETTINGS_KEYS.interiorLayoutVersion
+  ])
+
+  const currentVersion = String(rows?.[0]?.value || '')
+  if (currentVersion === INTERIOR_LAYOUT_VERSION_TARGET) return
+
+  const interiorDefaults = DEFAULT_TABLES.filter((table) => table.zone === 'interieur')
+
+  for (const table of interiorDefaults) {
+    await client.query(
+      'UPDATE tables SET seats = $1, pos_x = $2, pos_y = $3 WHERE code = $4',
+      [table.seats, table.x, table.y, table.code]
+    )
+  }
+
+  const interiorCodes = interiorDefaults.map((table) => table.code)
+
+  await client.query('UPDATE tables SET is_active = false WHERE zone = $1 AND code <> ALL($2::text[])', [
+    'interieur',
+    interiorCodes
+  ])
+
+  await client.query('UPDATE tables SET is_active = true WHERE code = ANY($1::text[])', [interiorCodes])
+
+  await client.query(
+    `
+      INSERT INTO settings (key, value)
+      VALUES ($1, $2)
+      ON CONFLICT (key)
+      DO UPDATE SET value = EXCLUDED.value
+    `,
+    [SETTINGS_KEYS.interiorLayoutVersion, INTERIOR_LAYOUT_VERSION_TARGET]
+  )
+}
+
 const ensureInitialized = async () => {
   if (initPromise) return initPromise
 
@@ -284,6 +334,7 @@ const ensureInitialized = async () => {
       await ensureRuntimeSchema(client)
       await ensureDefaultTables(client)
       await ensureSettingsDefaults(client)
+      await ensureInteriorLayoutVersion(client)
       await ensureTerraceLayoutVersion(client)
       await client.query('COMMIT')
     } catch (error) {
@@ -316,6 +367,7 @@ const listTables = async () => {
         pos_y::float8 AS pos_y,
         is_active
       FROM tables
+      WHERE is_active = true
       ORDER BY id ASC
     `)
     rows = result.rows || []
@@ -351,8 +403,9 @@ const getTableLayoutMap = (tables) => {
 
   tables.forEach((table) => {
     const isTerrace = table.zone === 'terrasse'
-    const width = isTerrace ? getTableRoundDiameter(table.seats) : 11
-    const height = isTerrace ? width : getTableRectHeight(table.seats)
+    const interiorRect = isTerrace ? null : getInteriorRectSize(table)
+    const width = isTerrace ? getTableRoundDiameter(table.seats) : interiorRect.width
+    const height = isTerrace ? width : interiorRect.height
     layout[table.id] = {
       x: table.x,
       y: table.y,
