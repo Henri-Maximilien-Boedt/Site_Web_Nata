@@ -510,27 +510,28 @@ const mergeUnitsById = (sourceUnitId, targetUnitId) => {
 };
 
 const alignMergedGroupLayout = (group, anchorId) => {
+  // Place merged tables side by side (horizontal grow), keeping each table's width/height.
   if (!Array.isArray(group) || group.length < 2) return;
   const layout = getTableLayout();
   const anchor = layout[anchorId] || layout[group[0]];
   if (!anchor) return;
 
   const ordered = [anchorId, ...group.filter((id) => id !== anchorId)];
-  const totalHeight = ordered.reduce((sum, tableId) => {
+  const totalWidth = ordered.reduce((sum, tableId) => {
     const item = layout[tableId];
-    return sum + (item ? item.h : 0);
+    return sum + (item ? item.w : 0);
   }, 0);
-  if (!totalHeight) return;
+  if (!totalWidth) return;
 
-  let cursor = anchor.y - totalHeight / 2;
+  let cursor = anchor.x - totalWidth / 2;
   ordered.forEach((tableId) => {
     const item = layout[tableId];
     if (!item) return;
     const halfW = item.w / 2;
     const halfH = item.h / 2;
-    item.x = clamp(anchor.x, halfW + 1, 99 - halfW);
-    item.y = clamp(cursor + item.h / 2, halfH + 1, 99 - halfH);
-    cursor += item.h;
+    item.x = clamp(cursor + item.w / 2, halfW + 1, 99 - halfW);
+    item.y = clamp(anchor.y, halfH + 1, 99 - halfH);
+    cursor += item.w;
   });
 
   writeTableLayout(layout);
