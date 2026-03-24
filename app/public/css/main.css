@@ -2143,6 +2143,82 @@ a.focus-card {
   margin-top: 1rem;
 }
 
+.admin-analytics {
+  margin-top: 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.admin-analytics__head {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  padding-top: 0.2rem;
+}
+
+.admin-analytics__head h3 {
+  margin: 0.3rem 0 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.03em;
+  font-size: clamp(1.35rem, 3.2vw, 1.85rem);
+  color: #153f70;
+}
+
+.admin-analytics__head .admin-help {
+  max-width: 720px;
+}
+
+.admin-analytics__cards {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.6rem;
+}
+
+.admin-analytics__table-wrap {
+  overflow-x: auto;
+  border: 1px solid #d3e1ef;
+  border-radius: 12px;
+}
+
+.admin-analytics__table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 580px;
+  background: #f8fbff;
+}
+
+.admin-analytics__table th,
+.admin-analytics__table td {
+  padding: 0.75rem 0.8rem;
+  border-bottom: 1px solid #dce8f5;
+  text-align: left;
+}
+
+.admin-analytics__table thead th {
+  background: #eef5fc;
+  color: #214a75;
+  font-size: 0.78rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+.admin-analytics__table tbody th {
+  color: #153f70;
+  font-size: 0.92rem;
+}
+
+.admin-analytics__table tbody td {
+  color: #4f6478;
+  font-variant-numeric: tabular-nums;
+}
+
+.admin-analytics__table tbody tr:last-child th,
+.admin-analytics__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
 .admin-timeline {
   overflow-x: auto;
   border: 1px solid #d3e1ef;
@@ -2901,6 +2977,10 @@ body.image-lightbox-open {
     grid-template-columns: 1fr;
   }
 
+  .admin-analytics__cards {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
   .admin-split-quick__list {
     display: grid;
     grid-template-columns: 1fr;
@@ -2987,6 +3067,10 @@ body.image-lightbox-open {
 
   .events-hero__visuals,
   .events-offer-card__strip {
+    grid-template-columns: 1fr;
+  }
+
+  .admin-analytics__cards {
     grid-template-columns: 1fr;
   }
 

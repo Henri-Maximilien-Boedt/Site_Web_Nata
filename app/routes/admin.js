@@ -5,6 +5,7 @@ const router = express.Router()
 const isAuth = require('../middleware/auth')
 const upload = require('../middleware/upload')
 const pool = require('../db')
+const { getPageViewStats } = require('../lib/pageAnalytics')
 const {
   deleteReservation,
   getClientState,
@@ -17,12 +18,20 @@ const {
 const renderDashboard = async (req, res, next, section, title) => {
   try {
     const clientState = await getClientState()
+    let pageAnalytics = null
+
+    try {
+      pageAnalytics = await getPageViewStats()
+    } catch (analyticsError) {
+      console.error('Erreur chargement analytics admin:', analyticsError)
+    }
 
     res.render('admin/dashboard', {
       title,
       admin: req.session.admin,
       currentSection: section,
-      clientStateJson: serializeStateForScript(clientState)
+      clientStateJson: serializeStateForScript(clientState),
+      pageAnalytics
     })
   } catch (error) {
     next(error)

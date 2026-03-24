@@ -103,6 +103,19 @@ CREATE TABLE IF NOT EXISTS quote_requests (
 
 -- ============================================================
 
+CREATE TABLE IF NOT EXISTS analytics_pageviews_daily (
+  view_date  date NOT NULL,
+  page_key   text NOT NULL,
+  page_label text NOT NULL,
+  view_count integer NOT NULL DEFAULT 0 CHECK (view_count >= 0),
+  created_at timestamptz DEFAULT now(),
+  updated_at timestamptz DEFAULT now(),
+  PRIMARY KEY (view_date, page_key)
+);
+CREATE INDEX IF NOT EXISTS idx_analytics_pageviews_daily_page_key ON analytics_pageviews_daily (page_key);
+
+-- ============================================================
+
 CREATE TABLE IF NOT EXISTS settings (
   key   text PRIMARY KEY,
   value text NOT NULL

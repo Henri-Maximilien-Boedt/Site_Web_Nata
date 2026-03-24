@@ -4,6 +4,7 @@ const path = require('path')
 const session = require('express-session')
 const PgSession = require('connect-pg-simple')(session)
 const pool = require('./db')
+const { pageAnalyticsMiddleware } = require('./lib/pageAnalytics')
 
 const app = express()
 
@@ -27,7 +28,7 @@ app.use(session({
   store: new PgSession({ pool }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-prod',
   resave: false,
-  saveUninitialized: true, // Initialiser même sans authentification
+  saveUninitialized: false, // Pas de cookie public inutile pour les visiteurs anonymes
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 heures
     httpOnly: true,
@@ -35,6 +36,8 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production' // HTTPS only en prod
   }
 }))
+
+app.use(pageAnalyticsMiddleware)
 
 // ============================================================
 // Routes

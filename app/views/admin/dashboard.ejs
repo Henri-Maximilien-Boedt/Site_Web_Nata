@@ -91,6 +91,69 @@
             <p class="admin-count">Vue soirée par table (30 minutes)</p>
             <div class="admin-timeline" data-admin-timeline></div>
           </div>
+
+          <section class="admin-analytics" aria-labelledby="admin-analytics-title">
+            <div class="admin-analytics__head">
+              <div>
+                <p class="eyebrow">Audience site</p>
+                <h3 id="admin-analytics-title">Pages vues publiques</h3>
+              </div>
+              <p class="admin-help">
+                Mesure serveur sans cookie analytics ni identifiant visiteur. Les chiffres ci-dessous comptent des pages vues, pas des visiteurs uniques.
+              </p>
+            </div>
+
+            <% if (pageAnalytics) { %>
+              <div class="admin-analytics__cards">
+                <article class="admin-service-card">
+                  <p class="admin-service-card__label">Aujourd'hui</p>
+                  <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.today_views || 0).toLocaleString('fr-BE') %></p>
+                  <p class="admin-service-card__suffix">pages vues</p>
+                </article>
+                <article class="admin-service-card">
+                  <p class="admin-service-card__label">7 jours</p>
+                  <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.last_7_days_views || 0).toLocaleString('fr-BE') %></p>
+                  <p class="admin-service-card__suffix">pages vues</p>
+                </article>
+                <article class="admin-service-card">
+                  <p class="admin-service-card__label">30 jours</p>
+                  <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.last_30_days_views || 0).toLocaleString('fr-BE') %></p>
+                  <p class="admin-service-card__suffix">pages vues</p>
+                </article>
+              </div>
+
+              <div class="admin-panel">
+                <p class="admin-count">Conservation limitée aux 30 derniers jours.</p>
+
+                <div class="admin-analytics__table-wrap">
+                  <table class="admin-analytics__table">
+                    <thead>
+                      <tr>
+                        <th scope="col">Page</th>
+                        <th scope="col">Aujourd'hui</th>
+                        <th scope="col">7 jours</th>
+                        <th scope="col">30 jours</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      <% pageAnalytics.pages.forEach((page) => { %>
+                        <tr>
+                          <th scope="row"><%= page.pageLabel %></th>
+                          <td><%= Number(page.todayViews || 0).toLocaleString('fr-BE') %></td>
+                          <td><%= Number(page.last7DaysViews || 0).toLocaleString('fr-BE') %></td>
+                          <td><%= Number(page.last30DaysViews || 0).toLocaleString('fr-BE') %></td>
+                        </tr>
+                      <% }) %>
+                    </tbody>
+                  </table>
+                </div>
+              </div>
+            <% } else { %>
+              <div class="admin-panel">
+                <p class="admin-help">Statistiques indisponibles pour le moment. Vérifie la connexion base de données.</p>
+              </div>
+            <% } %>
+          </section>
         </div>
       </section>
     </main>
