@@ -1,9 +1,8 @@
 const express = require('express')
-const path = require('path')
-const fs = require('fs')
 const router = express.Router()
 const isAuth = require('../middleware/auth')
 const upload = require('../middleware/upload')
+const { cloudinary } = require('../middleware/upload')
 const pool = require('../db')
 const { getPageViewStats } = require('../lib/pageAnalytics')
 const {
@@ -38,16 +37,6 @@ const renderDashboard = async (req, res, next, section, title) => {
   }
 }
 
-const uploadsDir = path.join(__dirname, '../public/uploads')
-
-function deleteUploadByUrl(urlPath) {
-  if (!urlPath) return
-  const normalized = path.posix.normalize(String(urlPath))
-  if (!normalized.startsWith('/uploads/')) return
-  const filename = path.basename(normalized)
-  const absolutePath = path.join(uploadsDir, filename)
-  fs.unlink(absolutePath, () => {})
-}
 
 // ============================================================
 // Routes login / logout (non protégées)
@@ -347,10 +336,12 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     const id = Number.parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return next()
 
-    // Fetch images to delete files from disk
-    const { rows: images } = await pool.query(`SELECT url FROM news_images WHERE post_id = $1`, [id])
+    // Destroy images on Cloudinary before cascade-delete
+    const { rows: images } = await pool.query(`SELECT cloudinary_id FROM news_images WHERE post_id = $1`, [id])
     for (const img of images) {
-      deleteUploadByUrl(img.url)
+      if (img.cloudinary_id) {
+        await cloudinary.uploader.destroy(img.cloudinary_id).catch(() => {})
+      }
     }
 
     await pool.query(`DELETE FROM news_posts WHERE id = $1`, [id])
@@ -380,12 +371,13 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
     const ignoredCount = Math.max(0, files.length - toInsert.length)
 
     for (let i = 0; i < toInsert.length; i++) {
-      const url = `/uploads/${toInsert[i].filename}`
+      const url = toInsert[i].path          // Cloudinary HTTPS URL
+      const cloudinaryId = toInsert[i].filename  // public_id
       // First image overall becomes main
       const isMain = currentCount === 0 && i === 0
       await pool.query(
-        `INSERT INTO news_images (post_id, url, is_main, sort_order) VALUES ($1, $2, $3, $4)`,
-        [id, url, isMain, currentCount + i]
+        `INSERT INTO news_images (post_id, url, cloudinary_id, is_main, sort_order) VALUES ($1, $2, $3, $4, $5)`,
+        [id, url, cloudinaryId, isMain, currentCount + i]
       )
     }
 
@@ -430,12 +422,14 @@ router.post('/actualites/:id/images/:imgId/delete', isAuth, async (req, res, nex
     if (!Number.isInteger(id) || !Number.isInteger(imgId)) return next()
 
     const { rows } = await pool.query(
-      `DELETE FROM news_images WHERE id = $1 AND post_id = $2 RETURNING url, is_main`,
+      `DELETE FROM news_images WHERE id = $1 AND post_id = $2 RETURNING cloudinary_id, is_main`,
       [imgId, id]
     )
 
     if (rows.length) {
-      deleteUploadByUrl(rows[0].url)
+      if (rows[0].cloudinary_id) {
+        await cloudinary.uploader.destroy(rows[0].cloudinary_id).catch(() => {})
+      }
 
       // If the deleted image was main, promote the first remaining image
       if (rows[0].is_main) {
