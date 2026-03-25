@@ -1015,7 +1015,7 @@ const initMenuDescriptions = () => {
 
 initMenuDescriptions();
 
-const readReservations = () => {
+const readReservationsRaw = () => {
   try {
     const raw = localStorage.getItem(STORAGE_KEYS.reservations);
     const parsed = raw ? JSON.parse(raw) : [];
@@ -1023,6 +1023,13 @@ const readReservations = () => {
   } catch {
     return [];
   }
+};
+
+const readReservations = (options = {}) => {
+  const includeCancelled = Boolean(options.includeCancelled);
+  const all = readReservationsRaw();
+  if (includeCancelled) return all;
+  return all.filter((item) => item.status !== 'cancelled');
 };
 
 const writeReservations = (reservations) => {
@@ -1052,8 +1059,23 @@ const deleteReservationOnServer = async (id) => {
 
 const removeReservation = async (id) => {
   await deleteReservationOnServer(id);
-  const reservations = readReservations().filter((item) => item.id !== id);
+  const reservations = readReservationsRaw().filter((item) => item.id !== id);
   writeReservations(reservations);
+};
+
+const updateReservationStatusRemote = async (id, status) => {
+  const payload = await requestJSON(`/admin/api/reservations/${encodeURIComponent(id)}/status`, {
+    method: 'PATCH',
+    body: JSON.stringify({ status }),
+  });
+  const updated = payload?.reservation;
+  const existing = readReservationsRaw();
+  const next = existing.map((item) => (item.id === updated.id ? { ...item, ...updated } : item));
+  if (!next.some((item) => item.id === updated.id)) {
+    next.unshift(updated);
+  }
+  writeReservations(next);
+  return updated;
 };
 
 const readAdminBlocks = () => {
@@ -1141,7 +1163,7 @@ const getReservationMembers = (reservation) => {
 
 const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => {
   const targetStart = toMinutes(timeHHMM);
-  const targetEnd = targetStart + 120;
+  const targetEnd = targetStart + 90;
 
   const hasReservationOverlap = readReservations().some((reservation) => {
     if (ignoreReservationId && reservation.id === ignoreReservationId) return false;
@@ -1149,7 +1171,7 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
     const members = getReservationMembers(reservation);
     if (!members.includes(tableId)) return false;
     const start = toMinutes(reservation.time);
-    const end = start + 120;
+    const end = start + 90;
     return overlaps(targetStart, targetEnd, start, end);
   });
 
@@ -1472,7 +1494,7 @@ if (bookingForms.length) {
     const people = getPeopleCount(booking);
     const units = getTableUnitsByZone(activeTableZone);
     const activeZoneLabel = ZONE_LABELS[activeTableZone] || ZONE_LABELS.interieur;
-    tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (2h) - ${people} personne${people > 1 ? 's' : ''} - ${activeZoneLabel}`;
+    tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (1h30) - ${people} personne${people > 1 ? 's' : ''} - ${activeZoneLabel}`;
     tableLayout.classList.toggle('table-layout--terrace', activeTableZone === 'terrasse');
     const decorations = activeTableZone === 'terrasse' ? TABLE_TERRACE_DECORATIONS : TABLE_FLOOR_DECORATIONS;
 
@@ -1912,7 +1934,7 @@ if (adminRoot) {
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
   const ADMIN_HELP_DEFAULT =
-    'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
+    'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (1h30).';
   const ADMIN_HELP_MERGE =
     'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
   let selectedTime = getDefaultAdminSlotForDate(dateInput?.value || toISODate(new Date()));
@@ -2037,7 +2059,7 @@ if (adminRoot) {
 
   const getReservationRangeText = (reservation) => {
     const start = toMinutes(reservation.time);
-    const end = start + 120;
+    const end = start + 90;
     return `${fromMinutes(start)} - ${fromMinutes(end)}`;
   };
 
@@ -2053,7 +2075,7 @@ if (adminRoot) {
 
     return reservations.find((reservation) => {
       const start = toMinutes(reservation.time);
-      const end = start + 120;
+      const end = start + 90;
       return point >= start && point < end;
     });
   };
@@ -2099,7 +2121,7 @@ if (adminRoot) {
     if (!normalizedMembers.length) return;
     const selectedDate = dateInput.value || toISODate(new Date());
     const blockStart = toMinutes(atTime);
-    const blockEnd = blockStart + 120;
+    const blockEnd = blockStart + 90;
     const unitCode =
       normalizedMembers.length > 1
         ? getUnitDisplayCodeById(`GROUP:${normalizedMembers.slice().sort().join('+')}`)
@@ -2109,7 +2131,7 @@ if (adminRoot) {
       const reservationMembers = getReservationMembers(reservation);
       if (!reservationMembers.some((memberId) => normalizedMembers.includes(memberId))) return false;
       const start = toMinutes(reservation.time);
-      const end = start + 120;
+      const end = start + 90;
       return overlaps(blockStart, blockEnd, start, end);
     });
 
@@ -2134,7 +2156,7 @@ if (adminRoot) {
       return;
     }
 
-    const endMinutes = toMinutes(atTime) + 120;
+    const endMinutes = toMinutes(atTime) + 90;
     const endTime = fromMinutes(endMinutes);
     const nextBlocks = [...currentBlocks];
     normalizedMembers.forEach((memberId) => {
@@ -2398,9 +2420,11 @@ if (adminRoot) {
       quickMergeSourceId = '';
     }
     const term = (searchInput.value || '').trim().toLowerCase();
-    const reservations = readReservations();
-    const filteredReservations = reservations
-      .filter((item) => item.date === selectedDate)
+    const reservations = readReservations({ includeCancelled: true });
+    const dayReservations = reservations.filter((item) => item.date === selectedDate);
+    const activeDayReservations = dayReservations.filter((item) => item.status !== 'cancelled');
+    const filteredReservations = dayReservations
+      .filter((item) => item.status === 'confirmed')
       .filter((item) => {
         if (!term) return true;
         const combined = `${item.name || ''} ${item.email || ''} ${item.phone || ''} ${item.tableLabel || ''} ${item.tableId || ''}`;
@@ -2413,11 +2437,10 @@ if (adminRoot) {
         return new Date(a.createdAt || 0) - new Date(b.createdAt || 0);
       });
     const dayBlocks = readAdminBlocks().filter((item) => item.date === selectedDate);
-    const selectedDateCovers = reservations
-      .filter((item) => item.date === selectedDate)
+    const selectedDateCovers = activeDayReservations
       .reduce((sum, item) => sum + toPeopleCount(item.people), 0);
 
-    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} • ${selectedDateCovers} couvert${selectedDateCovers > 1 ? 's' : ''} • ${dayBlocks.length} indisponibilité${dayBlocks.length > 1 ? 's' : ''} • ${formatISODateLong(selectedDate)}`;
+    countLabel.textContent = `${filteredReservations.length} réservation${filteredReservations.length > 1 ? 's' : ''} confirmée${filteredReservations.length > 1 ? 's' : ''} • ${selectedDateCovers} couvert${selectedDateCovers > 1 ? 's' : ''} • ${dayBlocks.length} indisponibilité${dayBlocks.length > 1 ? 's' : ''} • ${formatISODateLong(selectedDate)}`;
 
     if (!filteredReservations.length) {
       list.innerHTML = '<p class="admin-empty">Aucune réservation trouvée pour cette date.</p>';
@@ -2428,10 +2451,8 @@ if (adminRoot) {
             <article class="reservation-card">
               <div class="reservation-card__head">
                 <h4>${escapeHTML(item.name)}</h4>
-                <button type="button" class="btn btn-ghost reservation-delete" data-reservation-delete="${escapeHTML(item.id)}">
-                  Supprimer
-                </button>
               </div>
+              <p class="reservation-card__status"><span class="badge badge--confirmed">Confirmée</span></p>
               <p><strong>Email :</strong> ${escapeHTML(item.email)}</p>
               <p><strong>Téléphone :</strong> ${escapeHTML(item.phone || 'Non renseigné')}</p>
               <p><strong>Date :</strong> ${escapeHTML(formatISODateLong(item.date))}</p>
@@ -2439,6 +2460,9 @@ if (adminRoot) {
               <p><strong>Personnes :</strong> ${escapeHTML(item.people || '?')}</p>
               <p><strong>Table :</strong> ${escapeHTML(item.tableLabel || item.tableId || 'Non définie')}</p>
               <p><strong>Message :</strong> ${escapeHTML(item.message || 'Aucun message')}</p>
+              <div class="reservation-card__actions">
+                <button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Annuler</button>
+              </div>
             </article>
           `
         )
@@ -2802,14 +2826,31 @@ if (adminRoot) {
     list.addEventListener('click', async (event) => {
       const target = event.target;
       if (!(target instanceof HTMLElement)) return;
-      const id = target.getAttribute('data-reservation-delete');
-      if (!id) return;
-      try {
-        await removeReservation(id);
-        renderAdmin();
-      } catch (error) {
-        setActionFeedback(error?.message || 'Suppression impossible.', 'error');
+      const acceptId = target.getAttribute('data-reservation-accept');
+      const rejectId = target.getAttribute('data-reservation-reject');
+
+      if (acceptId) {
+        try {
+          await updateReservationStatusRemote(acceptId, 'confirmed');
+          setActionFeedback('Réservation confirmée et email prêt à être envoyé.');
+          renderAdmin();
+        } catch (error) {
+          setActionFeedback(error?.message || 'Confirmation impossible.', 'error');
+        }
+        return;
       }
+
+      if (rejectId) {
+        try {
+          await updateReservationStatusRemote(rejectId, 'cancelled');
+          setActionFeedback('Réservation annulée et email prêt à être envoyé.');
+          renderAdmin();
+        } catch (error) {
+          setActionFeedback(error?.message || 'Annulation impossible.', 'error');
+        }
+        return;
+      }
+
     });
   }
 

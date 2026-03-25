@@ -344,6 +344,12 @@
   border: 1px solid #ccc;
 }
 
+.badge--pending {
+  background: #fff7e6;
+  color: #946200;
+  border: 1px solid #f1c96a;
+}
+
 .badge--confirmed {
   background: #ddf4e8;
   color: #1a6636;
@@ -1033,6 +1039,17 @@
 .reservation-card p {
   margin: 0.4rem 0 0;
   color: #546779;
+}
+
+.reservation-card__status {
+  margin: 0.1rem 0 0.5rem;
+}
+
+.reservation-card__actions {
+  margin-top: 0.6rem;
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 .reservation-delete {

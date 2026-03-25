@@ -37,6 +37,7 @@
               <th>Couverts</th>
               <th>Source</th>
               <th>Statut</th>
+              <th>Actions</th>
             </tr>
           </thead>
           <tbody>
@@ -58,7 +59,25 @@
                     <%= r.source === 'phone' ? 'Téléphone' : 'En ligne' %>
                   </span>
                 </td>
-                <td><span class="badge badge--confirmed">Confirmée</span></td>
+                <td>
+                  <% if (r.status === 'pending') { %>
+                    <span class="badge badge--pending">En attente</span>
+                  <% } else if (r.status === 'confirmed') { %>
+                    <span class="badge badge--confirmed">Confirmée</span>
+                  <% } else { %>
+                    <span class="badge badge--inactive">Annulée</span>
+                  <% } %>
+                </td>
+                <td>
+                  <% if (r.status === 'pending') { %>
+                    <button class="btn btn-primary btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Confirmer</button>
+                    <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Refuser</button>
+                  <% } else if (r.status === 'confirmed') { %>
+                    <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Annuler</button>
+                  <% } else { %>
+                    <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Reconfirmer</button>
+                  <% } %>
+                </td>
               </tr>
             <% }) %>
           </tbody>
@@ -66,5 +85,35 @@
       </div>
     <% } %>
   </div>
+  <script>
+    (() => {
+      const root = document.currentScript?.parentElement || document;
+      const buttons = root.querySelectorAll('[data-res-status]');
+      if (!buttons.length) return;
+      buttons.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          const status = btn.getAttribute('data-status');
+          if (!id || !status) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch(`/admin/api/reservations/${encodeURIComponent(id)}/status`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ status })
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.message || `Erreur ${res.status}`);
+            }
+            window.location.reload();
+          } catch (err) {
+            alert(err.message || 'Action impossible.');
+            btn.disabled = false;
+          }
+        });
+      });
+    })();
+  </script>
 </body>
 </html>

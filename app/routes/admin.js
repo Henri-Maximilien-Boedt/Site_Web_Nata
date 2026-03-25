@@ -10,6 +10,7 @@ const {
   getClientState,
   replaceAdminBlocks,
   serializeStateForScript,
+  updateReservationStatus,
   updateTableLayout,
   updateTableMerges
 } = require('../lib/restaurantStore')
@@ -81,6 +82,12 @@ router.get('/', isAuth, (req, res, next) => {
 
 router.get('/reservations', isAuth, async (req, res, next) => {
   try {
+    await pool.query(`
+      DELETE FROM reservations
+      WHERE (status = 'cancelled' AND date < CURRENT_DATE - INTERVAL '10 days')
+         OR (status <> 'cancelled' AND date < CURRENT_DATE - INTERVAL '1 day')
+    `)
+
     const { rows: reservations } = await pool.query(
       `SELECT
         r.id,
@@ -93,9 +100,10 @@ router.get('/reservations', isAuth, async (req, res, next) => {
         t.code AS table_code
       FROM reservations r
       LEFT JOIN tables t ON t.id = r.table_id
-      WHERE r.status = 'confirmed' AND r.date >= CURRENT_DATE
-      ORDER BY r.date ASC, r.time_start ASC, r.created_at DESC
-      LIMIT 150`
+      WHERE (r.status = 'cancelled' AND r.date >= CURRENT_DATE - INTERVAL '10 days')
+         OR (r.status <> 'cancelled' AND r.date >= CURRENT_DATE - INTERVAL '1 day')
+      ORDER BY r.date DESC, r.time_start DESC, r.created_at DESC
+      LIMIT 200`
     )
 
     res.render('admin/reservations', {
@@ -467,6 +475,19 @@ router.delete('/api/reservations/:id', isAuth, async (req, res, next) => {
     const deleted = await deleteReservation(req.params.id)
     if (!deleted) return res.status(404).json({ ok: false, message: 'Réservation introuvable.' })
     res.json({ ok: true })
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ ok: false, message: error.message })
+    }
+    next(error)
+  }
+})
+
+router.patch('/api/reservations/:id/status', isAuth, async (req, res, next) => {
+  try {
+    const { status } = req.body || {}
+    const reservation = await updateReservationStatus(req.params.id, status)
+    res.json({ ok: true, reservation })
   } catch (error) {
     if (error.status) {
       return res.status(error.status).json({ ok: false, message: error.message })

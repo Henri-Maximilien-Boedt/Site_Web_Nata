@@ -1,4 +1,8 @@
 const pool = require('../db')
+const {
+  sendReservationAcknowledgement,
+  sendReservationStatusEmail
+} = require('./reservationMailer')
 
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
@@ -219,6 +223,21 @@ const ensureRuntimeSchema = async (client) => {
   `)
 
   await client.query(`
+    DO $$
+    BEGIN
+      IF EXISTS (
+        SELECT 1 FROM information_schema.columns
+        WHERE table_name = 'reservations' AND column_name = 'status'
+      ) THEN
+        ALTER TABLE reservations DROP CONSTRAINT IF EXISTS reservations_status_check;
+        ALTER TABLE reservations
+          ADD CONSTRAINT reservations_status_check CHECK (status IN ('pending','confirmed','cancelled'));
+        ALTER TABLE reservations ALTER COLUMN status SET DEFAULT 'pending';
+      END IF;
+    END $$;
+  `)
+
+  await client.query(`
     ALTER TABLE quote_requests
     ADD COLUMN IF NOT EXISTS request_kind text,
     ADD COLUMN IF NOT EXISTS first_name text,
@@ -233,6 +252,17 @@ const ensureRuntimeSchema = async (client) => {
     ALTER TABLE news_images
     ADD COLUMN IF NOT EXISTS cloudinary_id text
   `)
+}
+
+const purgeOldReservations = async () => {
+  await ensureInitialized()
+  await pool.query(
+    `
+    DELETE FROM reservations
+    WHERE (status = 'cancelled' AND date < CURRENT_DATE - INTERVAL '10 days')
+       OR (status <> 'cancelled' AND date < CURRENT_DATE - INTERVAL '1 day')
+    `
+  )
 }
 
 const ensureDefaultTables = async (client) => {
@@ -458,8 +488,15 @@ const setTableMerges = async (groups, validIds, tableZonesById = null) => {
   return normalized
 }
 
-const listReservations = async (tables, tableMerges) => {
+const listReservations = async (tables, tableMerges, options = {}) => {
   await ensureInitialized()
+  await purgeOldReservations()
+
+  const statuses = Array.isArray(options.statuses) && options.statuses.length
+    ? options.statuses.map((s) => String(s || '').trim().toLowerCase())
+    : null
+  const statusClause = statuses ? 'r.status = ANY($1)' : 'TRUE'
+  const params = statuses ? [statuses] : []
 
   const tableByUiId = Object.fromEntries(tables.map((table) => [table.id, table]))
   const dbIdToUiId = Object.fromEntries(tables.map((table) => [String(table.dbId), table.id]))
@@ -486,10 +523,11 @@ const listReservations = async (tables, tableMerges) => {
     FROM reservations r
     LEFT JOIN reservation_tables rt
       ON rt.reservation_id = r.id
-    WHERE r.status = 'confirmed'
+    WHERE ${statusClause}
     GROUP BY r.id
     ORDER BY r.date DESC, r.time_start ASC, r.id DESC
-  `)
+  `,
+  params)
 
   return rows.map((row) => {
     const memberIds = Array.isArray(row.member_ids)
@@ -578,7 +616,7 @@ const getClientState = async () => {
   const validIds = new Set(tables.map((table) => table.id))
   const tableZonesById = Object.fromEntries(tables.map((table) => [table.id, table.zone]))
   const tableMerges = await getTableMerges(validIds, tableZonesById)
-  const reservations = await listReservations(tables, tableMerges)
+  const reservations = await listReservations(tables, tableMerges, { statuses: ['pending', 'confirmed'] })
   const adminBlocks = await listAdminBlocks(tables)
 
   return {
@@ -618,14 +656,15 @@ const parseMemberIds = (tableMembers, tableId, tablesById) => {
 
 const hasConflict = ({ members, date, time, reservations, adminBlocks }) => {
   const targetStart = toMinutes(time)
-  const targetEnd = targetStart + 120
+  const targetEnd = targetStart + 90
 
   const reservationConflict = reservations.some((reservation) => {
+    if (reservation.status === 'cancelled') return false
     if (reservation.date !== date) return false
     if (!reservation.tableMembers.some((memberId) => members.includes(memberId))) return false
 
     const start = toMinutes(reservation.time)
-    const end = start + 120
+    const end = start + 90
     return overlaps(targetStart, targetEnd, start, end)
   })
 
@@ -740,7 +779,7 @@ const createReservation = async (payload) => {
         ? getMergedUnitCode(members, mergedGroups)
         : tablesByUiId[members[0]]?.code || members[0]
 
-    return {
+    const newReservation = {
       id: String(reservationId),
       name,
       email,
@@ -754,12 +793,18 @@ const createReservation = async (payload) => {
       tableMembers: members,
       message,
       source: 'online',
-      status: 'confirmed',
+      status: 'pending',
       createdAt:
         insertReservation.rows[0].created_at instanceof Date
           ? insertReservation.rows[0].created_at.toISOString()
           : new Date().toISOString()
     }
+
+    await sendReservationAcknowledgement(newReservation).catch((error) => {
+      console.warn('Ack réservation non envoyé :', error?.message || error)
+    })
+
+    return newReservation
   } catch (error) {
     await client.query('ROLLBACK').catch(() => {})
     throw error
@@ -866,6 +911,110 @@ const deleteReservation = async (reservationId) => {
   return rowCount > 0
 }
 
+const updateReservationStatus = async (reservationId, nextStatus) => {
+  await ensureInitialized()
+
+  const id = Number.parseInt(String(reservationId || '').trim(), 10)
+  if (!Number.isInteger(id)) {
+    throw createError(400, 'ID de réservation invalide.')
+  }
+
+  const normalizedStatus = String(nextStatus || '').trim().toLowerCase()
+  if (!['pending', 'confirmed', 'cancelled'].includes(normalizedStatus)) {
+    throw createError(400, 'Statut invalide.')
+  }
+
+  const tables = await listTables()
+  const tableByUiId = Object.fromEntries(tables.map((table) => [table.id, table]))
+  const dbIdToUiId = Object.fromEntries(tables.map((table) => [String(table.dbId), table.id]))
+  const tableZonesById = Object.fromEntries(tables.map((table) => [table.id, table.zone]))
+  const tableMerges = await getTableMerges(new Set(tables.map((t) => t.id)), tableZonesById)
+
+  const client = await pool.connect()
+  try {
+    await client.query('BEGIN')
+
+    const { rows } = await client.query(
+      `
+        UPDATE reservations
+        SET status = $2
+        WHERE id = $1
+        RETURNING
+          id,
+          table_id,
+          date::text AS date,
+          to_char(time_start, 'HH24:MI') AS time_start,
+          covers,
+          name,
+          email,
+          phone,
+          message,
+          source,
+          status,
+          created_at
+      `,
+      [id, normalizedStatus]
+    )
+
+    if (!rows.length) {
+      throw createError(404, 'Réservation introuvable.')
+    }
+
+    const memberResult = await client.query(
+      `SELECT table_id FROM reservation_tables WHERE reservation_id = $1 ORDER BY table_id`,
+      [id]
+    )
+
+    await client.query('COMMIT')
+
+    const base = rows[0]
+    const members = memberResult.rows
+      .map((row) => dbIdToUiId[String(row.table_id)])
+      .filter(Boolean)
+    const fallbackMember = base.table_id ? [dbIdToUiId[String(base.table_id)]].filter(Boolean) : []
+    const finalMembers = (members.length ? members : fallbackMember)
+      .filter((memberId) => Boolean(tableByUiId[memberId]))
+      .sort((a, b) => a.localeCompare(b))
+
+    const seats = finalMembers.reduce((sum, memberId) => sum + (tableByUiId[memberId]?.seats || 0), 0)
+
+    const tableLabel =
+      finalMembers.length > 1
+        ? getMergedUnitCode(finalMembers, tableMerges)
+        : tableByUiId[finalMembers[0] || '']?.code || finalMembers[0] || ''
+
+    const updated = {
+      id: String(base.id),
+      name: base.name,
+      email: base.email || '',
+      phone: base.phone || '',
+      people: Number(base.covers) || 0,
+      date: base.date,
+      time: base.time_start,
+      tableId:
+        finalMembers.length > 1 ? `GROUP:${finalMembers.join('+')}` : finalMembers[0] || String(base.table_id || ''),
+      tableLabel,
+      tableSeats: seats,
+      tableMembers: finalMembers,
+      message: base.message || '',
+      source: base.source || 'online',
+      status: base.status || normalizedStatus,
+      createdAt: base.created_at instanceof Date ? base.created_at.toISOString() : String(base.created_at || '')
+    }
+
+    await sendReservationStatusEmail(updated, normalizedStatus).catch((error) => {
+      console.warn('Email statut réservation non envoyé :', error?.message || error)
+    })
+
+    return updated
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally {
+    client.release()
+  }
+}
+
 const updateTableLayout = async (layout) => {
   await ensureInitialized()
 
@@ -935,7 +1084,7 @@ const replaceAdminBlocks = async (blocks) => {
       let endMinutes = Number.isFinite(rawEndMinutes) ? rawEndMinutes : toMinutes(fallbackEnd)
 
       if (!Number.isFinite(endMinutes) || endMinutes <= 0) {
-        endMinutes = startMinutes + 120
+        endMinutes = startMinutes + 90
       }
 
       if (endMinutes <= startMinutes) {
@@ -1006,6 +1155,7 @@ module.exports = {
   getClientState,
   replaceAdminBlocks,
   serializeStateForScript,
+  updateReservationStatus,
   updateTableLayout,
   updateTableMerges
 }
