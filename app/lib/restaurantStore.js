@@ -228,6 +228,11 @@ const ensureRuntimeSchema = async (client) => {
     ADD COLUMN IF NOT EXISTS vat_number text,
     ADD COLUMN IF NOT EXISTS peppol_id text
   `)
+
+  await client.query(`
+    ALTER TABLE news_images
+    ADD COLUMN IF NOT EXISTS cloudinary_id text
+  `)
 }
 
 const ensureDefaultTables = async (client) => {
