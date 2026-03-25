@@ -853,9 +853,34 @@
 
 .admin-time-strip {
   display: grid;
-  grid-template-columns: repeat(9, minmax(0, 1fr));
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+  margin-bottom: 1.1rem;
+}
+
+.admin-slot-group {
+  display: grid;
   gap: 0.45rem;
-  margin-bottom: 1rem;
+  padding: 0.55rem 0.65rem;
+  border: 1px solid #d3e1ef;
+  border-radius: 12px;
+  background: #fff;
+  box-shadow: 0 6px 14px rgba(20, 38, 59, 0.08);
+}
+
+.admin-slot-group__title {
+  margin: 0;
+  font-size: 0.9rem;
+  font-weight: 800;
+  color: #214a75;
+  letter-spacing: 0.02em;
+}
+
+.admin-slot-grid {
+  display: grid;
+  width: 100%;
+  grid-template-columns: repeat(var(--slot-count, 6), minmax(42px, 1fr));
+  column-gap: 0.35rem;
 }
 
 .admin-service-summary {
@@ -938,9 +963,11 @@
   border: 1px solid #c5d8ee;
   border-radius: 10px;
   min-height: 52px;
+  min-width: 42px;
   background: #fff;
   color: #21405f;
   font: inherit;
+  font-variant-numeric: tabular-nums;
   cursor: pointer;
   display: grid;
   align-content: center;
@@ -1185,7 +1212,8 @@
 .admin-timeline__heads,
 .admin-timeline__cells {
   display: grid;
-  grid-template-columns: repeat(9, minmax(58px, 1fr));
+  grid-auto-flow: column;
+  grid-auto-columns: minmax(58px, 1fr);
 }
 
 .admin-timeline__head {
@@ -1193,6 +1221,7 @@
   display: grid;
   place-items: center;
   font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
   color: #50667d;
   border-right: 1px solid #dce8f5;
 }
@@ -1215,6 +1244,7 @@
   font: inherit;
   font-size: 0.78rem;
   font-weight: 800;
+  font-variant-numeric: tabular-nums;
   color: #355270;
   cursor: pointer;
 }
@@ -1292,8 +1322,9 @@
     grid-template-columns: 1fr;
   }
 
-  .admin-time-strip {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+  .admin-slot-grid {
+    grid-template-columns: repeat(var(--slot-count, 6), minmax(38px, 1fr));
+    column-gap: 0.25rem;
   }
 
   .admin-service-summary__grid {
@@ -1306,7 +1337,7 @@
 
   .admin-timeline__heads,
   .admin-timeline__cells {
-    grid-template-columns: repeat(9, minmax(54px, 1fr));
+    grid-auto-columns: minmax(54px, 1fr);
   }
 
   .admin-dashboard__head {
@@ -1325,8 +1356,9 @@
     grid-template-columns: 1fr;
   }
 
-  .admin-time-strip {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  .admin-slot-grid {
+    grid-template-columns: repeat(var(--slot-count, 6), minmax(34px, 1fr));
+    column-gap: 0.2rem;
   }
 
   .admin-service-summary__grid {

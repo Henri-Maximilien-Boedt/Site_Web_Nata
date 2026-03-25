@@ -655,6 +655,51 @@ const buildOpenServiceSlotsForWeek = (iso) => {
   };
 };
 
+const SERVICE_SLOT_RANGES = {
+  lunch: { start: 12 * 60, end: 14 * 60 + 30 },
+  evening: { start: 18 * 60, end: 22 * 60 },
+};
+
+const buildSlotsFromRange = (startMinutes, endMinutes) => {
+  const slots = [];
+  for (let value = startMinutes; value <= endMinutes; value += 30) {
+    slots.push(fromMinutes(value));
+  }
+  return slots;
+};
+
+const getSlotsForService = (service) => {
+  const range = SERVICE_SLOT_RANGES[service];
+  if (!range) return [];
+  return buildSlotsFromRange(range.start, range.end);
+};
+
+const getAdminSlotsForDate = (isoDate) => {
+  const date = fromISODate(isoDate || toISODate(new Date()));
+  const day = date ? date.getDay() : new Date().getDay();
+  const services = getOpeningServicesForDay(day);
+  return services.flatMap((service) => getSlotsForService(service));
+};
+
+const getAdminSlotsByServiceForDate = (isoDate) => {
+  const date = fromISODate(isoDate || toISODate(new Date()));
+  const day = date ? date.getDay() : new Date().getDay();
+  const services = getOpeningServicesForDay(day);
+  return services.map((service) => ({
+    service,
+    label: SERVICE_LABELS[service] || service,
+    slots: getSlotsForService(service),
+  }));
+};
+
+const getDefaultAdminSlotForDate = (isoDate) => {
+  const slots = getAdminSlotsForDate(isoDate);
+  if (!slots.length) return '18:00';
+  const rounded = roundCurrentTimeToHalfHour();
+  if (slots.includes(rounded)) return rounded;
+  return slots[0];
+};
+
 const escapeHTML = (value) =>
   String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -1866,14 +1911,11 @@ if (adminRoot) {
   const todayButton = adminRoot.querySelector('[data-admin-today]');
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
-  const EVENING_SLOTS = Array.from({ length: 9 }, (_, index) => fromMinutes(18 * 60 + index * 30));
   const ADMIN_HELP_DEFAULT =
     'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (2h).';
   const ADMIN_HELP_MERGE =
     'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
-  let selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
-    ? roundCurrentTimeToHalfHour()
-    : EVENING_SLOTS[0];
+  let selectedTime = getDefaultAdminSlotForDate(dateInput?.value || toISODate(new Date()));
   let activeAdminZone = 'interieur';
   let quickMergeMode = false;
   let quickMergeSourceId = '';
@@ -2166,33 +2208,62 @@ if (adminRoot) {
   const renderSlotStrip = (selectedDate) => {
     if (!slotStrip) return;
     const units = getTableUnitsByZone(activeAdminZone);
-    slotStrip.innerHTML = EVENING_SLOTS.map((slot) => {
-      const busyCount = units.filter((unit) => {
-        const status = getUnitStatusAt(unit, selectedDate, slot);
-        return status.type !== 'free';
-      }).length;
-      return `
-        <button
-          type="button"
-          class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}"
-          data-admin-slot="${slot}"
-        >
-          <span>${slot}</span>
-          <strong>${busyCount}</strong>
-        </button>
-      `;
-    }).join('');
+    const groups = getAdminSlotsByServiceForDate(selectedDate);
+    if (!groups.length) {
+      slotStrip.innerHTML = '<p class="admin-empty">Aucun service ce jour.</p>';
+      return;
+    }
+    slotStrip.innerHTML = groups
+      .map(({ service, label, slots }) => {
+        if (!slots.length) return '';
+        const buttons = slots
+          .map((slot) => {
+            const busyCount = units.filter((unit) => {
+              const status = getUnitStatusAt(unit, selectedDate, slot);
+              return status.type !== 'free';
+            }).length;
+            return `
+              <button
+                type="button"
+                class="admin-slot-btn${slot === selectedTime ? ' is-selected' : ''}"
+                data-admin-slot="${slot}"
+                data-admin-service="${service}"
+              >
+                <span>${slot}</span>
+                <strong>${busyCount}</strong>
+              </button>
+            `;
+          })
+          .join('');
+
+        return `
+          <div class="admin-slot-group">
+            <p class="admin-slot-group__title">${escapeHTML(label)}</p>
+            <div
+              class="admin-slot-grid"
+              data-service="${escapeHTML(service)}"
+              style="--slot-count:${slots.length};"
+            >${buttons}</div>
+          </div>
+        `;
+      })
+      .join('');
   };
 
   const renderTimeline = (selectedDate) => {
     if (!timeline) return;
     const units = getTableUnitsByZone(activeAdminZone);
-    const header = EVENING_SLOTS.map(
+    const slots = getAdminSlotsForDate(selectedDate);
+    if (!slots.length) {
+      timeline.innerHTML = '<p class="admin-empty">Aucun service ce jour.</p>';
+      return;
+    }
+    const header = slots.map(
       (slot) => `<div class="admin-timeline__head${slot === selectedTime ? ' is-selected' : ''}">${slot}</div>`
     ).join('');
 
     const rows = units.map((unit) => {
-      const cells = EVENING_SLOTS.map((slot) => {
+      const cells = slots.map((slot) => {
         const status = getUnitStatusAt(unit, selectedDate, slot);
         const isSelected = slot === selectedTime;
         const cellLabel =
@@ -2319,8 +2390,9 @@ if (adminRoot) {
     const selectedDate = dateInput.value || toISODate(new Date());
     const currentLayout = getTableLayout();
     const units = getTableUnitsByZone(activeAdminZone, currentLayout);
-    if (!EVENING_SLOTS.includes(selectedTime)) {
-      selectedTime = EVENING_SLOTS[0];
+    const slotsForDate = getAdminSlotsForDate(selectedDate);
+    if (!slotsForDate.includes(selectedTime)) {
+      selectedTime = getDefaultAdminSlotForDate(selectedDate);
     }
     if (quickMergeSourceId && !units.some((unit) => unit.id === quickMergeSourceId)) {
       quickMergeSourceId = '';
@@ -2755,9 +2827,7 @@ if (adminRoot) {
   if (todayButton) {
     todayButton.addEventListener('click', () => {
       dateInput.value = toISODate(new Date());
-      selectedTime = EVENING_SLOTS.includes(roundCurrentTimeToHalfHour())
-        ? roundCurrentTimeToHalfHour()
-        : EVENING_SLOTS[0];
+      selectedTime = getDefaultAdminSlotForDate(dateInput.value);
       renderAdmin();
     });
   }

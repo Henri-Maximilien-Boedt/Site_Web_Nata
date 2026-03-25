@@ -35,4 +35,25 @@ router.get('/', async (_req, res, next) => {
   }
 })
 
+router.get('/mentions-legales', (_req, res) => {
+  res.render('mentions-legales', {
+    title: 'Mentions légales — NATA Bar',
+    description: 'Mentions légales du site NATA Bar.'
+  })
+})
+
+router.get('/politique-confidentialite', (_req, res) => {
+  res.render('politique-confidentialite', {
+    title: 'Politique de confidentialité — NATA Bar',
+    description: 'Politique de confidentialité et données personnelles.'
+  })
+})
+
+router.get('/politique-cookies', (_req, res) => {
+  res.render('politique-cookies', {
+    title: 'Politique cookies — NATA Bar',
+    description: 'Information sur les cookies et traceurs utilisés.'
+  })
+})
+
 module.exports = router

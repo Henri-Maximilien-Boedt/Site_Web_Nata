@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <%- include('partials/header', { currentPath: '/politique-cookies' }) %>
+
+    <main class="legal-page">
+      <header class="legal-hero">
+        <p class="eyebrow">Cookies & traceurs</p>
+        <h1>Politique cookies</h1>
+        <p>Explication des cookies utilisés sur natabar.be et de vos choix.</p>
+      </header>
+
+      <section class="legal-section">
+        <h2>Cookies et traceurs utilisés</h2>
+        <ul class="legal-list">
+          <li><strong>connect.sid :</strong> session sécurisée pour l’espace gérant (essentiel).</li>
+          <li><strong>nata_cookie_consent :</strong> mémorise votre choix (essentiel).</li>
+          <li><strong>localStorage (nata_cookie_consent_v1) :</strong> mémorise également votre choix (essentiel).</li>
+          <li><strong>Analytics internes :</strong> pages vues agrégées, sans cookie, ni identifiant individuel.</li>
+        </ul>
+        <p>Aucun cookie publicitaire, marketing ou reciblage n’est utilisé.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Catégories de cookies</h2>
+        <ul class="legal-list">
+          <li><strong>Essentiels :</strong> nécessaires au fonctionnement (session, consentement).</li>
+          <li><strong>Mesure d’audience interne :</strong> réalisée sans cookies et sans profilage individuel.</li>
+          <li><strong>Publicité / profilage :</strong> non utilisés sur ce site.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Base légale</h2>
+        <p>
+          Les cookies strictement nécessaires sont déposés sur la base de notre intérêt légitime à sécuriser et faire fonctionner le site.
+          Aucun cookie non essentiel n’est déposé sans votre consentement préalable.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Durée de vie</h2>
+        <ul class="legal-list">
+          <li>connect.sid : jusqu’à 24h ou fermeture de session.</li>
+          <li>nata_cookie_consent : 30 jours.</li>
+          <li>localStorage consent : 30 jours (renouvelé à chaque mise à jour du choix).</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Gérer vos choix</h2>
+        <p>
+          Vous pouvez retirer ou modifier votre consentement à tout moment via le bouton « Gérer les cookies » en bas à droite.
+        </p>
+        <p>
+          Vous pouvez aussi paramétrer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies essentiels
+          peut empêcher l’accès à l’espace gérant ou perturber certaines fonctionnalités.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Absence de tiers publicitaires</h2>
+        <p>
+          Aucun pixel marketing (Facebook, TikTok, etc.) ni SDK publicitaire n’est implanté. Si un tel service était ajouté ultérieurement,
+          il serait soumis à votre consentement préalable et mentionné ici.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Mise à jour</h2>
+        <p>Dernière mise à jour : 25 mars 2026.</p>
+      </section>
+    </main>
+
+    <%- include('partials/footer') %>
+  </body>
+</html>

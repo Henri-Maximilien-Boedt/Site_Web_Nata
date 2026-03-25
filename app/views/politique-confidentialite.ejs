@@ -1,0 +1,153 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <%- include('partials/header', { currentPath: '/politique-confidentialite' }) %>
+
+    <main class="legal-page">
+      <header class="legal-hero">
+        <p class="eyebrow">Données personnelles</p>
+        <h1>Politique de confidentialité</h1>
+        <p>Conformité RGPD pour la gestion des réservations, devis et analytics internes.</p>
+      </header>
+
+      <section class="legal-section">
+        <h2>Responsable du traitement</h2>
+        <p>
+          NATA Bar (voir coordonnées dans les mentions légales) est responsable des traitements décrits ci-dessous.
+          Contact DPD / référent : privacy@natabar.be (à personnaliser).
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Données collectées</h2>
+        <ul class="legal-list">
+          <li><strong>Réservation en ligne :</strong> nom, e-mail, téléphone, date/heure, nombre de personnes, message.</li>
+          <li><strong>Demande de devis événements :</strong> nom, e-mail, téléphone, type d’événement, date souhaitée, nombre d’invités, message.</li>
+          <li><strong>Compte admin :</strong> e-mail et mot de passe haché pour l’accès gérant.</li>
+          <li><strong>Logs techniques :</strong> adresses IP, user-agent, horodatage pour sécurité et diagnostic.</li>
+          <li><strong>Analytics internes :</strong> pages vues agrégées (sans cookies de suivi ni identifiant individuel).</li>
+          <li><strong>Pièces jointes (le cas échéant) :</strong> uniquement si un champ upload est activé dans un formulaire ; types et taille limités.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Bases légales</h2>
+        <ul class="legal-list">
+          <li><strong>Exécution d’un contrat :</strong> gestion des réservations et devis.</li>
+          <li><strong>Intérêt légitime :</strong> sécurité, prévention de la fraude, statistiques internes anonymes.</li>
+          <li><strong>Consentement :</strong> uniquement si des cookies non essentiels sont activés (voir politique cookies).</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Durées de conservation</h2>
+        <ul class="legal-list">
+          <li>Réservations et devis : purge automatique 30 jours après la date de l’événement ou la demande.</li>
+          <li>Comptes admin : tant que le compte est actif, puis suppression sous 30 jours.</li>
+          <li>Logs techniques : 30 jours maximum.</li>
+          <li>Preuves de consentement cookies (le cas échéant) : 30 jours.</li>
+          <li>Backups hébergeur : rétention glissante de 30 jours (selon politique Render).</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Destinataires & sous-traitants</h2>
+        <ul class="legal-list">
+          <li>Équipe NATA Bar habilitée.</li>
+          <li>Hébergeur Render (USA) avec clauses contractuelles types UE.</li>
+          <li>Fournisseur e-mail (Brevo) pour les confirmations / notifications.</li>
+          <li>Prestataires techniques ponctuels (maintenance), soumis à obligation de confidentialité.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Droits des personnes</h2>
+        <p>
+          Vous pouvez exercer vos droits d’accès, rectification, effacement, limitation, opposition et portabilité en écrivant à
+          <a href="mailto:contact@natabar.be">contact@natabar.be</a> (à personnaliser).
+          Vous pouvez également introduire une réclamation auprès de l’Autorité de protection des données (APD Belgique).
+        </p>
+        <p>
+          Pour les demandes liées à l’oubli ou l’effacement, certaines données peuvent être conservées pour respecter des obligations
+          légales (comptabilité, prévention de la fraude).
+        </p>
+        <p>
+          Réponse aux demandes sous 30 jours, prorogeable une fois en cas de complexité (art. 12.3 RGPD).
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Sécurité</h2>
+        <p>
+          Mots de passe admin hachés, connexions HTTPS en production, contrôle d’accès restreint, sauvegardes chiffrées côté hébergeur,
+          limitation d’accès aux bases de données, journalisation des accès admin, séparation des environnements (prod/dev) et mises à jour
+          régulières des dépendances.
+        </p>
+        <p>
+          Tests de sécurité et mises à jour critiques appliqués dès disponibilité ; désactivation rapide des comptes compromis ; principe de moindre privilège.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Transferts hors UE</h2>
+        <p>
+          Les données peuvent être hébergées ou transitent via Render (USA) et Brevo. Les Clauses Contractuelles Types (SCC) de la Commission européenne sont utilisées pour encadrer ces transferts.
+        </p>
+        <p>
+          En cas d’ajout d’un nouveau sous-traitant hors UE, la présente politique sera mise à jour et, si nécessaire, un complément
+          d’information ou de consentement sera demandé.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Réclamations</h2>
+        <p>
+          Autorité de protection des données (APD) — Rue de la Presse 35, 1000 Bruxelles, contact@apd-gba.be.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Violations de données</h2>
+        <p>
+          En cas de violation de données personnelles présentant un risque pour les droits et libertés, NATA Bar notifiera l’APD dans les délais
+          légaux et, le cas échéant, informera les personnes concernées.
+        </p>
+        <p>
+          Un registre interne des incidents est tenu et inclut la nature de la violation, la catégorie de données touchées et les mesures correctives.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Mineurs</h2>
+        <p>
+          Les formulaires de réservation et de devis sont destinés aux personnes majeures. Si un mineur soumet des données, un représentant légal
+          peut demander leur suppression.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Décisions automatisées</h2>
+        <p>
+          Aucune décision produisant des effets juridiques significatifs n’est prise de manière entièrement automatisée à partir des données
+          collectées sur ce site.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Dernière mise à jour</h2>
+        <p>25 mars 2026.</p>
+        </p>
+      </section>
+    </main>
+
+    <%- include('partials/footer') %>
+  </body>
+</html>

@@ -13,7 +13,18 @@
         <a href="/evenements">Événements</a>
         <a href="/actualites">Actualités</a>
         <a href="/reservation">Réserver</a>
+        <a href="/mentions-legales">Mentions légales</a>
+        <a href="/politique-confidentialite">Politique de confidentialité</a>
+        <a href="/politique-cookies">Politique cookies</a>
       </nav>
+      <a class="social-link" href="https://www.instagram.com/NATA_LLN" target="_blank" rel="noreferrer noopener">
+        <span class="social-icon" aria-hidden="true">
+          <svg viewBox="0 0 24 24" role="img" focusable="false">
+            <path d="M7 3h10a4 4 0 0 1 4 4v10a4 4 0 0 1-4 4H7a4 4 0 0 1-4-4V7a4 4 0 0 1 4-4zm0 2a2 2 0 0 0-2 2v10a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V7a2 2 0 0 0-2-2H7zm5 2.5A4.5 4.5 0 1 1 7.5 12 4.5 4.5 0 0 1 12 7.5zm0 2A2.5 2.5 0 1 0 14.5 12 2.5 2.5 0 0 0 12 9.5zm5.25-3.25a1.25 1.25 0 1 1-1.25 1.25 1.25 1.25 0 0 1 1.25-1.25z" />
+          </svg>
+        </span>
+        <span>Ajoutez-nous sur Instagram : @NATA_LLN</span>
+      </a>
     </div>
 
     <div class="footer-col">
@@ -39,6 +50,110 @@
     <p>© <span id="year"></span> NATA Bar. Tous droits réservés.</p>
     <a href="/admin/login" class="footer-admin-link">Accès espace gérant</a>
   </div>
+
+  <div class="cookie-banner is-hidden" data-cookie-banner>
+    <div class="cookie-banner__text">
+      <strong>Cookies essentiels uniquement.</strong>
+      Nous utilisons un cookie de session pour la sécurité et un cookie pour mémoriser votre choix. Pas de publicité ni de suivi.
+      <a href="/politique-cookies">En savoir plus</a>
+    </div>
+    <div class="cookie-banner__actions">
+      <button type="button" class="btn btn-ghost" data-cookie-reject>Refuser</button>
+      <button type="button" class="btn btn-primary" data-cookie-accept>Accepter</button>
+    </div>
+  </div>
+
+  <button class="cookie-manage is-hidden" data-cookie-manage type="button">Gérer les cookies</button>
 </footer>
 
-<script>document.getElementById('year').textContent = new Date().getFullYear()</script>
+<script>
+  document.getElementById('year').textContent = new Date().getFullYear()
+
+  const initCookieBanner = () => {
+    const banner = document.querySelector('[data-cookie-banner]')
+    const manageBtn = document.querySelector('[data-cookie-manage]')
+    const acceptBtn = banner ? banner.querySelector('[data-cookie-accept]') : null
+    const rejectBtn = banner ? banner.querySelector('[data-cookie-reject]') : null
+    const STORAGE_KEY = 'nata_cookie_consent_v1'
+    const COOKIE_NAME = 'nata_cookie_consent'
+    const COOKIE_MAX_AGE = 60 * 60 * 24 * 30 // 30 jours
+    if (!banner || !manageBtn || !acceptBtn || !rejectBtn) return
+
+    const showBanner = () => {
+      banner.classList.remove('is-hidden')
+      manageBtn.classList.add('is-hidden')
+    }
+
+    const hideBanner = () => {
+      banner.classList.add('is-hidden')
+      manageBtn.classList.remove('is-hidden')
+    }
+
+    const setConsentCookie = (value, maxAge = COOKIE_MAX_AGE) => {
+      document.cookie = `${COOKIE_NAME}=${encodeURIComponent(value)}; Max-Age=${maxAge}; Path=/; SameSite=Lax`
+    }
+
+    const clearConsentCookie = () => setConsentCookie('rejected', 0)
+
+    const saveConsent = (value) => {
+      try {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify({ value, ts: Date.now() }))
+      } catch (_) {
+        /* stockage plein ou privé : on ignore */
+      }
+      if (value === 'accepted' || value === 'rejected') setConsentCookie(value)
+    }
+
+    const getStored = () => {
+      try {
+        return JSON.parse(localStorage.getItem(STORAGE_KEY) || 'null')
+      } catch {
+        return null
+      }
+    }
+
+    const stored = getStored()
+    const ONE_DAY_MS = 24 * 60 * 60 * 1000
+    const THIRTY_DAYS_MS = ONE_DAY_MS * 30
+    const isExpired = stored?.ts ? (Date.now() - stored.ts) > THIRTY_DAYS_MS : true
+    if (!stored || !stored.value || isExpired) {
+      showBanner()
+    } else {
+      hideBanner()
+    }
+
+    acceptBtn.addEventListener('click', () => {
+      saveConsent('accepted')
+      hideBanner()
+    })
+
+    rejectBtn.addEventListener('click', () => {
+      saveConsent('rejected')
+      clearConsentCookie()
+      hideBanner()
+    })
+
+    manageBtn.addEventListener('click', () => {
+      showBanner()
+    })
+  }
+
+  const start = () => {
+    // si les éléments ne sont pas encore dans le DOM, on retente
+    let attempts = 0
+    const tryInit = () => {
+      initCookieBanner()
+      attempts += 1
+      const ready = document.querySelector('[data-cookie-banner] [data-cookie-accept]')
+      if (ready || attempts > 10) return
+      setTimeout(tryInit, 50)
+    }
+    tryInit()
+  }
+
+  if (document.readyState === 'complete') {
+    start()
+  } else {
+    window.addEventListener('load', start, { once: true })
+  }
+</script>

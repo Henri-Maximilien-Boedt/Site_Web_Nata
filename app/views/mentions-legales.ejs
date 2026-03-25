@@ -1,0 +1,151 @@
+<!DOCTYPE html>
+<html lang="fr">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title><%= title %></title>
+    <meta name="description" content="<%= description %>" />
+    <link rel="stylesheet" href="/css/main.css" />
+  </head>
+  <body>
+    <div class="noise"></div>
+    <%- include('partials/header', { currentPath: '/mentions-legales' }) %>
+
+    <main class="legal-page">
+      <header class="legal-hero">
+        <p class="eyebrow">Information légale</p>
+        <h1>Mentions légales</h1>
+        <p>Informations prévues par le Code de droit économique belge et le RGPD.</p>
+      </header>
+
+      <section class="legal-section">
+        <h2>Éditeur du site</h2>
+        <ul class="legal-list">
+          <li><strong>Nom commercial :</strong> NATA Bar</li>
+          <li><strong>Adresse :</strong> Grand-Place 51, 1348 Louvain-la-Neuve, Belgique</li>
+          <li><strong>E-mail :</strong> contact@natabar.be (à personnaliser)</li>
+          <li><strong>Téléphone :</strong> +32 (0)X XX XX XX XX (à personnaliser)</li>
+          <li><strong>Forme juridique :</strong> SRL (à confirmer)</li>
+          <li><strong>Numéro d’entreprise / TVA :</strong> BE 0XX.X.XXX.XXX (à compléter)</li>
+          <li><strong>Directeur·rice de publication :</strong> à compléter</li>
+          <li><strong>Statut TVA intracommunautaire :</strong> actif (à confirmer)</li>
+          <li><strong>Compte bancaire professionnel :</strong> IBAN à compléter (pour devis/contrats éventuels)</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Hébergement</h2>
+        <p>
+          Hébergement : (à compléter)<br />
+          Adresse : (à compléter)
+        </p>
+        <p>
+          Sauvegardes et logs techniques sont gérés par l’hébergeur. Les incidents de sécurité sont notifiés selon leurs procédures
+          contractuelles et relayés par NATA Bar le cas échéant.
+        </p>
+        <p>
+          Environnement de production distinct de l’environnement de test ; accès restreint aux personnes autorisées.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Propriété intellectuelle</h2>
+        <p>
+          Le contenu du site (textes, photos, visuels, logos, code) est protégé par le droit d’auteur.
+          Toute reproduction ou réutilisation nécessite l’autorisation écrite de NATA Bar.
+          Les photos créditées à des tiers sont utilisées avec licence ou accord explicite.
+          Crédits photos : NATA Bar / partenaires (à compléter).
+        </p>
+        <p>
+          Les marques et logos cités demeurent la propriété de leurs détenteurs respectifs. Toute extraction ou réutilisation substantielle
+          de la base de données du site est interdite (Livre XI Code de droit économique).
+        </p>
+        <p>
+          Si vous pensez qu’un contenu porte atteinte à vos droits, contactez-nous avec preuve de titularité pour retrait ou régularisation.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Responsabilité</h2>
+        <p>
+          Les informations publiées sont fournies à titre indicatif et peuvent être mises à jour.
+          NATA Bar ne saurait être tenu responsable des dommages directs ou indirects liés à l’usage du site.
+        </p>
+        <p>
+          Les liens hypertextes vers des sites tiers sont fournis à titre pratique ; NATA Bar n’a aucun contrôle sur leur contenu et décline toute responsabilité s’y rapportant.
+        </p>
+        <p>
+          Accès au site : l’accès peut être interrompu pour maintenance, mise à jour ou cas de force majeure. Aucune indemnité ne pourra être réclamée
+          en cas d’indisponibilité temporaire ou définitive.
+        </p>
+        <p>
+          L’utilisateur est seul responsable de son équipement, de la sécurisation de sa connexion et de la sauvegarde de ses données locales.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Règlement des litiges / Médiation</h2>
+        <p>
+          En cas de litige, vous pouvez contacter le Service de Médiation pour le Consommateur (Belgique) : https://mediationconsommateur.be.
+          À défaut de résolution amiable, les tribunaux de l’arrondissement du Brabant Wallon sont seuls compétents.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Protection des données</h2>
+        <p>
+          Le traitement des données personnelles est décrit dans la <a href="/politique-confidentialite">politique de confidentialité</a>.
+          Pour toute demande relative à vos données, écrivez à privacy@natabar.be (à personnaliser).
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Signalement de vulnérabilité</h2>
+        <p>
+          Si vous identifiez une faille de sécurité, merci de nous écrire à security@natabar.be (à personnaliser) en décrivant la vulnérabilité
+          et les étapes de reproduction. Ne publiez pas l’information avant correction (responsible disclosure).
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Conditions d’utilisation</h2>
+        <ul class="legal-list">
+          <li>Interdiction de toute tentative de décompilation, scraping massif ou attaque de déni de service.</li>
+          <li>Usage du formulaire de contact/réservation uniquement pour des demandes légitimes, non pour du spam ou de la prospection non sollicitée.</li>
+          <li>Respect des droits d’auteur sur les contenus téléchargés ou visualisés.</li>
+          <li>Interdiction de soumettre des contenus diffamatoires, illicites ou violant des droits de tiers.</li>
+          <li>Acceptation que le service puisse évoluer ou être arrêté sans indemnité.</li>
+        </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Force majeure</h2>
+        <p>
+          La responsabilité de NATA Bar ne saurait être engagée en cas de force majeure ou d’événements indépendants de sa volonté
+          (panne hébergeur, coupure réseau, catastrophes naturelles).
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Signalement de contenu illicite</h2>
+        <p>
+          Pour toute notification de contenu illicite ou de violation de droits, écrivez à contact@natabar.be (à personnaliser) en détaillant l’URL concernée, la nature de la violation et vos coordonnées.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Dernière mise à jour</h2>
+        <p>25 mars 2026.</p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Contact</h2>
+        <p>
+          Pour toute question ou signalement de contenu illicite, contactez-nous à l’adresse e-mail indiquée ci-dessus.
+        </p>
+      </section>
+    </main>
+
+    <%- include('partials/footer') %>
+  </body>
+</html>
