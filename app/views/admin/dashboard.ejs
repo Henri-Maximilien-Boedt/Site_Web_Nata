@@ -12,6 +12,7 @@
       rel="stylesheet"
     />
     <link rel="stylesheet" href="/css/main.css" />
+    <link rel="stylesheet" href="/css/admin.css" />
   </head>
   <body class="admin-page">
     <div class="noise"></div>
@@ -37,31 +38,32 @@
         </div>
 
         <div class="admin-dashboard" data-admin-dashboard>
-          <div class="admin-dashboard__head">
-            <div>
-              <p class="eyebrow">Réservations</p>
-              <h3>Vue globale du service <span class="admin-live-clock" data-admin-clock></span></h3>
+          <div class="admin-section-panel" data-section="reservations">
+            <div class="admin-dashboard__head">
+              <div>
+                <p class="eyebrow">Réservations</p>
+                <h3>Vue globale du service <span class="admin-live-clock" data-admin-clock></span></h3>
+              </div>
             </div>
-          </div>
-          <div class="admin-tools">
-            <label>
-              Date
-              <input type="date" data-admin-date />
-            </label>
-            <label>
-              Recherche
-              <input type="search" data-admin-search placeholder="Nom, email ou table..." />
-            </label>
-            <div class="admin-tools__quick">
-              <button type="button" class="btn btn-ghost" data-admin-prev>Jour précédent</button>
-              <button type="button" class="btn btn-ghost" data-admin-today>Aujourd'hui</button>
-              <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
+            <div class="admin-tools">
+              <label>
+                Date
+                <input type="date" data-admin-date />
+              </label>
+              <label>
+                Recherche
+                <input type="search" data-admin-search placeholder="Nom, email ou table..." />
+              </label>
+              <div class="admin-tools__quick">
+                <button type="button" class="btn btn-ghost" data-admin-prev>Jour précédent</button>
+                <button type="button" class="btn btn-ghost" data-admin-today>Aujourd'hui</button>
+                <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
+              </div>
             </div>
-          </div>
-          <div class="admin-time-strip" data-admin-slots></div>
-          <div class="admin-service-summary" data-admin-service-summary></div>
+            <div class="admin-time-strip" data-admin-slots></div>
+            <div class="admin-service-summary" data-admin-service-summary></div>
 
-          <div class="admin-grid">
+            <div class="admin-grid">
             <div class="admin-panel">
               <p class="admin-count" data-admin-count>0 réservation</p>
               <div class="admin-list" data-admin-list></div>
@@ -85,14 +87,15 @@
               <p class="admin-help" data-admin-action-feedback>Glisse-dépose les tables pour réorganiser le plan. Utilise le switch Intérieur/Terrasse. Active le mode fusion pour cliquer table 1 puis table 2, ou fais clic droit sur une table.</p>
               <div class="table-layout table-layout--admin" data-admin-table-grid></div>
             </div>
+            </div>
+
+            <div class="admin-panel admin-panel--timeline">
+              <p class="admin-count">Vue soirée par table (30 minutes)</p>
+              <div class="admin-timeline" data-admin-timeline></div>
+            </div>
           </div>
 
-          <div class="admin-panel admin-panel--timeline">
-            <p class="admin-count">Vue soirée par table (30 minutes)</p>
-            <div class="admin-timeline" data-admin-timeline></div>
-          </div>
-
-          <section class="admin-analytics" aria-labelledby="admin-analytics-title">
+          <section class="admin-section-panel admin-analytics" data-section="analytics" aria-labelledby="admin-analytics-title">
             <div class="admin-analytics__head">
               <div>
                 <p class="eyebrow">Audience site</p>

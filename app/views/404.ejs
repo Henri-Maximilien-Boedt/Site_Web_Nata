@@ -8,13 +8,14 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/pages.css">
 </head>
 <body>
   <div class="noise"></div>
   <%- include('partials/header', { currentPath: '' }) %>
-  <main style="display: flex; align-items: center; justify-content: center; min-height: 60vh; flex-direction: column; text-align: center;">
-    <h1 style="font-size: 3rem; color: var(--accent); margin-bottom: 1rem;">404</h1>
-    <p style="font-size: 1.2rem; margin-bottom: 2rem;">Page non trouvée</p>
+  <main class="error-page">
+    <h1 class="error-page__code">404</h1>
+    <p class="error-page__message">Page non trouvée</p>
     <a href="/" class="btn btn-primary">Retour à l'accueil</a>
   </main>
   <%- include('partials/footer') %>

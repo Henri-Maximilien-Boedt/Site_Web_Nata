@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="admin-page">
   <div class="noise"></div>
@@ -19,7 +20,49 @@
         <h1>Plan de salle</h1>
       </div>
     </div>
-    <p style="color: var(--muted);">Gestion des tables et du plan de salle.</p>
+
+    <% if (!tables || tables.length === 0) { %>
+      <div class="admin-empty">
+        <p>Aucune table configurée.</p>
+      </div>
+    <% } else { %>
+      <div class="admin-posts-table-wrap">
+        <table class="admin-posts-table">
+          <thead>
+            <tr>
+              <th>Code</th>
+              <th>Zone</th>
+              <th>Places</th>
+              <th>Actif</th>
+              <th>Statut live</th>
+              <th>Position</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% tables.forEach((t) => { %>
+              <tr>
+                <td><%= t.code %></td>
+                <td>
+                  <span class="badge badge--zone"><%= t.zone === 'terrasse' ? 'Terrasse' : 'Intérieur' %></span>
+                </td>
+                <td><%= t.seats %></td>
+                <td>
+                  <span class="badge <%= t.is_active ? 'badge--confirmed' : 'badge--inactive' %>">
+                    <%= t.is_active ? 'Oui' : 'Non' %>
+                  </span>
+                </td>
+                <td>
+                  <span class="badge <%= t.live_status === 'occupied' ? 'badge--live-occupied' : (t.live_status === 'walk_in' ? 'badge--live-walkin' : 'badge--live-free') %>">
+                    <%= t.live_status === 'occupied' ? 'Occupée' : (t.live_status === 'walk_in' ? 'Walk-in' : 'Libre') %>
+                  </span>
+                </td>
+                <td><%= Number(t.pos_x).toFixed(1) %>% · <%= Number(t.pos_y).toFixed(1) %>%</td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>

@@ -38,6 +38,17 @@ const renderDashboard = async (req, res, next, section, title) => {
   }
 }
 
+const uploadsDir = path.join(__dirname, '../public/uploads')
+
+function deleteUploadByUrl(urlPath) {
+  if (!urlPath) return
+  const normalized = path.posix.normalize(String(urlPath))
+  if (!normalized.startsWith('/uploads/')) return
+  const filename = path.basename(normalized)
+  const absolutePath = path.join(uploadsDir, filename)
+  fs.unlink(absolutePath, () => {})
+}
+
 // ============================================================
 // Routes login / logout (non protégées)
 // ============================================================
@@ -76,19 +87,72 @@ router.post('/logout', (req, res) => {
 // ============================================================
 
 router.get('/', isAuth, (req, res, next) => {
-  renderDashboard(req, res, next, 'reservations', 'Réservations — Admin NATA')
+  renderDashboard(req, res, next, 'dashboard', 'Dashboard — Admin NATA')
 })
 
-router.get('/reservations', isAuth, (req, res, next) => {
-  renderDashboard(req, res, next, 'reservations', 'Réservations — Admin NATA')
+router.get('/reservations', isAuth, async (req, res, next) => {
+  try {
+    const { rows: reservations } = await pool.query(
+      `SELECT
+        r.id,
+        r.date::text AS date,
+        r.time_start::text AS time_start,
+        r.covers,
+        r.name,
+        r.source,
+        r.status,
+        t.code AS table_code
+      FROM reservations r
+      LEFT JOIN tables t ON t.id = r.table_id
+      WHERE r.status = 'confirmed' AND r.date >= CURRENT_DATE
+      ORDER BY r.date ASC, r.time_start ASC, r.created_at DESC
+      LIMIT 150`
+    )
+
+    res.render('admin/reservations', {
+      title: 'Réservations — Admin NATA',
+      currentSection: 'reservations',
+      reservations
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.get('/tables', isAuth, (req, res, next) => {
-  renderDashboard(req, res, next, 'tables', 'Plan de salle — Admin NATA')
+router.get('/tables', isAuth, async (req, res, next) => {
+  try {
+    const { rows: tables } = await pool.query(
+      `SELECT id, code, seats, zone, is_active, live_status, pos_x, pos_y
+       FROM tables
+       ORDER BY zone ASC, code ASC`
+    )
+
+    res.render('admin/tables', {
+      title: 'Plan de salle — Admin NATA',
+      currentSection: 'tables',
+      tables
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
-router.get('/menu', isAuth, (req, res, next) => {
-  renderDashboard(req, res, next, 'menu', 'Menu — Admin NATA')
+router.get('/menu', isAuth, async (req, res, next) => {
+  try {
+    const { rows: items } = await pool.query(
+      `SELECT id, category, name, price, is_available, sort_order
+       FROM menu_items
+       ORDER BY category ASC, sort_order ASC, name ASC`
+    )
+
+    res.render('admin/menu', {
+      title: 'Menu — Admin NATA',
+      currentSection: 'menu',
+      items
+    })
+  } catch (err) {
+    next(err)
+  }
 })
 
 // ============================================================
@@ -109,13 +173,14 @@ router.get('/actualites', isAuth, async (req, res, next) => {
       FROM news_posts p
       LEFT JOIN news_images i ON i.post_id = p.id
       GROUP BY p.id
-      ORDER BY p.created_at DESC
+      ORDER BY p.is_pinned DESC, p.event_date DESC NULLS LAST, p.created_at DESC
     `)
 
     res.render('admin/actualites', {
       title: 'Actualités — Admin NATA',
       posts,
-      flash: req.session.flash || null
+      flash: req.session.flash || null,
+      currentSection: 'actualites'
     })
     delete req.session.flash
   } catch (err) {
@@ -132,7 +197,9 @@ router.get('/actualites/create', isAuth, (_req, res) => {
     title: 'Nouvel article — Admin NATA',
     post: null,
     images: [],
-    error: null
+    error: null,
+    flash: null,
+    currentSection: 'actualites'
   })
 })
 
@@ -149,7 +216,9 @@ router.post('/actualites/create', isAuth, async (req, res, next) => {
         title: 'Nouvel article — Admin NATA',
         post: { title, content, event_date: eventDate, is_published: isPublished, is_pinned: isPinned },
         images: [],
-        error: 'Le titre est obligatoire.'
+        error: 'Le titre est obligatoire.',
+        flash: null,
+        currentSection: 'actualites'
       })
     }
 
@@ -192,7 +261,8 @@ router.get('/actualites/:id/edit', isAuth, async (req, res, next) => {
       post: rows[0],
       images,
       error: null,
-      flash: req.session.flash || null
+      flash: req.session.flash || null,
+      currentSection: 'actualites'
     })
     delete req.session.flash
   } catch (err) {
@@ -225,7 +295,8 @@ router.post('/actualites/:id/edit', isAuth, async (req, res, next) => {
         post: rows[0] || { id, title, content, event_date: eventDate, is_published: isPublished, is_pinned: isPinned },
         images,
         error: 'Le titre est obligatoire.',
-        flash: null
+        flash: null,
+        currentSection: 'actualites'
       })
     }
 
@@ -279,8 +350,7 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     // Fetch images to delete files from disk
     const { rows: images } = await pool.query(`SELECT url FROM news_images WHERE post_id = $1`, [id])
     for (const img of images) {
-      const filePath = path.join(__dirname, '../public', img.url)
-      fs.unlink(filePath, () => {}) // ignore errors (file may not exist)
+      deleteUploadByUrl(img.url)
     }
 
     await pool.query(`DELETE FROM news_posts WHERE id = $1`, [id])
@@ -305,7 +375,9 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
     const currentCount = Number(existing[0].cnt)
 
     const files = req.files || []
-    const toInsert = files.slice(0, Math.max(0, 10 - currentCount))
+    const remainingSlots = Math.max(0, 10 - currentCount)
+    const toInsert = files.slice(0, remainingSlots)
+    const ignoredCount = Math.max(0, files.length - toInsert.length)
 
     for (let i = 0; i < toInsert.length; i++) {
       const url = `/uploads/${toInsert[i].filename}`
@@ -317,7 +389,14 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
       )
     }
 
-    req.session.flash = { type: 'success', text: `${toInsert.length} image(s) ajoutée(s).` }
+    let flashText = `${toInsert.length} image(s) ajoutée(s).`
+    if (toInsert.length === 0 && files.length > 0) {
+      flashText = 'Aucune image ajoutée: limite de 10 images atteinte pour cet article.'
+    } else if (ignoredCount > 0) {
+      flashText += ` ${ignoredCount} image(s) ignorée(s) (limite de 10 atteinte).`
+    }
+
+    req.session.flash = { type: 'success', text: flashText }
     res.redirect(`/admin/actualites/${id}/edit`)
   } catch (err) {
     next(err)
@@ -356,7 +435,7 @@ router.post('/actualites/:id/images/:imgId/delete', isAuth, async (req, res, nex
     )
 
     if (rows.length) {
-      fs.unlink(path.join(__dirname, '../public', rows[0].url), () => {})
+      deleteUploadByUrl(rows[0].url)
 
       // If the deleted image was main, promote the first remaining image
       if (rows[0].is_main) {

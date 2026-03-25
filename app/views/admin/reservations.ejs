@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="admin-page">
   <div class="noise"></div>
@@ -19,7 +20,51 @@
         <h1>Réservations</h1>
       </div>
     </div>
-    <p style="color: var(--muted);">Gestion des réservations.</p>
+
+    <% if (!reservations || reservations.length === 0) { %>
+      <div class="admin-empty">
+        <p>Aucune réservation confirmée à venir.</p>
+      </div>
+    <% } else { %>
+      <div class="admin-posts-table-wrap">
+        <table class="admin-posts-table">
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Heure</th>
+              <th>Table</th>
+              <th>Client</th>
+              <th>Couverts</th>
+              <th>Source</th>
+              <th>Statut</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% reservations.forEach((r) => { %>
+              <tr>
+                <td>
+                  <%
+                    const d = new Date(r.date)
+                    const dateF = d.toLocaleDateString('fr-BE', { day: '2-digit', month: '2-digit', year: 'numeric' })
+                  %>
+                  <%= dateF %>
+                </td>
+                <td><%= (r.time_start || '').slice(0, 5) %></td>
+                <td><%= r.table_code || 'Non assignée' %></td>
+                <td><%= r.name %></td>
+                <td><%= r.covers %></td>
+                <td>
+                  <span class="badge <%= r.source === 'phone' ? 'badge--phone' : 'badge--online' %>">
+                    <%= r.source === 'phone' ? 'Téléphone' : 'En ligne' %>
+                  </span>
+                </td>
+                <td><span class="badge badge--confirmed">Confirmée</span></td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>

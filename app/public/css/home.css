@@ -1,0 +1,488 @@
+/* ── Home page styles ──────────────────────────────────────────────────────── */
+
+.home-hero {
+  position: relative;
+  min-height: clamp(520px, 84vh, 760px);
+  display: grid;
+  place-items: center;
+  overflow: hidden;
+  border-bottom: 1px solid var(--line);
+}
+
+.home-hero__media {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+}
+
+.home-hero__bg {
+  position: absolute;
+  inset: 0;
+  background-size: cover;
+  background-position: center;
+  opacity: 1;
+  animation: none;
+}
+
+.home-hero__bg--one {
+  background-image: url("/media/img/Le%20restaurant/restaurant_bg_image.webp");
+  animation-delay: 0s;
+}
+
+.home-hero::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  background: radial-gradient(circle at 50% 42%, rgba(11, 8, 6, 0.2) 0%, rgba(9, 7, 5, 0.74) 58%, rgba(6, 5, 4, 0.9) 100%);
+}
+
+.home-hero__content {
+  position: relative;
+  z-index: 2;
+  width: min(980px, 92vw);
+  text-align: center;
+  display: grid;
+  gap: 0.9rem;
+}
+
+.home-hero__eyebrow {
+  justify-self: center;
+  color: #f3c889;
+}
+
+.home-hero__title {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  font-size: clamp(4.1rem, 15vw, 9.6rem);
+  letter-spacing: 0.08em;
+  line-height: 0.9;
+  color: #fff3dd;
+  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+}
+
+.home-hero__sub {
+  margin: 0;
+  font-size: clamp(1rem, 2.7vw, 1.36rem);
+  color: #e9d8bd;
+}
+
+.home-hero__actions {
+  margin-top: 0.8rem;
+  display: flex;
+  justify-content: center;
+  gap: 0.85rem;
+  flex-wrap: wrap;
+}
+
+.home-hero__scroll {
+  position: absolute;
+  bottom: 1.2rem;
+  left: 50%;
+  transform: translateX(-50%);
+  z-index: 2;
+  color: #f7ddba;
+  text-decoration: none;
+  font-size: 1.4rem;
+  opacity: 0.9;
+}
+
+@keyframes homeHeroFade {
+  0%,
+  44% {
+    opacity: 1;
+  }
+
+  56%,
+  100% {
+    opacity: 0;
+  }
+}
+
+/* ── Food strip ─────────────────────────────────────────────────────────────── */
+
+.food-strip {
+  padding: 1.4rem 0 0.65rem;
+}
+
+.food-strip__track {
+  display: grid;
+  grid-template-columns: repeat(5, minmax(0, 1fr));
+  gap: 0.72rem;
+  scrollbar-width: none;
+}
+
+.food-strip__track::-webkit-scrollbar {
+  display: none;
+}
+
+.food-strip__item {
+  border: 1px solid var(--line);
+  border-radius: 14px;
+  overflow: hidden;
+  background: #17100d;
+  min-height: 150px;
+}
+
+.food-strip__item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Focus cards ────────────────────────────────────────────────────────────── */
+
+.home-focus {
+  padding: 2.2rem 0 1rem;
+  display: grid;
+  gap: 1rem;
+}
+
+.focus-card {
+  position: relative;
+  display: grid;
+  align-content: end;
+  min-height: 270px;
+  width: 100%;
+  border-radius: 18px;
+  border: 1px solid var(--line);
+  padding: 1.45rem;
+  text-align: left;
+  color: var(--text);
+  overflow: hidden;
+  background: linear-gradient(150deg, rgba(232, 110, 47, 0.12), rgba(240, 215, 161, 0.05));
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.25);
+  transition: transform 0.2s ease, border-color 0.2s ease;
+}
+
+button.focus-card {
+  appearance: none;
+  -webkit-appearance: none;
+  cursor: pointer;
+}
+
+a.focus-card {
+  text-decoration: none;
+}
+
+.focus-card::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(9, 7, 6, 0.88) 10%, rgba(9, 7, 6, 0.34) 68%);
+  z-index: 1;
+}
+
+.focus-card__gallery {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+}
+
+.focus-card__photo {
+  position: relative;
+  overflow: hidden;
+}
+
+.focus-card__photo::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  right: 0;
+  width: 18px;
+  background: linear-gradient(to right, rgba(9, 7, 6, 0), rgba(9, 7, 6, 0.45));
+}
+
+.focus-card__photo:last-child::after {
+  display: none;
+}
+
+.focus-card__photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.focus-card > :not(.focus-card__gallery) {
+  position: relative;
+  z-index: 2;
+}
+
+.focus-card h2 {
+  margin: 0.2rem 0 0.55rem;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(2.1rem, 6vw, 3.1rem);
+}
+
+.focus-card__hint {
+  margin: 0;
+  color: var(--gold);
+  font-weight: 700;
+}
+
+.focus-card:hover,
+.focus-card:focus-visible {
+  transform: translateY(-2px);
+  border-color: #6b4b39;
+}
+
+.focus-card--events {
+  background: #1d140f;
+}
+
+.focus-card--truck {
+  background: #1d140f;
+}
+
+.focus-card--menu {
+  background: #1d140f;
+}
+
+.focus-details {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: #19120e;
+  padding: 1rem;
+}
+
+.focus-details h3 {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 1.8rem;
+  color: var(--gold);
+}
+
+.focus-details ul {
+  margin: 0.65rem 0 0;
+  padding-left: 1.2rem;
+  display: grid;
+  gap: 0.35rem;
+}
+
+.focus-details li {
+  color: var(--muted);
+}
+
+.home-story-cta {
+  margin-top: 1rem;
+  display: inline-flex;
+}
+
+/* ── Home news section ──────────────────────────────────────────────────────── */
+
+.home-news {
+  padding: 2rem 0 1.2rem;
+}
+
+.home-news__head {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 0.9rem;
+  margin-bottom: 0.95rem;
+}
+
+.home-news__head h2 {
+  margin: 0.2rem 0 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.9rem, 4.4vw, 2.8rem);
+}
+
+/* ── Home info section ──────────────────────────────────────────────────────── */
+
+.home-info {
+  padding: 2rem 0 2.5rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 1rem;
+}
+
+.home-info__block {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(232, 110, 47, 0.08), rgba(240, 215, 161, 0.03));
+  padding: 1.2rem;
+}
+
+.home-info__block h2 {
+  margin: 0.2rem 0 0.85rem;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.8rem, 4.1vw, 2.6rem);
+}
+
+.home-info__address {
+  font-style: normal;
+  color: var(--text);
+  line-height: 1.45;
+}
+
+.home-info__hours p {
+  margin: 0.3rem 0;
+}
+
+.home-info-cta {
+  margin-top: 1.4rem;
+  display: inline-flex;
+}
+
+.home-info__map {
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  overflow: hidden;
+  min-height: 330px;
+  background: #17100d;
+}
+
+.home-info__map img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 860px) {
+  .home-hero {
+    min-height: 74vh;
+  }
+
+  .home-hero__title {
+    font-size: clamp(3.2rem, 16vw, 6.2rem);
+  }
+
+  .food-strip__track {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .home-news__head {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .home-info {
+    grid-template-columns: 1fr;
+  }
+
+  .focus-card {
+    min-height: 220px;
+  }
+}
+
+@media (max-width: 720px) {
+  .home-hero {
+    min-height: clamp(560px, 88svh, 760px);
+  }
+
+  .home-hero__content {
+    width: min(100%, 94vw);
+    padding: 6.2rem 0 5.15rem;
+    gap: 1rem;
+  }
+
+  .home-hero__sub {
+    max-width: 30ch;
+    justify-self: center;
+    line-height: 1.55;
+    font-size: 1.02rem;
+  }
+
+  .home-hero__actions {
+    width: min(100%, 420px);
+    display: grid;
+    gap: 0.7rem;
+    justify-self: center;
+  }
+
+  .home-hero__actions .btn {
+    width: 100%;
+  }
+
+  .food-strip__track {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(74vw, 1fr);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.45rem;
+  }
+
+  .food-strip__item {
+    min-height: clamp(240px, 58vw, 320px);
+    scroll-snap-align: start;
+  }
+
+  .focus-card {
+    min-height: 310px;
+    padding: 1.2rem;
+  }
+
+  .focus-card h2 {
+    font-size: clamp(2.2rem, 11vw, 3rem);
+  }
+
+  .focus-card__hint {
+    max-width: 24ch;
+    line-height: 1.45;
+  }
+
+  .story-card h2,
+  .home-info__block h2,
+  .home-news__head h2 {
+    font-size: clamp(2rem, 10vw, 2.9rem);
+    line-height: 0.95;
+  }
+
+  .home-info__map {
+    min-height: 280px;
+  }
+
+  .story-card {
+    padding: 1.1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .home-hero {
+    min-height: clamp(540px, 92svh, 720px);
+  }
+
+  .home-hero__actions {
+    gap: 0.55rem;
+    width: 100%;
+  }
+
+  .food-strip__track {
+    grid-template-columns: none;
+    grid-auto-columns: minmax(86vw, 1fr);
+  }
+
+  .focus-card {
+    min-height: 285px;
+    padding: 1.05rem;
+  }
+
+  .home-info__map {
+    min-height: 230px;
+  }
+}
+
+@media (max-width: 420px) {
+  .home-hero__title {
+    font-size: clamp(3rem, 20vw, 4.4rem);
+  }
+
+  .home-info__block {
+    padding: 1rem;
+  }
+}

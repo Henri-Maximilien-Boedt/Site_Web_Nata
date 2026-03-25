@@ -18,52 +18,125 @@
     <%- include('partials/header', { currentPath: '/actualites' }) %>
 
     <main>
+      <%
+        const featured = Array.isArray(typeof featuredPosts !== 'undefined' ? featuredPosts : null) ? featuredPosts : []
+        const upcoming = Array.isArray(typeof upcomingPosts !== 'undefined' ? upcomingPosts : null) ? upcomingPosts : []
+        const past = Array.isArray(typeof pastPosts !== 'undefined' ? pastPosts : null) ? pastPosts : []
+      %>
       <section class="story reveal">
         <div class="story-card">
           <p class="eyebrow">Actualités</p>
           <h2>Infos & Événements</h2>
-          <p>Les dernières nouvelles de NATA Bar : soirées spéciales, nouveautés et moments partagés.</p>
+          <p>Retrouve nos événements à la une, les prochains rendez-vous et ceux déjà passés.</p>
         </div>
       </section>
 
       <section class="news-section reveal">
-        <% if (!posts || posts.length === 0) { %>
-          <p class="news-empty">Aucune actualité pour le moment. Revenez bientôt !</p>
+        <div class="news-section-head">
+          <p class="eyebrow">Section 1</p>
+          <h2>Événements à la une</h2>
+        </div>
+        <% if (featured.length === 0) { %>
+          <p class="news-empty">Aucun événement à la une pour le moment.</p>
         <% } else { %>
           <div class="news-grid">
-            <% posts.forEach(post => { %>
-              <a class="news-card<%= post.is_pinned ? ' news-card--pinned' : '' %>" href="/actualites/<%= post.id %>">
+            <% featured.forEach(post => { %>
+              <a class="news-card news-card--pinned" href="/actualites/<%= post.id %>">
                 <div class="news-card__img">
                   <% if (post.main_image_url) { %>
                     <img src="<%= post.main_image_url %>" alt="<%= post.title %>" loading="lazy" />
                   <% } else { %>
                     <div class="news-card__img-placeholder">NATA</div>
                   <% } %>
-                  <% if (post.event_date) { %>
-                    <span class="news-badge news-badge--event">Événement</span>
-                  <% } %>
-                  <% if (post.is_pinned) { %>
-                    <span class="news-badge news-badge--pinned">À la une</span>
-                  <% } %>
+                  <span class="news-badge news-badge--event">Événement</span>
+                  <span class="news-badge news-badge--pinned">À la une</span>
                 </div>
                 <div class="news-card__body">
-                  <% if (post.event_date) { %>
-                    <p class="news-card__date">
-                      <%
-                        const d = new Date(post.event_date)
-                        const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
-                      %>
-                      <%= formatted %>
-                    </p>
-                  <% } else { %>
-                    <p class="news-card__date">
-                      <%
-                        const d = new Date(post.created_at)
-                        const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
-                      %>
-                      <%= formatted %>
-                    </p>
+                  <p class="news-card__date">
+                    <%
+                      const d = new Date(post.event_date || post.ref_date || post.created_at)
+                      const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                    %>
+                    <%= formatted %>
+                  </p>
+                  <h3 class="news-card__title"><%= post.title %></h3>
+                  <% if (post.content) { %>
+                    <p class="news-card__excerpt"><%= post.content.replace(/<[^>]*>/g, '').slice(0, 120) %><% if (post.content.length > 120) { %>…<% } %></p>
                   <% } %>
+                  <span class="news-card__cta">Lire la suite →</span>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <section class="news-section reveal">
+        <div class="news-section-head">
+          <p class="eyebrow">Section 2</p>
+          <h2>Événements futurs</h2>
+        </div>
+        <% if (upcoming.length === 0) { %>
+          <p class="news-empty">Aucun événement futur pour le moment.</p>
+        <% } else { %>
+          <div class="news-grid">
+            <% upcoming.forEach(post => { %>
+              <a class="news-card" href="/actualites/<%= post.id %>">
+                <div class="news-card__img">
+                  <% if (post.main_image_url) { %>
+                    <img src="<%= post.main_image_url %>" alt="<%= post.title %>" loading="lazy" />
+                  <% } else { %>
+                    <div class="news-card__img-placeholder">NATA</div>
+                  <% } %>
+                  <span class="news-badge news-badge--event">Événement</span>
+                </div>
+                <div class="news-card__body">
+                  <p class="news-card__date">
+                    <%
+                      const d = new Date(post.event_date || post.ref_date || post.created_at)
+                      const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                    %>
+                    <%= formatted %>
+                  </p>
+                  <h3 class="news-card__title"><%= post.title %></h3>
+                  <% if (post.content) { %>
+                    <p class="news-card__excerpt"><%= post.content.replace(/<[^>]*>/g, '').slice(0, 120) %><% if (post.content.length > 120) { %>…<% } %></p>
+                  <% } %>
+                  <span class="news-card__cta">Lire la suite →</span>
+                </div>
+              </a>
+            <% }) %>
+          </div>
+        <% } %>
+      </section>
+
+      <section class="news-section reveal">
+        <div class="news-section-head">
+          <p class="eyebrow">Section 3</p>
+          <h2>Événements passés</h2>
+        </div>
+        <% if (past.length === 0) { %>
+          <p class="news-empty">Aucun événement passé pour le moment.</p>
+        <% } else { %>
+          <div class="news-grid">
+            <% past.forEach(post => { %>
+              <a class="news-card" href="/actualites/<%= post.id %>">
+                <div class="news-card__img">
+                  <% if (post.main_image_url) { %>
+                    <img src="<%= post.main_image_url %>" alt="<%= post.title %>" loading="lazy" />
+                  <% } else { %>
+                    <div class="news-card__img-placeholder">NATA</div>
+                  <% } %>
+                  <span class="news-badge news-badge--event">Événement</span>
+                </div>
+                <div class="news-card__body">
+                  <p class="news-card__date">
+                    <%
+                      const d = new Date(post.event_date || post.ref_date || post.created_at)
+                      const formatted = d.toLocaleDateString('fr-BE', { day: 'numeric', month: 'long', year: 'numeric' })
+                    %>
+                    <%= formatted %>
+                  </p>
                   <h3 class="news-card__title"><%= post.title %></h3>
                   <% if (post.content) { %>
                     <p class="news-card__excerpt"><%= post.content.replace(/<[^>]*>/g, '').slice(0, 120) %><% if (post.content.length > 120) { %>…<% } %></p>

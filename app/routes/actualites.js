@@ -4,25 +4,67 @@ const pool = require('../db')
 
 router.get('/', async (_req, res, next) => {
   try {
-    const { rows: posts } = await pool.query(`
+    const { rows: featuredPosts } = await pool.query(`
       SELECT
         p.id,
         p.title,
         p.content,
         p.event_date::text AS event_date,
+        COALESCE(p.event_date, p.created_at::date)::text AS ref_date,
         p.is_pinned,
         p.created_at,
         i.url AS main_image_url
       FROM news_posts p
       LEFT JOIN news_images i ON i.post_id = p.id AND i.is_main = true
       WHERE p.is_published = true
-      ORDER BY p.is_pinned DESC, p.event_date DESC NULLS LAST, p.created_at DESC
+        AND p.is_pinned = true
+      ORDER BY ABS(COALESCE(p.event_date, p.created_at::date) - CURRENT_DATE) ASC,
+               COALESCE(p.event_date, p.created_at::date) ASC,
+               p.created_at DESC
+    `)
+
+    const { rows: upcomingPosts } = await pool.query(`
+      SELECT
+        p.id,
+        p.title,
+        p.content,
+        p.event_date::text AS event_date,
+        COALESCE(p.event_date, p.created_at::date)::text AS ref_date,
+        p.is_pinned,
+        p.created_at,
+        i.url AS main_image_url
+      FROM news_posts p
+      LEFT JOIN news_images i ON i.post_id = p.id AND i.is_main = true
+      WHERE p.is_published = true
+        AND COALESCE(p.event_date, p.created_at::date) >= CURRENT_DATE
+        AND p.is_pinned = false
+      ORDER BY COALESCE(p.event_date, p.created_at::date) ASC, p.created_at DESC
+    `)
+
+    const { rows: pastPosts } = await pool.query(`
+      SELECT
+        p.id,
+        p.title,
+        p.content,
+        p.event_date::text AS event_date,
+        COALESCE(p.event_date, p.created_at::date)::text AS ref_date,
+        p.is_pinned,
+        p.created_at,
+        i.url AS main_image_url
+      FROM news_posts p
+      LEFT JOIN news_images i ON i.post_id = p.id AND i.is_main = true
+      WHERE p.is_published = true
+        AND COALESCE(p.event_date, p.created_at::date) < CURRENT_DATE
+        AND p.is_pinned = false
+      ORDER BY COALESCE(p.event_date, p.created_at::date) DESC, p.created_at DESC
     `)
 
     res.render('actualites', {
       title: 'Actualités | NATA Bar',
       description: 'Les dernières actualités et événements de NATA Bar, restaurant coréen à Louvain-la-Neuve.',
-      posts
+      featuredPosts,
+      upcomingPosts,
+      pastPosts
     })
   } catch (err) {
     next(err)

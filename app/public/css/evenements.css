@@ -1,0 +1,456 @@
+/* ── Evenements page styles ────────────────────────────────────────────────── */
+
+.events-main {
+  width: min(1220px, 94vw);
+  padding-bottom: 2.6rem;
+}
+
+.events-hero {
+  padding: 1.2rem 0 1.4rem;
+  display: grid;
+  grid-template-columns: minmax(0, 0.95fr) minmax(0, 1.05fr);
+  gap: 1rem;
+}
+
+.events-hero__intro {
+  border: 1px solid #5b3e2f;
+  border-radius: 22px;
+  padding: 1.25rem;
+  background:
+    radial-gradient(circle at 12% 14%, rgba(240, 215, 161, 0.1), transparent 45%),
+    linear-gradient(160deg, rgba(40, 25, 19, 0.97), rgba(20, 14, 11, 0.98));
+  box-shadow: 0 18px 38px rgba(0, 0, 0, 0.28);
+  display: grid;
+  gap: 0.85rem;
+  align-content: start;
+}
+
+.events-hero__intro h1 {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.05em;
+  font-size: clamp(2.9rem, 6.7vw, 4.9rem);
+  line-height: 0.9;
+}
+
+.events-hero__intro p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.events-hero__actions {
+  margin-top: 0.15rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.6rem;
+}
+
+.events-hero__tags {
+  margin: 0.2rem 0 0;
+  padding: 0;
+  list-style: none;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.events-hero__tags li {
+  border: 1px solid #604232;
+  border-radius: 999px;
+  padding: 0.35rem 0.7rem;
+  background: rgba(23, 16, 12, 0.86);
+  color: #e4cfb0;
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.events-hero__visuals {
+  display: grid;
+  grid-template-columns: minmax(0, 1.1fr) minmax(0, 0.9fr);
+  gap: 0.7rem;
+  min-height: 390px;
+  scrollbar-width: none;
+}
+
+.events-hero__visuals::-webkit-scrollbar {
+  display: none;
+}
+
+.events-hero__visual {
+  margin: 0;
+  min-height: 185px;
+  border: 1px solid #5a3f31;
+  border-radius: 16px;
+  overflow: hidden;
+  background: #1a120e;
+  box-shadow: 0 16px 32px rgba(0, 0, 0, 0.28);
+}
+
+.events-hero__visual--main {
+  min-height: 390px;
+  grid-row: 1 / span 2;
+}
+
+.events-hero__visual img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 0.45s ease;
+}
+
+.events-hero__visual:hover img {
+  transform: scale(1.03);
+}
+
+/* ── Offers ─────────────────────────────────────────────────────────────────── */
+
+.events-offers {
+  padding: 0.4rem 0 1rem;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.events-offer-card {
+  border: 1px solid #5a3f31;
+  border-radius: 20px;
+  padding: 1.05rem;
+  background: linear-gradient(165deg, rgba(31, 21, 16, 0.96), rgba(18, 13, 10, 0.97));
+  box-shadow: inset 0 1px 0 rgba(255, 234, 198, 0.05);
+  display: grid;
+  gap: 0.8rem;
+}
+
+.events-offer-card__head h2 {
+  margin: 0.15rem 0 0.45rem;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(2rem, 4.8vw, 2.9rem);
+  line-height: 0.95;
+  color: var(--gold);
+}
+
+.events-offer-card__lead {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.5;
+}
+
+.events-offer-card__list {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 0.5rem;
+}
+
+.events-offer-card__list li {
+  border: 1px solid rgba(113, 80, 61, 0.58);
+  border-left: 3px solid rgba(232, 110, 47, 0.58);
+  border-radius: 12px;
+  background: linear-gradient(125deg, rgba(27, 19, 15, 0.97), rgba(20, 15, 11, 0.96));
+  padding: 0.58rem 0.7rem;
+  color: #f2e4cf;
+  line-height: 1.35;
+}
+
+.events-offer-card__strip {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.55rem;
+  scrollbar-width: none;
+}
+
+.events-offer-card__strip::-webkit-scrollbar {
+  display: none;
+}
+
+.events-offer-photo {
+  margin: 0;
+  min-height: 130px;
+  border: 1px solid #5a3f31;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.events-offer-photo img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+.events-offer-card .btn {
+  justify-self: start;
+}
+
+/* ── Flow steps ─────────────────────────────────────────────────────────────── */
+
+.events-flow {
+  padding: 0.2rem 0 1.4rem;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 0.85rem;
+}
+
+.events-flow__step {
+  border: 1px solid #583d2f;
+  border-radius: 16px;
+  background: linear-gradient(150deg, rgba(232, 110, 47, 0.1), rgba(240, 215, 161, 0.04));
+  padding: 0.95rem;
+  display: grid;
+  gap: 0.4rem;
+}
+
+.events-flow__step span {
+  width: 1.9rem;
+  height: 1.9rem;
+  border-radius: 50%;
+  border: 1px solid #7e583f;
+  background: rgba(21, 15, 11, 0.9);
+  color: var(--gold);
+  font-weight: 800;
+  display: grid;
+  place-items: center;
+}
+
+.events-flow__step h3 {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 1.7rem;
+  color: var(--gold);
+}
+
+.events-flow__step p {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+
+/* ── Devis form ─────────────────────────────────────────────────────────────── */
+
+.events-devis {
+  padding: 0.95rem 0 2.2rem;
+  border-top: 1px solid #4c3427;
+}
+
+.events-devis__head {
+  display: grid;
+  gap: 0.35rem;
+  margin-bottom: 0.85rem;
+}
+
+.events-devis__head h2 {
+  margin: 0.2rem 0 0.1rem;
+}
+
+.events-devis__head p {
+  margin: 0;
+}
+
+.events-devis__meta {
+  margin-top: 0.25rem;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.45rem;
+}
+
+.events-devis__meta span {
+  border: 1px solid #5e4131;
+  border-radius: 999px;
+  padding: 0.3rem 0.7rem;
+  background: rgba(22, 15, 11, 0.86);
+  color: #e9d3b4;
+  font-size: 0.84rem;
+  font-weight: 700;
+}
+
+.devis-feedback {
+  border-radius: 12px;
+  padding: 0.7rem 0.85rem;
+  margin: 0.9rem 0;
+  font-size: 0.9rem;
+  font-weight: 700;
+}
+
+.devis-feedback--ok {
+  border: 1px solid #2f9158;
+  background: rgba(47, 145, 88, 0.12);
+  color: #9de2bd;
+}
+
+.devis-feedback--warn {
+  border: 1px solid #ad7f36;
+  background: rgba(173, 127, 54, 0.15);
+  color: #f7d39b;
+}
+
+.devis-feedback--error {
+  border: 1px solid #b24848;
+  background: rgba(178, 72, 72, 0.14);
+  color: #ffb5b5;
+}
+
+.events-devis__forms {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 1rem;
+}
+
+.events-quote-form {
+  background: linear-gradient(165deg, rgba(34, 22, 16, 0.97), rgba(20, 14, 11, 0.97));
+  border: 1px solid #5b3f2f;
+  border-radius: 18px;
+  box-shadow: inset 0 1px 0 rgba(255, 234, 198, 0.05);
+  gap: 0.72rem;
+}
+
+.booking-form--devis h3 {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 1.7rem;
+  color: var(--gold);
+}
+
+.events-quote-form__hint {
+  margin: 0;
+  color: #d8c4a7;
+  font-size: 0.88rem;
+  line-height: 1.4;
+}
+
+.events-quote-form label {
+  color: #dbc8ad;
+  font-weight: 600;
+}
+
+/* ── Responsive ─────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1080px) {
+  .events-main {
+    width: min(980px, 95vw);
+  }
+
+  .events-hero {
+    grid-template-columns: 1fr;
+  }
+
+  .events-hero__visuals {
+    min-height: 0;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .events-hero__visual--main {
+    grid-row: auto;
+    grid-column: 1 / -1;
+    min-height: 250px;
+  }
+
+  .events-offers {
+    grid-template-columns: 1fr;
+  }
+
+  .events-flow {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+@media (max-width: 860px) {
+  .events-hero,
+  .events-offers,
+  .events-flow,
+  .events-devis__forms {
+    grid-template-columns: 1fr;
+  }
+
+  .events-offer-card__strip {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+
+  .events-hero__actions {
+    gap: 0.5rem;
+  }
+
+  .events-hero__tags li {
+    font-size: 0.8rem;
+  }
+}
+
+@media (max-width: 720px) {
+  .events-main {
+    width: min(1120px, 94vw);
+  }
+
+  .events-hero__actions,
+  .menu-hero-actions {
+    width: min(100%, 420px);
+    display: grid;
+    gap: 0.7rem;
+    justify-self: center;
+  }
+
+  .events-hero__actions .btn,
+  .menu-hero-actions .btn {
+    width: 100%;
+  }
+
+  .events-hero__visuals,
+  .events-offer-card__strip {
+    grid-template-columns: none;
+    grid-auto-flow: column;
+    grid-auto-columns: minmax(78vw, 1fr);
+    overflow-x: auto;
+    overscroll-behavior-x: contain;
+    scroll-snap-type: x mandatory;
+    padding-bottom: 0.4rem;
+  }
+
+  .events-hero__visual,
+  .events-offer-photo {
+    min-height: 220px;
+    scroll-snap-align: start;
+  }
+
+  .events-hero__visual--main {
+    grid-row: auto;
+    grid-column: auto;
+    min-height: 280px;
+  }
+
+  .story-card h2,
+  .events-devis__head h2 {
+    font-size: clamp(2rem, 10vw, 2.9rem);
+    line-height: 0.95;
+  }
+
+  .events-hero__intro,
+  .events-offer-card,
+  .events-flow__step {
+    padding: 1.1rem;
+  }
+}
+
+@media (max-width: 560px) {
+  .events-hero__visuals,
+  .events-offer-card__strip {
+    grid-template-columns: none;
+    grid-auto-columns: minmax(84vw, 1fr);
+  }
+
+  .events-hero__visual--main {
+    grid-column: auto;
+    min-height: 205px;
+  }
+}
+
+@media (max-width: 420px) {
+  .events-hero__intro,
+  .events-offer-card,
+  .events-flow__step {
+    padding: 1rem;
+  }
+}

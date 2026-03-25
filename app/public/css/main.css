@@ -445,6 +445,17 @@ a.focus-card {
   padding: 1rem 0 2.8rem;
 }
 
+.news-section-head {
+  margin-bottom: 0.9rem;
+}
+
+.news-section-head h2 {
+  margin: 0.2rem 0 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: clamp(1.8rem, 4vw, 2.6rem);
+}
+
 .news-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));

@@ -8,6 +8,7 @@
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
 </head>
 <body class="admin-page">
   <div class="noise"></div>
@@ -19,7 +20,41 @@
         <h1>Menu</h1>
       </div>
     </div>
-    <p style="color: var(--muted);">Gestion des articles du menu.</p>
+
+    <% if (!items || items.length === 0) { %>
+      <div class="admin-empty">
+        <p>Aucun article de menu trouvé.</p>
+      </div>
+    <% } else { %>
+      <div class="admin-posts-table-wrap">
+        <table class="admin-posts-table">
+          <thead>
+            <tr>
+              <th>Catégorie</th>
+              <th>Nom</th>
+              <th>Prix</th>
+              <th>Ordre</th>
+              <th>Disponible</th>
+            </tr>
+          </thead>
+          <tbody>
+            <% items.forEach((item) => { %>
+              <tr>
+                <td><%= item.category %></td>
+                <td><%= item.name %></td>
+                <td><%= item.price !== null ? Number(item.price).toFixed(2) + ' EUR' : '-' %></td>
+                <td><%= item.sort_order %></td>
+                <td>
+                  <span class="badge <%= item.is_available ? 'badge--confirmed' : 'badge--inactive' %>">
+                    <%= item.is_available ? 'Oui' : 'Non' %>
+                  </span>
+                </td>
+              </tr>
+            <% }) %>
+          </tbody>
+        </table>
+      </div>
+    <% } %>
   </div>
 </body>
 </html>

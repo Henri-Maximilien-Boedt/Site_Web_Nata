@@ -8,7 +8,8 @@
   <button class="admin-topbar__hamburger" id="adminMenuBtn" aria-label="Menu admin" aria-expanded="false">☰</button>
 
   <nav class="admin-topbar__nav" id="adminNav">
-    <a href="/admin" class="admin-topbar__link<%= isSection('reservations') %>">Réservations</a>
+    <a href="/admin" class="admin-topbar__link<%= isSection('dashboard') %>">Dashboard</a>
+    <a href="/admin/reservations" class="admin-topbar__link<%= isSection('reservations') %>">Réservations</a>
     <a href="/admin/tables" class="admin-topbar__link<%= isSection('tables') %>">Tables</a>
     <a href="/admin/menu" class="admin-topbar__link<%= isSection('menu') %>">Menu</a>
     <a href="/admin/actualites" class="admin-topbar__link<%= isSection('actualites') %>">Actualités</a>
