@@ -1,10 +1,12 @@
 require('dotenv').config()
 const express = require('express')
 const path = require('path')
+const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const PgSession = require('connect-pg-simple')(session)
 const pool = require('./db')
 const { pageAnalyticsMiddleware } = require('./lib/pageAnalytics')
+const visitorMiddleware = require('./middleware/visitor')
 
 const app = express()
 
@@ -20,6 +22,7 @@ app.set('views', path.join(__dirname, 'views'))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
+app.use(cookieParser())
 
 // ============================================================
 // Sessions (PostgreSQL store)
@@ -36,6 +39,13 @@ app.use(session({
     secure: process.env.NODE_ENV === 'production' // HTTPS only en prod
   }
 }))
+
+app.use(visitorMiddleware)
+
+app.use((req, res, next) => {
+  res.locals.cookieConsent = req.cookies?.nata_consent || null
+  next()
+})
 
 app.use(pageAnalyticsMiddleware)
 
@@ -81,6 +91,14 @@ const PORT = process.env.PORT || 3000
 app.listen(PORT, () => {
   console.log(`✓ NATA Bar server lancé sur http://localhost:${PORT}`)
   console.log(`✓ Environnement : ${process.env.NODE_ENV || 'development'}`)
+  console.log(`✓ Cloudinary cloud: ${process.env.CLOUDINARY_CLOUD_NAME || '(non configuré)'}`)
+})
+
+// Test DB connection at startup
+pool.query('SELECT 1').then(() => {
+  console.log('✓ PostgreSQL connecté')
+}).catch(err => {
+  console.error('✗ PostgreSQL erreur connexion:', err.message)
 })
 
 module.exports = app

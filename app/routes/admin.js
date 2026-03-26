@@ -59,10 +59,12 @@ router.post('/login', (req, res) => {
   const validPassword = password === process.env.ADMIN_PASSWORD
 
   if (!validEmail || !validPassword) {
+    console.log(`✗ Tentative connexion échouée: ${email}`)
     return res.render('login', { error: 'Identifiants incorrects.' })
   }
 
   req.session.admin = { email: email.trim().toLowerCase() }
+  console.log(`✓ Admin connecté: ${email.trim().toLowerCase()}`)
   res.redirect('/admin')
 })
 
@@ -348,7 +350,9 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     const { rows: images } = await pool.query(`SELECT cloudinary_id FROM news_images WHERE post_id = $1`, [id])
     for (const img of images) {
       if (img.cloudinary_id) {
-        await cloudinary.uploader.destroy(img.cloudinary_id).catch(() => {})
+        await cloudinary.uploader.destroy(img.cloudinary_id)
+          .then(() => console.log(`✓ Cloudinary destroy: ${img.cloudinary_id}`))
+          .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
       }
     }
 
@@ -388,6 +392,8 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
         [id, url, cloudinaryId, isMain, currentCount + i]
       )
     }
+
+    console.log(`✓ Cloudinary upload: ${toInsert.length} image(s) → article #${id}`)
 
     let flashText = `${toInsert.length} image(s) ajoutée(s).`
     if (toInsert.length === 0 && files.length > 0) {
@@ -436,7 +442,9 @@ router.post('/actualites/:id/images/:imgId/delete', isAuth, async (req, res, nex
 
     if (rows.length) {
       if (rows[0].cloudinary_id) {
-        await cloudinary.uploader.destroy(rows[0].cloudinary_id).catch(() => {})
+        await cloudinary.uploader.destroy(rows[0].cloudinary_id)
+          .then(() => console.log(`✓ Cloudinary destroy: ${rows[0].cloudinary_id}`))
+          .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
       }
 
       // If the deleted image was main, promote the first remaining image

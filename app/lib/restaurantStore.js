@@ -252,6 +252,8 @@ const ensureRuntimeSchema = async (client) => {
     ALTER TABLE news_images
     ADD COLUMN IF NOT EXISTS cloudinary_id text
   `)
+
+  console.log('✓ Schema BDD vérifié')
 }
 
 const purgeOldReservations = async () => {

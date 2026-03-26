@@ -40,8 +40,14 @@ const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => 
   payload.textContent = textContent
   if (replyTo) payload.replyTo = replyTo
 
-  await api.sendTransacEmail(payload)
-  return true
+  try {
+    await api.sendTransacEmail(payload)
+    console.log(`✓ Email envoyé → ${to.map(t => t.email).join(', ')} | "${subject}"`)
+    return true
+  } catch (err) {
+    console.error(`✗ Email échoué → ${to.map(t => t.email).join(', ')} | "${subject}" |`, err.message)
+    throw err
+  }
 }
 
 const sendReservationAcknowledgement = async (reservation) => {
