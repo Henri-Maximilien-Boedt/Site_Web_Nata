@@ -351,7 +351,7 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     for (const img of images) {
       if (img.cloudinary_id) {
         await cloudinary.uploader.destroy(img.cloudinary_id)
-          .then(() => console.log(`✓ Cloudinary destroy: ${img.cloudinary_id}`))
+          .then(() => console.log(`✓ Cloudinary destroy: ${img.cloudinary_id} | par ${req.session.admin?.email} (${req.ip})`))
           .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
       }
     }
@@ -393,7 +393,7 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
       )
     }
 
-    console.log(`✓ Cloudinary upload: ${toInsert.length} image(s) → article #${id}`)
+    console.log(`✓ Cloudinary upload: ${toInsert.length} image(s) → article #${id} | par ${req.session.admin?.email} (${req.ip})`)
 
     let flashText = `${toInsert.length} image(s) ajoutée(s).`
     if (toInsert.length === 0 && files.length > 0) {
@@ -443,7 +443,7 @@ router.post('/actualites/:id/images/:imgId/delete', isAuth, async (req, res, nex
     if (rows.length) {
       if (rows[0].cloudinary_id) {
         await cloudinary.uploader.destroy(rows[0].cloudinary_id)
-          .then(() => console.log(`✓ Cloudinary destroy: ${rows[0].cloudinary_id}`))
+          .then(() => console.log(`✓ Cloudinary destroy: ${rows[0].cloudinary_id} | par ${req.session.admin?.email} (${req.ip})`))
           .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
       }
 

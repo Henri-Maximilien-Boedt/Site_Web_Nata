@@ -103,7 +103,7 @@
                 <h3 id="admin-analytics-title">Pages vues publiques</h3>
               </div>
               <p class="admin-help">
-                Mesure serveur sans cookie analytics ni identifiant visiteur. Les chiffres ci-dessous comptent des pages vues, pas des visiteurs uniques.
+                Mesure serveur avec cookie visiteur (<code>nata_vid</code>). Les visiteurs uniques sont comptés par appareil ayant accepté les cookies analytics.
               </p>
             </div>
 
@@ -112,17 +112,17 @@
                 <article class="admin-service-card">
                   <p class="admin-service-card__label">Aujourd'hui</p>
                   <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.today_views || 0).toLocaleString('fr-BE') %></p>
-                  <p class="admin-service-card__suffix">pages vues</p>
+                  <p class="admin-service-card__suffix">pages vues · <strong><%= Number(pageAnalytics.totals.today_unique || 0).toLocaleString('fr-BE') %></strong> uniques</p>
                 </article>
                 <article class="admin-service-card">
                   <p class="admin-service-card__label">7 jours</p>
                   <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.last_7_days_views || 0).toLocaleString('fr-BE') %></p>
-                  <p class="admin-service-card__suffix">pages vues</p>
+                  <p class="admin-service-card__suffix">pages vues · <strong><%= Number(pageAnalytics.totals.last_7_days_unique || 0).toLocaleString('fr-BE') %></strong> uniques</p>
                 </article>
                 <article class="admin-service-card">
                   <p class="admin-service-card__label">30 jours</p>
                   <p class="admin-service-card__covers"><%= Number(pageAnalytics.totals.last_30_days_views || 0).toLocaleString('fr-BE') %></p>
-                  <p class="admin-service-card__suffix">pages vues</p>
+                  <p class="admin-service-card__suffix">pages vues · <strong><%= Number(pageAnalytics.totals.last_30_days_unique || 0).toLocaleString('fr-BE') %></strong> uniques</p>
                 </article>
               </div>
 
@@ -143,9 +143,9 @@
                       <% pageAnalytics.pages.forEach((page) => { %>
                         <tr>
                           <th scope="row"><%= page.pageLabel %></th>
-                          <td><%= Number(page.todayViews || 0).toLocaleString('fr-BE') %></td>
-                          <td><%= Number(page.last7DaysViews || 0).toLocaleString('fr-BE') %></td>
-                          <td><%= Number(page.last30DaysViews || 0).toLocaleString('fr-BE') %></td>
+                          <td><%= Number(page.todayViews || 0).toLocaleString('fr-BE') %> <small>/ <%= Number(page.todayUnique || 0).toLocaleString('fr-BE') %> uniq.</small></td>
+                          <td><%= Number(page.last7DaysViews || 0).toLocaleString('fr-BE') %> <small>/ <%= Number(page.last7DaysUnique || 0).toLocaleString('fr-BE') %> uniq.</small></td>
+                          <td><%= Number(page.last30DaysViews || 0).toLocaleString('fr-BE') %> <small>/ <%= Number(page.last30DaysUnique || 0).toLocaleString('fr-BE') %> uniq.</small></td>
                         </tr>
                       <% }) %>
                     </tbody>
