@@ -16,6 +16,9 @@ const app = express()
 app.set('view engine', 'ejs')
 app.set('views', path.join(__dirname, 'views'))
 
+// Reverse proxy (AlwaysData, Render…)
+app.set('trust proxy', 1)
+
 // ============================================================
 // Middleware global
 // ============================================================
