@@ -88,8 +88,10 @@ app.use((err, req, res, next) => {
 // Start server
 // ============================================================
 const PORT = process.env.PORT || 3000
-app.listen(PORT, () => {
-  console.log(`✓ NATA Bar server lancé sur http://localhost:${PORT}`)
+const HOST = process.env.HOST || '::'
+
+app.listen(PORT, HOST, () => {
+  console.log(`✓ NATA Bar server lancé sur ${HOST}:${PORT}`)
   console.log(`✓ Environnement : ${process.env.NODE_ENV || 'development'}`)
   console.log(`✓ Cloudinary cloud: ${process.env.CLOUDINARY_CLOUD_NAME || '(non configuré)'}`)
 })
