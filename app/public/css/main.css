@@ -53,11 +53,16 @@ body.nav-open {
 }
 
 .brand {
-  font-family: "Bebas Neue", sans-serif;
-  letter-spacing: 0.08em;
-  font-size: 1.8rem;
-  color: var(--gold);
+  display: inline-flex;
+  align-items: center;
   text-decoration: none;
+  flex-shrink: 0;
+}
+
+.brand-logo {
+  height: 52px;
+  width: auto;
+  display: block;
 }
 
 .menu-btn {
@@ -564,8 +569,8 @@ footer {
     padding: 0.85rem 4vw;
   }
 
-  .brand {
-    font-size: 1.6rem;
+  .brand-logo {
+    height: 44px;
   }
 
   .story-card h2,
@@ -587,8 +592,8 @@ footer {
 }
 
 @media (max-width: 420px) {
-  .brand {
-    font-size: 1.45rem;
+  .brand-logo {
+    height: 38px;
   }
 
   .story-card {
