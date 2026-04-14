@@ -88,6 +88,7 @@
   </div>
   <script>
     (() => {
+      const CSRF = '<%= csrfToken %>';
       const root = document.currentScript?.parentElement || document;
       const buttons = root.querySelectorAll('[data-res-status]');
       if (!buttons.length) return;
@@ -100,7 +101,7 @@
           try {
             const res = await fetch(`/admin/api/reservations/${encodeURIComponent(id)}/status`, {
               method: 'PATCH',
-              headers: { 'Content-Type': 'application/json' },
+              headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF },
               body: JSON.stringify({ status })
             });
             if (!res.ok) {
