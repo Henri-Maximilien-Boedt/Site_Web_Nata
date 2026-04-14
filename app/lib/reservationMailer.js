@@ -120,7 +120,45 @@ const sendReservationStatusEmail = async (reservation, status) => {
   })
 }
 
+const sendManagerNewReservationNotification = async (reservation) => {
+  const { adminEmail } = getMailerConfig()
+  if (!adminEmail) return false
+
+  const subject = `[NATA] Nouvelle réservation en attente — ${reservation.name}`
+  const htmlContent = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#f6fbff;padding:16px;">
+      <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #d8e5f2;border-radius:12px;padding:18px;">
+        <h2 style="margin:0 0 8px;color:#153f70;">Nouvelle réservation à confirmer</h2>
+        <p style="margin:0 0 14px;color:#50667d;">Une réservation en ligne vient d'être soumise et attend votre confirmation.</p>
+        <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
+        <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
+        <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
+        <p style="margin:0 0 6px;">Email client : <strong>${escapeHTML(reservation.email || '')}</strong></p>
+        <p style="margin:0 0 6px;">Téléphone : <strong>${escapeHTML(reservation.phone || '')}</strong></p>
+        ${reservation.message ? `<p style="margin:0 0 6px;">Message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
+        <p style="margin:14px 0 0;"><a href="${process.env.SITE_URL || ''}/admin/reservations" style="background:#153f70;color:#fff;padding:10px 20px;border-radius:6px;text-decoration:none;">Voir dans l'admin</a></p>
+      </div>
+    </div>
+  `
+
+  return sendEmail({
+    to: [{ email: adminEmail }],
+    subject,
+    htmlContent,
+    textContent: [
+      'Nouvelle réservation en attente de confirmation.',
+      `Nom : ${reservation.name}`,
+      `Date/heure : ${reservation.date} ${reservation.time}`,
+      `Personnes : ${reservation.people}`,
+      `Email : ${reservation.email}`,
+      `Téléphone : ${reservation.phone}`,
+      reservation.message ? `Message : ${reservation.message}` : ''
+    ].filter(Boolean).join('\n')
+  })
+}
+
 module.exports = {
   sendReservationAcknowledgement,
-  sendReservationStatusEmail
+  sendReservationStatusEmail,
+  sendManagerNewReservationNotification
 }

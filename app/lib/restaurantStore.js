@@ -1,7 +1,8 @@
 const pool = require('../db')
 const {
   sendReservationAcknowledgement,
-  sendReservationStatusEmail
+  sendReservationStatusEmail,
+  sendManagerNewReservationNotification
 } = require('./reservationMailer')
 
 const SETTINGS_KEYS = {
@@ -754,7 +755,7 @@ const createReservation = async (payload) => {
           source,
           status
         )
-        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'online', 'confirmed')
+        VALUES ($1, $2, $3, $4, $5, $6, $7, $8, 'online', 'pending')
         RETURNING id, created_at
       `,
       [anchorTableId, date, time, people, name, email, phone, message]
@@ -804,6 +805,10 @@ const createReservation = async (payload) => {
 
     await sendReservationAcknowledgement(newReservation).catch((error) => {
       console.warn('Ack réservation non envoyé :', error?.message || error)
+    })
+
+    await sendManagerNewReservationNotification(newReservation).catch((error) => {
+      console.warn('Notif gérant non envoyée :', error?.message || error)
     })
 
     return newReservation
@@ -1004,9 +1009,11 @@ const updateReservationStatus = async (reservationId, nextStatus) => {
       createdAt: base.created_at instanceof Date ? base.created_at.toISOString() : String(base.created_at || '')
     }
 
-    await sendReservationStatusEmail(updated, normalizedStatus).catch((error) => {
-      console.warn('Email statut réservation non envoyé :', error?.message || error)
-    })
+    if (['confirmed', 'cancelled'].includes(normalizedStatus)) {
+      await sendReservationStatusEmail(updated, normalizedStatus).catch((error) => {
+        console.warn('Email statut réservation non envoyé :', error?.message || error)
+      })
+    }
 
     return updated
   } catch (error) {
