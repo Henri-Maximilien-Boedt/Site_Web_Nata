@@ -13,8 +13,8 @@ const formatDateTime = (dateISO, timeHHMM) =>
 
 const getMailerConfig = () => {
   const apiKey = String(process.env.BREVO_API_KEY || '').trim()
-  const fromEmail = String(process.env.MAIL_FROM || process.env.ADMIN_EMAIL || '').trim().toLowerCase()
-  const adminEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+  const fromEmail = String(process.env.MAIL_FROM || process.env.TEST_EMAIL || '').trim().toLowerCase()
+  const adminEmail = String(process.env.TEST_EMAIL || '').trim().toLowerCase()
   return { apiKey, fromEmail, adminEmail }
 }
 
