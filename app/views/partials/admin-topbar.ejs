@@ -17,10 +17,12 @@
   <div class="admin-topbar__right">
     <a href="/" class="admin-topbar__site-link">← Site</a>
     <form method="POST" action="/admin/logout">
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <button type="submit" class="btn btn-ghost btn-sm">Déconnexion</button>
     </form>
   </div>
 </header>
+<script>window.__csrfToken = '<%= csrfToken %>';</script>
 <script>
   (function () {
     const btn = document.getElementById('adminMenuBtn')

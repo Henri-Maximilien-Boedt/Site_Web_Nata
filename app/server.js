@@ -1,12 +1,23 @@
 require('dotenv').config()
 const express = require('express')
 const path = require('path')
+const helmet = require('helmet')
 const cookieParser = require('cookie-parser')
 const session = require('express-session')
 const PgSession = require('connect-pg-simple')(session)
 const pool = require('./db')
 const { pageAnalyticsMiddleware } = require('./lib/pageAnalytics')
 const visitorMiddleware = require('./middleware/visitor')
+const { csrfMiddleware } = require('./middleware/csrf')
+
+if (!process.env.SESSION_SECRET) {
+  if (process.env.NODE_ENV === 'production') {
+    console.error('FATAL: SESSION_SECRET non défini en production')
+    process.exit(1)
+  } else {
+    console.warn('⚠ SESSION_SECRET non défini — fallback dev uniquement')
+  }
+}
 
 const app = express()
 
@@ -22,6 +33,7 @@ app.set('trust proxy', 1)
 // ============================================================
 // Middleware global
 // ============================================================
+app.use(helmet({ contentSecurityPolicy: false }))
 app.use(express.static(path.join(__dirname, 'public')))
 app.use(express.urlencoded({ extended: true }))
 app.use(express.json())
@@ -38,15 +50,16 @@ app.use(session({
   cookie: {
     maxAge: 24 * 60 * 60 * 1000, // 24 heures
     httpOnly: true,
-    sameSite: 'lax', // Moins strict pour développement local
+    sameSite: 'strict',
     secure: process.env.NODE_ENV === 'production' // HTTPS only en prod
   }
 }))
 
 app.use(visitorMiddleware)
+app.use(csrfMiddleware)
 
 app.use((req, res, next) => {
-  res.locals.cookieConsent = req.cookies?.nata_consent || null
+  res.locals.cookieConsent = req.cookies?.nata_cookie_consent || null
   next()
 })
 

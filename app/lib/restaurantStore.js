@@ -84,7 +84,7 @@ const normalizeTime = (value) => {
 
 const normalizeEmail = (value) => {
   const email = String(value || '').trim().toLowerCase()
-  if (!email || !email.includes('@')) return null
+  if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) return null
   return email
 }
 

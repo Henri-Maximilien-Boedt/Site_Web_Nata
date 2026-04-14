@@ -38,6 +38,7 @@
       action="/admin/actualites/<%= post ? post.id + '/edit' : 'create' %>"
       class="admin-form"
     >
+      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
       <div class="admin-form__group">
         <label for="title">Titre <span class="required">*</span></label>
         <input
@@ -121,11 +122,13 @@
                 <div class="admin-img-card__actions">
                   <% if (!img.is_main) { %>
                     <form method="POST" action="/admin/actualites/<%= post.id %>/images/<%= img.id %>/set-main">
+                      <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                       <button type="submit" class="btn btn-ghost btn-xs">Définir principale</button>
                     </form>
                   <% } %>
                   <form method="POST" action="/admin/actualites/<%= post.id %>/images/<%= img.id %>/delete"
                         onsubmit="return confirm('Supprimer cette image ?')">
+                    <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                     <button type="submit" class="btn btn-danger btn-xs">Supprimer</button>
                   </form>
                 </div>
@@ -143,6 +146,7 @@
             enctype="multipart/form-data"
             class="admin-upload-form"
           >
+            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <label class="admin-upload-label" for="images">
               <span>Ajouter des images</span>
               <span class="admin-form__hint-inline">JPG, PNG ou WebP · max 2 Mo chacune · <%= 10 - images.length %> restante(s)</span>

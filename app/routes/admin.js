@@ -1,6 +1,9 @@
 const express = require('express')
 const router = express.Router()
+const bcrypt = require('bcrypt')
+const { rateLimit } = require('express-rate-limit')
 const isAuth = require('../middleware/auth')
+const { verifyCsrf } = require('../middleware/csrf')
 const upload = require('../middleware/upload')
 const { cloudinary } = require('../middleware/upload')
 const pool = require('../db')
@@ -14,6 +17,25 @@ const {
   updateTableLayout,
   updateTableMerges
 } = require('../lib/restaurantStore')
+
+const loginLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  handler: (req, res) => {
+    res.status(429).render('login', {
+      error: 'Trop de tentatives de connexion. Réessayez dans 15 minutes.'
+    })
+  }
+})
+
+// CSRF obligatoire sur tous les POST/PUT/PATCH/DELETE admin
+router.use((req, res, next) => {
+  const mutating = ['POST', 'PUT', 'PATCH', 'DELETE']
+  if (mutating.includes(req.method)) return verifyCsrf(req, res, next)
+  next()
+})
 
 const renderDashboard = async (req, res, next, section, title) => {
   try {
@@ -48,7 +70,7 @@ router.get('/login', (req, res) => {
   res.render('login', { error: null })
 })
 
-router.post('/login', (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   const { email, password } = req.body
 
   if (!email || !password) {
@@ -56,16 +78,26 @@ router.post('/login', (req, res) => {
   }
 
   const validEmail = email.trim().toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()
-  const validPassword = password === process.env.ADMIN_PASSWORD
+
+  let validPassword = false
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    validPassword = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH)
+  } else if (process.env.ADMIN_PASSWORD) {
+    console.warn('⚠ Utilisez ADMIN_PASSWORD_HASH en production (bcrypt)')
+    validPassword = (password === process.env.ADMIN_PASSWORD)
+  }
 
   if (!validEmail || !validPassword) {
-    console.log(`✗ Tentative connexion échouée: ${email}`)
+    console.log(`✗ Tentative connexion échouée: ${email} (${req.ip})`)
     return res.render('login', { error: 'Identifiants incorrects.' })
   }
 
-  req.session.admin = { email: email.trim().toLowerCase() }
-  console.log(`✓ Admin connecté: ${email.trim().toLowerCase()}`)
-  res.redirect('/admin')
+  req.session.regenerate((err) => {
+    if (err) return res.render('login', { error: 'Erreur serveur. Réessayez.' })
+    req.session.admin = { email: email.trim().toLowerCase() }
+    console.log(`✓ Admin connecté: ${email.trim().toLowerCase()} (${req.ip})`)
+    res.redirect('/admin')
+  })
 })
 
 router.post('/logout', (req, res) => {

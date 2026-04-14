@@ -53,12 +53,15 @@
 
 .home-hero__title {
   margin: 0;
-  font-family: "Bebas Neue", sans-serif;
-  font-size: clamp(4.1rem, 15vw, 9.6rem);
-  letter-spacing: 0.08em;
-  line-height: 0.9;
-  color: #fff3dd;
-  text-shadow: 0 10px 24px rgba(0, 0, 0, 0.5);
+  line-height: 1;
+}
+
+.home-hero__logo {
+  display: block;
+  width: min(560px, 82vw);
+  height: auto;
+  margin: 0 auto;
+  filter: drop-shadow(0 8px 22px rgba(0, 0, 0, 0.55));
 }
 
 .home-hero__sub {
@@ -356,8 +359,8 @@ a.focus-card {
     min-height: 74vh;
   }
 
-  .home-hero__title {
-    font-size: clamp(3.2rem, 16vw, 6.2rem);
+  .home-hero__logo {
+    width: min(440px, 84vw);
   }
 
   .food-strip__track {
@@ -478,8 +481,8 @@ a.focus-card {
 }
 
 @media (max-width: 420px) {
-  .home-hero__title {
-    font-size: clamp(3rem, 20vw, 4.4rem);
+  .home-hero__logo {
+    width: min(300px, 88vw);
   }
 
   .home-info__block {

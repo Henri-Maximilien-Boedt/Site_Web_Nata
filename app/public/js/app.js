@@ -37,9 +37,11 @@ const ADMIN_API = {
 const isAdminPage = () => Boolean(document.querySelector('[data-admin-page]'));
 
 const requestJSON = async (url, options = {}) => {
+  const csrfToken = window.__csrfToken || '';
   const response = await fetch(url, {
     headers: {
       'Content-Type': 'application/json',
+      'X-CSRF-Token': csrfToken,
       ...(options.headers || {}),
     },
     ...options,
@@ -75,10 +77,6 @@ if (initialServerState && Array.isArray(initialServerState.tables)) {
   }
 }
 
-const ADMIN_CREDENTIALS = {
-  username: 'admin',
-  password: 'Nata2026!',
-};
 
 const TABLES = [
   { id: 'T2-1', code: 'T-1', seats: 2, label: 'T-1', zone: 'interieur' },
@@ -2537,19 +2535,7 @@ if (adminRoot) {
   if (loginForm) {
     loginForm.addEventListener('submit', (event) => {
       event.preventDefault();
-      const formData = new FormData(loginForm);
-      const username = String(formData.get('username') || '').trim();
-      const password = String(formData.get('password') || '').trim();
-
-      if (username === ADMIN_CREDENTIALS.username && password === ADMIN_CREDENTIALS.password) {
-        localStorage.setItem(STORAGE_KEYS.adminSession, '1');
-        feedback.textContent = '';
-        showDashboard();
-        setActionFeedback(getCurrentAdminHelp());
-        renderAdmin();
-      } else {
-        feedback.textContent = 'Identifiants invalides.';
-      }
+      window.location.href = '/admin/login';
     });
   }
 
