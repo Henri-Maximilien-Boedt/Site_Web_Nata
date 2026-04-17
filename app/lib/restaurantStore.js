@@ -12,7 +12,7 @@ const SETTINGS_KEYS = {
 }
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
-const INTERIOR_LAYOUT_VERSION_TARGET = '3'
+const INTERIOR_LAYOUT_VERSION_TARGET = '4'
 
 const DEFAULT_TABLES = [
   { id: 'T2-1', code: 'T-1', seats: 2, zone: 'interieur', x: 28, y: 17 },
@@ -40,7 +40,8 @@ const DEFAULT_TABLES = [
   { id: 'TR4-2', code: 'T-18', seats: 4, zone: 'terrasse', x: 44, y: 48 },
   { id: 'TR4-3', code: 'T-19', seats: 4, zone: 'terrasse', x: 64, y: 48 },
   { id: 'TR4-4', code: 'T-20', seats: 4, zone: 'terrasse', x: 84, y: 48 },
-  { id: 'TR6-1', code: 'T-21', seats: 6, zone: 'terrasse', x: 54, y: 76 }
+  { id: 'TR6-1', code: 'T-21', seats: 6, zone: 'terrasse', x: 54, y: 76 },
+  { id: 'T6-1', code: 'T-29', seats: 6, zone: 'interieur', x: 30, y: 65 }
 ]
 
 const DEFAULT_TABLE_BY_CODE = Object.fromEntries(DEFAULT_TABLES.map((table) => [table.code, table]))
@@ -51,7 +52,7 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value))
 const TABLE_SIZE_SCALE = 0.7
 const BASE_RECT_TABLE_WIDTH = 11 * TABLE_SIZE_SCALE
 const BASE_RECT_TABLE_HEIGHT = clamp((8 + 2 * 1.6) * TABLE_SIZE_SCALE, 12 * TABLE_SIZE_SCALE, 30 * TABLE_SIZE_SCALE)
-const WIDE_INTERIOR_TABLE_CODES = new Set(['T-23', 'T-27'])
+const WIDE_INTERIOR_TABLE_CODES = new Set(['T-23', 'T-27', 'T-29'])
 const pad2 = (value) => String(value).padStart(2, '0')
 
 const toMinutes = (value) => {

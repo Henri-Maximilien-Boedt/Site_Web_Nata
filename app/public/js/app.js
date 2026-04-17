@@ -94,6 +94,7 @@ const TABLES = [
   { id: 'T2-9', code: 'T-25', seats: 2, label: 'T-25', zone: 'interieur' },
   { id: 'T2-10', code: 'T-26', seats: 2, label: 'T-26', zone: 'interieur' },
   { id: 'T2-11', code: 'T-27', seats: 6, label: 'T-27', zone: 'interieur' },
+  { id: 'T6-1', code: 'T-29', seats: 6, label: 'T-29', zone: 'interieur' },
   { id: 'TR2-1', code: 'T-11', seats: 2, label: 'T-11', zone: 'terrasse' },
   { id: 'TR2-2', code: 'T-12', seats: 2, label: 'T-12', zone: 'terrasse' },
   { id: 'TR2-3', code: 'T-13', seats: 2, label: 'T-13', zone: 'terrasse' },
@@ -152,7 +153,7 @@ const clamp = (value, min, max) => Math.min(max, Math.max(min, value));
 const TABLE_SIZE_SCALE = 0.7;
 const BASE_RECT_TABLE_WIDTH = 11 * TABLE_SIZE_SCALE;
 const BASE_RECT_TABLE_HEIGHT = clamp((8 + 2 * 1.6) * TABLE_SIZE_SCALE, 12 * TABLE_SIZE_SCALE, 30 * TABLE_SIZE_SCALE);
-const WIDE_INTERIOR_TABLE_IDS = new Set(['T2-7', 'T2-11']);
+const WIDE_INTERIOR_TABLE_IDS = new Set(['T2-7', 'T2-11', 'T6-1']);
 const getTableCode = (tableId) => TABLE_BY_ID[tableId]?.code || tableId;
 const getTableRectSize = (table) => {
   const seats = Number(table?.seats || 0);
