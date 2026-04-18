@@ -50,11 +50,11 @@ const buildHtmlContent = (quote) => {
 
 const sendQuoteRequestNotification = async (quote) => {
   const apiKey = String(process.env.BREVO_API_KEY || '').trim()
-  const adminEmail = String(process.env.TEST_EMAIL || '').trim().toLowerCase()
+  const adminEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
   const senderEmail = String(process.env.MAIL_FROM || adminEmail || '').trim().toLowerCase()
 
   if (!apiKey || !adminEmail || !senderEmail) {
-    console.warn('Email devis non envoyé: BREVO_API_KEY, TEST_EMAIL ou MAIL_FROM manquant.')
+    console.warn('Email devis non envoyé: BREVO_API_KEY, ADMIN_EMAIL ou MAIL_FROM manquant.')
     return false
   }
 
