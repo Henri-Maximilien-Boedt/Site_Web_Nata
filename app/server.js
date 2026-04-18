@@ -81,6 +81,53 @@ app.get('/login', (req, res) => {
 })
 
 // ============================================================
+// Sitemap
+// ============================================================
+app.get('/sitemap.xml', async (req, res) => {
+  const base = 'https://nata-lln.be'
+  const today = new Date().toISOString().split('T')[0]
+
+  const staticUrls = [
+    { loc: '/',                          priority: '1.0', changefreq: 'weekly' },
+    { loc: '/menu',                      priority: '0.9', changefreq: 'weekly' },
+    { loc: '/reservation',               priority: '0.9', changefreq: 'monthly' },
+    { loc: '/evenements',                priority: '0.8', changefreq: 'monthly' },
+    { loc: '/actualites',                priority: '0.7', changefreq: 'weekly' },
+    { loc: '/mentions-legales',          priority: '0.2', changefreq: 'yearly' },
+    { loc: '/politique-confidentialite', priority: '0.2', changefreq: 'yearly' },
+    { loc: '/politique-cookies',         priority: '0.2', changefreq: 'yearly' },
+  ]
+
+  let dynamicUrls = []
+  try {
+    const { rows } = await pool.query(
+      `SELECT id, created_at FROM news_posts WHERE is_published = true ORDER BY created_at DESC`
+    )
+    dynamicUrls = rows.map(p => ({
+      loc: `/actualites/${p.id}`,
+      priority: '0.6',
+      changefreq: 'monthly',
+      lastmod: new Date(p.created_at).toISOString().split('T')[0]
+    }))
+  } catch (_) {}
+
+  const allUrls = [...staticUrls, ...dynamicUrls]
+
+  const xml = `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${allUrls.map(u => `  <url>
+    <loc>${base}${u.loc}</loc>
+    <lastmod>${u.lastmod || today}</lastmod>
+    <changefreq>${u.changefreq}</changefreq>
+    <priority>${u.priority}</priority>
+  </url>`).join('\n')}
+</urlset>`
+
+  res.header('Content-Type', 'application/xml')
+  res.send(xml)
+})
+
+// ============================================================
 // 404 handler
 // ============================================================
 app.use((req, res) => {

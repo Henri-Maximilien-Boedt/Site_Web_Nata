@@ -11,8 +11,8 @@ router.get('/', async (req, res, next) => {
     const clientState = await getClientState()
 
     res.render('reservation', {
-      title: 'Réservation | NATA Bar',
-      description: 'Réservez votre table chez NATA Bar.',
+      title: 'Réservation | NATA — Restaurant coréen Louvain-la-Neuve',
+      description: 'Réservez votre table en ligne chez NATA, restaurant coréen à Louvain-la-Neuve.',
       clientStateJson: serializeStateForScript(clientState)
     })
   } catch (error) {
