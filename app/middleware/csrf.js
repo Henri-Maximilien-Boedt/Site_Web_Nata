@@ -17,7 +17,7 @@ function verifyCsrf(req, res, next) {
   // Si pas de session ou pas de token en session, on ne peut pas vérifier
   if (!req.session || !req.session.csrfToken) return next()
 
-  const token = req.body?._csrf || req.headers['x-csrf-token']
+  const token = req.body?._csrf || req.headers['x-csrf-token'] || req.query?._csrf
   if (!token || token !== req.session.csrfToken) {
     const isJson =
       req.headers['content-type']?.includes('application/json') ||
