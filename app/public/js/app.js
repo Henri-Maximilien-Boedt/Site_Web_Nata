@@ -2423,7 +2423,7 @@ if (adminRoot) {
     const dayReservations = reservations.filter((item) => item.date === selectedDate);
     const activeDayReservations = dayReservations.filter((item) => item.status !== 'cancelled');
     const filteredReservations = dayReservations
-      .filter((item) => item.status === 'confirmed')
+      .filter((item) => item.status === 'confirmed' || item.status === 'pending')
       .filter((item) => {
         if (!term) return true;
         const combined = `${item.name || ''} ${item.email || ''} ${item.phone || ''} ${item.tableLabel || ''} ${item.tableId || ''}`;
@@ -2451,7 +2451,11 @@ if (adminRoot) {
               <div class="reservation-card__head">
                 <h4>${escapeHTML(item.name)}</h4>
               </div>
-              <p class="reservation-card__status"><span class="badge badge--confirmed">Confirmée</span></p>
+              <p class="reservation-card__status">
+                ${item.status === 'pending'
+                  ? '<span class="badge badge--pending">En attente</span>'
+                  : '<span class="badge badge--confirmed">Confirmée</span>'}
+              </p>
               <p><strong>Email :</strong> ${escapeHTML(item.email)}</p>
               <p><strong>Téléphone :</strong> ${escapeHTML(item.phone || 'Non renseigné')}</p>
               <p><strong>Date :</strong> ${escapeHTML(formatISODateLong(item.date))}</p>
@@ -2460,7 +2464,10 @@ if (adminRoot) {
               <p><strong>Table :</strong> ${escapeHTML(item.tableLabel || item.tableId || 'Non définie')}</p>
               <p><strong>Message :</strong> ${escapeHTML(item.message || 'Aucun message')}</p>
               <div class="reservation-card__actions">
-                <button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Annuler</button>
+                ${item.status === 'pending'
+                  ? `<button type="button" class="btn btn-primary" data-reservation-accept="${escapeHTML(item.id)}">Confirmer</button>
+                     <button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Refuser</button>`
+                  : `<button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Annuler</button>`}
               </div>
             </article>
           `
