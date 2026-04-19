@@ -378,16 +378,6 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     const id = Number.parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return next()
 
-    // Destroy images on Cloudinary before cascade-delete
-    const { rows: images } = await pool.query(`SELECT cloudinary_id FROM news_images WHERE post_id = $1`, [id])
-    for (const img of images) {
-      if (img.cloudinary_id) {
-        await cloudinary.uploader.destroy(img.cloudinary_id)
-          .then(() => console.log(`✓ Cloudinary destroy: ${img.cloudinary_id} | par ${req.session.admin?.email} (${req.ip})`))
-          .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
-      }
-    }
-
     await pool.query(`DELETE FROM news_posts WHERE id = $1`, [id])
     req.session.flash = { type: 'success', text: 'Article supprimé.' }
     res.redirect('/admin/actualites')

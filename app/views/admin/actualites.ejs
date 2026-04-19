@@ -72,12 +72,14 @@
               <a href="/admin/actualites/<%= post.id %>/edit" class="btn btn-ghost btn-sm">Modifier</a>
 
               <form method="POST" action="/admin/actualites/<%= post.id %>/toggle-published">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="btn btn-ghost btn-sm">
                   <%= post.is_published ? 'Dépublier' : 'Publier' %>
                 </button>
               </form>
 
               <form method="POST" action="/admin/actualites/<%= post.id %>/toggle-pinned">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="btn btn-ghost btn-sm">
                   <%= post.is_pinned ? 'Désépingler' : 'Épingler' %>
                 </button>
@@ -85,6 +87,7 @@
 
               <form method="POST" action="/admin/actualites/<%= post.id %>/delete"
                     onsubmit="return confirm('Supprimer cet article et toutes ses images ?')">
+                <input type="hidden" name="_csrf" value="<%= csrfToken %>">
                 <button type="submit" class="btn btn-danger btn-sm">Supprimer</button>
               </form>
             </div>
