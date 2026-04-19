@@ -1014,6 +1014,9 @@
 .admin-list {
   display: grid;
   gap: 0.8rem;
+  max-height: 520px;
+  overflow-y: auto;
+  padding-right: 0.25rem;
 }
 
 .reservation-card {
