@@ -1000,6 +1000,7 @@
   display: grid;
   grid-template-columns: minmax(340px, 0.9fr) minmax(760px, 1.55fr);
   gap: 1rem;
+  align-items: start;
 }
 
 .admin-panel {
@@ -1007,15 +1008,16 @@
   border-radius: 14px;
   padding: 0.85rem;
   background: #ffffff;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.7rem;
 }
 
 .admin-list {
   display: grid;
   gap: 0.8rem;
-  max-height: 520px;
   overflow-y: auto;
+  max-height: 640px;
   padding-right: 0.25rem;
 }
 
