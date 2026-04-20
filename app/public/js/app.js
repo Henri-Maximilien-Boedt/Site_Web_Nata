@@ -1252,7 +1252,7 @@ if (bookingForms.length) {
     const day = date.getDay();
     if (day === 0) return [];
     const periods =
-      day === 1
+      day === 1 || day === 6
         ? [[18, 0, 22, 0]]
         : [
             [12, 0, 14, 30],
