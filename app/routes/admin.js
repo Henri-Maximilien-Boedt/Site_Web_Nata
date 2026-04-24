@@ -77,7 +77,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     return res.render('login', { error: 'Veuillez renseigner email et mot de passe.' })
   }
 
-  const validEmail = email.trim().toLowerCase() === (process.env.ADMIN_EMAIL || '').toLowerCase()
+  const validEmail = email.trim().toLowerCase() === (process.env.ADMIN_EMAIL || '').trim().toLowerCase()
 
   let validPassword = false
   if (process.env.ADMIN_PASSWORD_HASH) {

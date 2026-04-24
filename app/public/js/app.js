@@ -2350,7 +2350,7 @@ if (adminRoot) {
           slot.dateISO === selectedDate && slot.service === selectedService ? ' is-selected' : '';
 
         return `
-          <article class="admin-service-card${selectedClass}">
+          <article class="admin-service-card${selectedClass}" data-date="${slot.dateISO}" data-service="${slot.service}" role="button" tabindex="0">
             <p class="admin-service-card__label">${escapeHTML(
               `${slot.dayLabel} ${slot.dateLabel} • ${slot.serviceLabel}`
             )}</p>
@@ -2370,6 +2370,19 @@ if (adminRoot) {
       </div>
       <div class="admin-service-summary__grid">${cards}</div>
     `;
+
+    serviceSummary.querySelectorAll('article[data-date]').forEach((card) => {
+      card.addEventListener('click', () => {
+        const dateISO = card.dataset.date;
+        const service = card.dataset.service;
+        dateInput.value = dateISO;
+        const firstResa = readReservations()
+          .filter((r) => r.date === dateISO && getServiceTypeFromTime(r.time) === service && r.status !== 'cancelled')
+          .sort((a, b) => toMinutes(a.time) - toMinutes(b.time))[0];
+        selectedTime = firstResa ? firstResa.time : getDefaultAdminSlotForDate(dateISO);
+        renderAdmin();
+      });
+    });
   };
 
   const renderSplitQuickPanel = (units) => {
