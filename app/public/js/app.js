@@ -628,7 +628,7 @@ const formatISODateCompact = (iso) => {
 };
 
 const buildOpenServiceSlotsForWeek = (iso) => {
-  const weekStartISO = getWeekStartISO(iso);
+  const weekStartISO = iso || toISODate(new Date());
   const slots = [];
 
   for (let offset = 0; offset < 7; offset += 1) {
