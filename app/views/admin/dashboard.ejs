@@ -61,6 +61,11 @@
                 <button type="button" class="btn btn-ghost" data-admin-next>Jour suivant</button>
               </div>
             </div>
+            <div class="admin-lunch-toggle-bar">
+              <button type="button" class="btn btn-ghost" data-admin-lunch-toggle>
+                Service du midi&nbsp;: <strong data-admin-lunch-label>Activé</strong>
+              </button>
+            </div>
             <div class="admin-time-strip" data-admin-slots></div>
             <div class="admin-service-summary" data-admin-service-summary></div>
 
@@ -169,6 +174,7 @@
       data-update-layout="/admin/api/layout"
       data-update-merges="/admin/api/merges"
       data-update-blocks="/admin/api/blocks"
+      data-update-lunch-disabled="/admin/api/settings/lunch-disabled"
       data-state="/admin/api/state"
       hidden
     ></div>

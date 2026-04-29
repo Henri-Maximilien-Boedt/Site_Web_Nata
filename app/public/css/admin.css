@@ -857,6 +857,22 @@
   padding: 0.55rem 0.8rem;
 }
 
+.admin-lunch-toggle-bar {
+  margin-bottom: 0.75rem;
+}
+
+.admin-lunch-toggle-bar .btn {
+  min-height: 42px;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-lunch-toggle-bar .btn.is-disabled {
+  background: linear-gradient(145deg, #c0392b, #e74c3c);
+  border-color: #a93226;
+  color: #fff;
+}
+
 .admin-time-strip {
   display: grid;
   grid-template-columns: 1fr;

@@ -11,8 +11,10 @@ const { getPageViewStats } = require('../lib/pageAnalytics')
 const {
   deleteReservation,
   getClientState,
+  getLunchDisabled,
   replaceAdminBlocks,
   serializeStateForScript,
+  setLunchDisabled,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges
@@ -548,6 +550,25 @@ router.put('/api/blocks', isAuth, async (req, res, next) => {
   try {
     const adminBlocks = await replaceAdminBlocks(req.body?.adminBlocks)
     res.json({ ok: true, adminBlocks })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/api/settings/lunch-disabled', isAuth, async (req, res, next) => {
+  try {
+    const lunchDisabled = await getLunchDisabled()
+    res.json({ ok: true, lunchDisabled })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/api/settings/lunch-disabled', isAuth, async (req, res, next) => {
+  try {
+    const value = Boolean(req.body?.value)
+    const lunchDisabled = await setLunchDisabled(value)
+    res.json({ ok: true, lunchDisabled })
   } catch (error) {
     next(error)
   }

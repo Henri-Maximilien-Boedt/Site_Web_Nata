@@ -8,8 +8,12 @@ const {
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
   terraceLayoutVersion: 'terrace_layout_version_v1',
-  interiorLayoutVersion: 'interior_layout_version_v1'
+  interiorLayoutVersion: 'interior_layout_version_v1',
+  lunchDisabled: 'lunch_disabled'
 }
+
+const LUNCH_START_MINUTES = 12 * 60
+const LUNCH_END_MINUTES = 17 * 60
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
 const INTERIOR_LAYOUT_VERSION_TARGET = '4'
@@ -294,6 +298,31 @@ const ensureSettingsDefaults = async (client) => {
     `,
     [SETTINGS_KEYS.tableMerges, '[]']
   )
+
+  await client.query(
+    `
+      INSERT INTO settings (key, value)
+      VALUES ($1, $2)
+      ON CONFLICT (key) DO NOTHING
+    `,
+    [SETTINGS_KEYS.lunchDisabled, 'false']
+  )
+}
+
+const getLunchDisabled = async () => {
+  await ensureInitialized()
+  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [SETTINGS_KEYS.lunchDisabled])
+  return String(rows?.[0]?.value || 'false') === 'true'
+}
+
+const setLunchDisabled = async (value) => {
+  await ensureInitialized()
+  const normalized = Boolean(value) ? 'true' : 'false'
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [SETTINGS_KEYS.lunchDisabled, normalized]
+  )
+  return normalized === 'true'
 }
 
 const ensureTerraceLayoutVersion = async (client) => {
@@ -622,13 +651,15 @@ const getClientState = async () => {
   const tableMerges = await getTableMerges(validIds, tableZonesById)
   const reservations = await listReservations(tables, tableMerges, { statuses: ['pending', 'confirmed'] })
   const adminBlocks = await listAdminBlocks(tables)
+  const lunchDisabled = await getLunchDisabled()
 
   return {
     tables,
     tableLayout: getTableLayoutMap(tables),
     tableMerges,
     reservations,
-    adminBlocks
+    adminBlocks,
+    lunchDisabled
   }
 }
 
@@ -715,6 +746,10 @@ const createReservation = async (payload) => {
   const tableSeats = members.reduce((sum, memberId) => sum + (tablesByUiId[memberId]?.seats || 0), 0)
   if (people > tableSeats) {
     throw createError(400, 'Cette table est trop petite pour ce groupe.')
+  }
+
+  if (state.lunchDisabled && toMinutes(time) >= LUNCH_START_MINUTES && toMinutes(time) < LUNCH_END_MINUTES) {
+    throw createError(400, 'Les réservations du midi sont désactivées.')
   }
 
   if (hasConflict({
@@ -1163,8 +1198,10 @@ module.exports = {
   createReservation,
   deleteReservation,
   getClientState,
+  getLunchDisabled,
   replaceAdminBlocks,
   serializeStateForScript,
+  setLunchDisabled,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges

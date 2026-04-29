@@ -8,6 +8,7 @@ const STORAGE_KEYS = {
   adminBlocks: 'nata_admin_blocks_v1',
   tableLayout: 'nata_table_layout_v2',
   tableMerges: 'nata_table_merges_v1',
+  lunchDisabled: 'nata_lunch_disabled_v1',
 };
 
 const parseJSONSafe = (value, fallback) => {
@@ -32,6 +33,7 @@ const ADMIN_API = {
   updateLayout: adminApiNode?.dataset?.updateLayout || '/admin/api/layout',
   updateMerges: adminApiNode?.dataset?.updateMerges || '/admin/api/merges',
   updateBlocks: adminApiNode?.dataset?.updateBlocks || '/admin/api/blocks',
+  updateLunchDisabled: adminApiNode?.dataset?.updateLunchDisabled || '/admin/api/settings/lunch-disabled',
 };
 
 const isAdminPage = () => Boolean(document.querySelector('[data-admin-page]'));
@@ -75,7 +77,11 @@ if (initialServerState && Array.isArray(initialServerState.tables)) {
   if (initialServerState.tableLayout && typeof initialServerState.tableLayout === 'object') {
     localStorage.setItem(STORAGE_KEYS.tableLayout, JSON.stringify(initialServerState.tableLayout));
   }
+  localStorage.setItem(STORAGE_KEYS.lunchDisabled, initialServerState.lunchDisabled ? 'true' : 'false');
 }
+
+let lunchDisabled = initialServerState?.lunchDisabled === true
+  || localStorage.getItem(STORAGE_KEYS.lunchDisabled) === 'true';
 
 
 const TABLES = [
@@ -610,6 +616,7 @@ const getServiceTypeFromTime = (timeValue) => (toMinutes(timeValue) < 17 * 60 ? 
 const getOpeningServicesForDay = (day) => {
   if (day === 0) return [];
   if (day === 1) return ['evening'];
+  if (lunchDisabled) return ['evening'];
   return ['lunch', 'evening'];
 };
 
@@ -1251,13 +1258,13 @@ if (bookingForms.length) {
     if (!date) return [];
     const day = date.getDay();
     if (day === 0) return [];
-    const periods =
-      day === 1 || day === 6
-        ? [[18, 0, 22, 0]]
-        : [
-            [12, 0, 14, 30],
-            [18, 0, 22, 0],
-          ];
+    const eveningOnly = day === 1 || day === 6 || lunchDisabled;
+    const periods = eveningOnly
+      ? [[18, 0, 22, 0]]
+      : [
+          [12, 0, 14, 30],
+          [18, 0, 22, 0],
+        ];
 
     const slots = [];
     periods.forEach(([sh, sm, eh, em]) => {
@@ -1932,6 +1939,8 @@ if (adminRoot) {
   const todayButton = adminRoot.querySelector('[data-admin-today]');
   const nextButton = adminRoot.querySelector('[data-admin-next]');
   const logoutButton = adminRoot.querySelector('[data-admin-logout]');
+  const lunchToggleButton = adminRoot.querySelector('[data-admin-lunch-toggle]');
+  const lunchLabel = adminRoot.querySelector('[data-admin-lunch-label]');
   const ADMIN_HELP_DEFAULT =
     'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (1h30).';
   const ADMIN_HELP_MERGE =
@@ -2537,6 +2546,17 @@ if (adminRoot) {
     renderTimeline(selectedDate);
   };
 
+  const syncLunchToggleUI = () => {
+    if (!lunchToggleButton || !lunchLabel) return;
+    if (lunchDisabled) {
+      lunchLabel.textContent = 'Désactivé';
+      lunchToggleButton.classList.add('is-disabled');
+    } else {
+      lunchLabel.textContent = 'Activé';
+      lunchToggleButton.classList.remove('is-disabled');
+    }
+  };
+
   const initAdmin = () => {
     const todayISO = toISODate(new Date());
     dateInput.value = todayISO;
@@ -2544,6 +2564,7 @@ if (adminRoot) {
     setQuickMergeMode(false);
     setSplitQuickOpen(false);
     setActionFeedback(getCurrentAdminHelp());
+    syncLunchToggleUI();
 
     if (isLoggedIn()) {
       showDashboard();
@@ -2884,6 +2905,30 @@ if (adminRoot) {
     nextButton.addEventListener('click', () => {
       dateInput.value = shiftISODate(dateInput.value, 1);
       renderAdmin();
+    });
+  }
+
+  if (lunchToggleButton) {
+    lunchToggleButton.addEventListener('click', async () => {
+      const nextValue = !lunchDisabled;
+      lunchToggleButton.disabled = true;
+      try {
+        const payload = await requestJSON(ADMIN_API.updateLunchDisabled, {
+          method: 'POST',
+          body: JSON.stringify({ value: nextValue }),
+        });
+        lunchDisabled = Boolean(payload.lunchDisabled);
+        localStorage.setItem(STORAGE_KEYS.lunchDisabled, lunchDisabled ? 'true' : 'false');
+        syncLunchToggleUI();
+        if (selectedTime) {
+          selectedTime = getDefaultAdminSlotForDate(dateInput?.value || toISODate(new Date()));
+        }
+        renderAdmin();
+      } catch (err) {
+        console.error('Erreur toggle midi :', err.message);
+      } finally {
+        lunchToggleButton.disabled = false;
+      }
     });
   }
 
