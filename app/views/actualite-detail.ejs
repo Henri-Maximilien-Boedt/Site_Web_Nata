@@ -5,14 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
-    <link rel="canonical" href="https://nata-lln.be/actualites/<%= post.id %>" />
-    <meta property="og:title" content="<%= title %>" />
-    <meta property="og:description" content="<%= description %>" />
-    <meta property="og:url" content="https://nata-lln.be/actualites/<%= post.id %>" />
-    <meta property="og:type" content="article" />
-    <% if (images && images.find(i => i.is_main)) { %>
-    <meta property="og:image" content="https://nata-lln.be<%= images.find(i => i.is_main).url %>" />
-    <% } %>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -68,7 +60,7 @@
         </header>
 
         <% if (post.content) { %>
-          <div class="news-article__content"><%- post.content.replace(/\n/g, '<br>') %></div>
+          <div class="news-article__content"><%- renderUserText(post.content) %></div>
         <% } %>
 
         <% if (gallery.length > 0) { %>

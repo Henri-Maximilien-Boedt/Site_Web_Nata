@@ -5,14 +5,15 @@ const {
   getClientState,
   serializeStateForScript
 } = require('../lib/restaurantStore')
+const { reservationLimiter } = require('../middleware/rateLimits')
 
 router.get('/', async (req, res, next) => {
   try {
     const clientState = await getClientState()
 
     res.render('reservation', {
-      title: 'Réservation | NATA — Restaurant coréen Louvain-la-Neuve',
-      description: 'Réservez votre table en ligne chez NATA, restaurant coréen à Louvain-la-Neuve.',
+      title: 'Réservation | NATA Bar',
+      description: 'Réservez votre table chez NATA Bar.',
       clientStateJson: serializeStateForScript(clientState)
     })
   } catch (error) {
@@ -29,7 +30,7 @@ router.get('/api/state', async (req, res, next) => {
   }
 })
 
-router.post('/api/reservations', async (req, res, next) => {
+router.post('/api/reservations', reservationLimiter, async (req, res, next) => {
   try {
     const reservation = await createReservation(req.body)
     res.status(201).json({ ok: true, reservation })
@@ -41,7 +42,7 @@ router.post('/api/reservations', async (req, res, next) => {
   }
 })
 
-router.post('/', async (req, res, next) => {
+router.post('/', reservationLimiter, async (req, res, next) => {
   try {
     await createReservation(req.body)
 
