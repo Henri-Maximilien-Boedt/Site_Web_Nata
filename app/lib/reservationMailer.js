@@ -33,7 +33,7 @@ const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => 
 
   const api = buildApiInstance(apiKey)
   const payload = new brevo.SendSmtpEmail()
-  payload.sender = { email: fromEmail, name: 'NATA' }
+  payload.sender = { email: fromEmail, name: 'NATA Bar' }
   payload.to = to
   payload.subject = subject
   payload.htmlContent = htmlContent
@@ -52,7 +52,7 @@ const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => 
 
 const sendReservationAcknowledgement = async (reservation) => {
   if (!reservation?.email) return false
-  const subject = 'Votre demande de réservation - NATA'
+  const subject = 'Votre demande de réservation - NATA Bar'
   const htmlContent = `
     <div style="font-family:Arial,Helvetica,sans-serif;background:#f6fbff;padding:16px;">
       <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #d8e5f2;border-radius:12px;padding:18px;">
@@ -61,7 +61,6 @@ const sendReservationAcknowledgement = async (reservation) => {
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
-        ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
       </div>
     </div>
@@ -71,9 +70,8 @@ const sendReservationAcknowledgement = async (reservation) => {
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
     `Personnes : ${reservation.people}`,
-    reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`
-  ].filter(Boolean).join('\n')
+  ].join('\n')
 
   return sendEmail({
     to: [{ email: reservation.email, name: reservation.name || '' }],
@@ -87,8 +85,8 @@ const sendReservationStatusEmail = async (reservation, status) => {
   if (!reservation?.email) return false
   const isConfirm = status === 'confirmed'
   const subject = isConfirm
-    ? 'Réservation confirmée - NATA'
-    : 'Réservation annulée - NATA'
+    ? 'Réservation confirmée - NATA Bar'
+    : 'Réservation annulée - NATA Bar'
   const lead = isConfirm
     ? 'Votre réservation est confirmée.'
     : 'Votre réservation a été annulée.'
@@ -97,11 +95,10 @@ const sendReservationStatusEmail = async (reservation, status) => {
     <div style="font-family:Arial,Helvetica,sans-serif;background:#f6fbff;padding:16px;">
       <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #d8e5f2;border-radius:12px;padding:18px;">
         <h2 style="margin:0 0 8px;color:#153f70;">${lead}</h2>
-        <p style="margin:0 0 14px;color:#50667d;">NATA — Louvain-la-Neuve</p>
+        <p style="margin:0 0 14px;color:#50667d;">NATA Bar — Louvain-la-Neuve</p>
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
-        ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
       </div>
     </div>
@@ -112,9 +109,8 @@ const sendReservationStatusEmail = async (reservation, status) => {
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
     `Personnes : ${reservation.people}`,
-    reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`
-  ].filter(Boolean).join('\n')
+  ].join('\n')
 
   return sendEmail({
     to: [{ email: reservation.email, name: reservation.name || '' }],

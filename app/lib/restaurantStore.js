@@ -8,12 +8,8 @@ const {
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
   terraceLayoutVersion: 'terrace_layout_version_v1',
-  interiorLayoutVersion: 'interior_layout_version_v1',
-  lunchDisabled: 'lunch_disabled'
+  interiorLayoutVersion: 'interior_layout_version_v1'
 }
-
-const LUNCH_START_MINUTES = 12 * 60
-const LUNCH_END_MINUTES = 17 * 60
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
 const INTERIOR_LAYOUT_VERSION_TARGET = '4'
@@ -96,7 +92,22 @@ const normalizeEmail = (value) => {
 
 const normalizePhone = (value) => {
   const phone = String(value || '').trim()
-  return phone || null
+  if (!phone) return null
+  if (phone.length > 30) return null
+  // Tolère chiffres, espaces, +, -, ., ( ), /
+  if (!/^[\d\s+().\-/]+$/.test(phone)) return null
+  return phone
+}
+
+const MAX_NAME_LEN = 120
+const MAX_EMAIL_LEN = 200
+const MAX_MESSAGE_LEN = 2000
+const MAX_COMPANY_LEN = 200
+const MAX_VAT_LEN = 30
+
+const truncSafe = (value, max) => {
+  const s = String(value || '').trim()
+  return s.length > max ? null : s
 }
 
 const overlaps = (startA, endA, startB, endB) => startA < endB && startB < endA
@@ -189,7 +200,15 @@ const getMergedUnitCode = (sortedMembers, mergedGroups) => {
   return `T-G${groupIndex >= 0 ? groupIndex + 1 : 1}`
 }
 
-const serializeStateForScript = (state) => JSON.stringify(state).replace(/</g, '\\u003c')
+// Échappement complet pour insertion dans HTML (textarea/script).
+// Couvre </script>, </textarea>, separators U+2028 / U+2029.
+const serializeStateForScript = (state) =>
+  JSON.stringify(state)
+    .replace(/</g, '\\u003c')
+    .replace(/>/g, '\\u003e')
+    .replace(/&/g, '\\u0026')
+    .replace(/\u2028/g, "\\u2028")
+    .replace(/\u2029/g, "\\u2029")
 
 const createError = (status, message) => {
   const error = new Error(message)
@@ -298,31 +317,6 @@ const ensureSettingsDefaults = async (client) => {
     `,
     [SETTINGS_KEYS.tableMerges, '[]']
   )
-
-  await client.query(
-    `
-      INSERT INTO settings (key, value)
-      VALUES ($1, $2)
-      ON CONFLICT (key) DO NOTHING
-    `,
-    [SETTINGS_KEYS.lunchDisabled, 'false']
-  )
-}
-
-const getLunchDisabled = async () => {
-  await ensureInitialized()
-  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [SETTINGS_KEYS.lunchDisabled])
-  return String(rows?.[0]?.value || 'false') === 'true'
-}
-
-const setLunchDisabled = async (value) => {
-  await ensureInitialized()
-  const normalized = Boolean(value) ? 'true' : 'false'
-  await pool.query(
-    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
-    [SETTINGS_KEYS.lunchDisabled, normalized]
-  )
-  return normalized === 'true'
 }
 
 const ensureTerraceLayoutVersion = async (client) => {
@@ -651,15 +645,13 @@ const getClientState = async () => {
   const tableMerges = await getTableMerges(validIds, tableZonesById)
   const reservations = await listReservations(tables, tableMerges, { statuses: ['pending', 'confirmed'] })
   const adminBlocks = await listAdminBlocks(tables)
-  const lunchDisabled = await getLunchDisabled()
 
   return {
     tables,
     tableLayout: getTableLayoutMap(tables),
     tableMerges,
     reservations,
-    adminBlocks,
-    lunchDisabled
+    adminBlocks
   }
 }
 
@@ -722,15 +714,15 @@ const createReservation = async (payload) => {
   const state = await getClientState()
   const tablesByUiId = Object.fromEntries(state.tables.map((table) => [table.id, table]))
 
-  const name = String(payload?.name || '').trim()
-  const email = String(payload?.email || '').trim()
-  const phone = String(payload?.phone || '').trim()
-  const message = String(payload?.message || '').trim()
+  const name = truncSafe(payload?.name, MAX_NAME_LEN)
+  const email = normalizeEmail(payload?.email)
+  const phone = normalizePhone(payload?.phone)
+  const message = truncSafe(payload?.message, MAX_MESSAGE_LEN)
   const people = Number.parseInt(String(payload?.people || '').trim(), 10)
   const date = normalizeDate(payload?.date)
   const time = normalizeTime(payload?.time)
 
-  if (!name || !email || !phone || !date || !time || !Number.isInteger(people)) {
+  if (!name || !email || !phone || message === null || !date || !time || !Number.isInteger(people)) {
     throw createError(400, 'Données de réservation invalides.')
   }
 
@@ -746,10 +738,6 @@ const createReservation = async (payload) => {
   const tableSeats = members.reduce((sum, memberId) => sum + (tablesByUiId[memberId]?.seats || 0), 0)
   if (people > tableSeats) {
     throw createError(400, 'Cette table est trop petite pour ce groupe.')
-  }
-
-  if (state.lunchDisabled && toMinutes(time) >= LUNCH_START_MINUTES && toMinutes(time) < LUNCH_END_MINUTES) {
-    throw createError(400, 'Les réservations du midi sont désactivées.')
   }
 
   if (hasConflict({
@@ -860,16 +848,16 @@ const createQuoteRequest = async (payload) => {
   await ensureInitialized()
 
   const requestKind = String(payload?.requestKind || '').trim().toLowerCase()
-  const firstName = String(payload?.firstName || '').trim()
-  const lastName = String(payload?.lastName || '').trim()
+  const firstName = truncSafe(payload?.firstName, MAX_NAME_LEN)
+  const lastName = truncSafe(payload?.lastName, MAX_NAME_LEN)
   const email = normalizeEmail(payload?.email)
   const phone = normalizePhone(payload?.phone)
-  const message = String(payload?.message || '').trim()
+  const message = truncSafe(payload?.message, MAX_MESSAGE_LEN)
 
-  const companyName = String(payload?.companyName || '').trim()
-  const companyContactName = String(payload?.companyContactName || '').trim()
-  const vatNumber = String(payload?.vatNumber || '').trim()
-  const peppolId = String(payload?.peppolId || '').trim()
+  const companyName = truncSafe(payload?.companyName, MAX_COMPANY_LEN)
+  const companyContactName = truncSafe(payload?.companyContactName, MAX_NAME_LEN)
+  const vatNumber = truncSafe(payload?.vatNumber, MAX_VAT_LEN)
+  const peppolId = truncSafe(payload?.peppolId, MAX_VAT_LEN)
 
   if (!['particulier', 'entreprise'].includes(requestKind)) {
     throw createError(400, 'Type de demande invalide.')
@@ -1198,10 +1186,8 @@ module.exports = {
   createReservation,
   deleteReservation,
   getClientState,
-  getLunchDisabled,
   replaceAdminBlocks,
   serializeStateForScript,
-  setLunchDisabled,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges

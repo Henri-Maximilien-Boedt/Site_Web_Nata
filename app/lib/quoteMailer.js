@@ -62,7 +62,7 @@ const sendQuoteRequestNotification = async (quote) => {
   apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey)
 
   const payload = new brevo.SendSmtpEmail()
-  payload.sender = { email: senderEmail, name: 'NATA' }
+  payload.sender = { email: senderEmail, name: 'NATA Bar' }
   payload.to = [{ email: adminEmail }]
   payload.replyTo = { email: quote.email, name: `${quote.firstName} ${quote.lastName}`.trim() }
   payload.subject = `[NATA] Nouveau devis ${toPrettyLabel(quote.requestKind)}`
