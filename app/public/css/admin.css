@@ -7,8 +7,8 @@
   align-items: center;
   gap: 1rem;
   padding: 0.75rem 3vw;
-  background: var(--bg-card);
-  border-bottom: 2px solid var(--accent);
+  background: #f4f9ff;
+  border-bottom: 2px solid #c8d9eb;
   flex-wrap: wrap;
 }
 
@@ -857,6 +857,22 @@
   padding: 0.55rem 0.8rem;
 }
 
+.admin-lunch-toggle-bar {
+  margin-bottom: 0.75rem;
+}
+
+.admin-lunch-toggle-bar .btn {
+  min-height: 42px;
+  padding: 0.45rem 1rem;
+  font-size: 0.9rem;
+}
+
+.admin-lunch-toggle-bar .btn.is-disabled {
+  background: linear-gradient(145deg, #c0392b, #e74c3c);
+  border-color: #a93226;
+  color: #fff;
+}
+
 .admin-time-strip {
   display: grid;
   grid-template-columns: 1fr;
@@ -934,6 +950,13 @@
   padding: 0.65rem 0.7rem;
   display: grid;
   gap: 0.2rem;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.admin-service-card:hover {
+  border-color: #2e7cc9;
+  background: #eef5ff;
 }
 
 .admin-service-card.is-selected {
@@ -1000,6 +1023,7 @@
   display: grid;
   grid-template-columns: minmax(340px, 0.9fr) minmax(760px, 1.55fr);
   gap: 1rem;
+  align-items: start;
 }
 
 .admin-panel {
@@ -1007,13 +1031,17 @@
   border-radius: 14px;
   padding: 0.85rem;
   background: #ffffff;
-  display: grid;
+  display: flex;
+  flex-direction: column;
   gap: 0.7rem;
 }
 
 .admin-list {
   display: grid;
   gap: 0.8rem;
+  overflow-y: auto;
+  max-height: 640px;
+  padding-right: 0.25rem;
 }
 
 .reservation-card {
@@ -1307,11 +1335,17 @@
 
   .admin-topbar__nav {
     display: none;
-    width: 100%;
+    position: absolute;
+    top: 100%;
+    left: 0;
+    right: 0;
     flex-direction: column;
-    gap: 0.35rem;
-    padding-bottom: 0.5rem;
-    order: 99;
+    gap: 0.25rem;
+    padding: 0.5rem;
+    background: #f4f9ff;
+    border-bottom: 2px solid #c8d9eb;
+    box-shadow: 0 6px 18px rgba(0, 0, 0, 0.12);
+    z-index: 25;
   }
 
   .admin-topbar__nav.is-open {

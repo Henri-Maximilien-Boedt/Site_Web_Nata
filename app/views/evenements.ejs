@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
+    <link rel="canonical" href="https://nata-lln.be/evenements" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:url" content="https://nata-lln.be/evenements" />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -158,7 +163,6 @@
 
         <div class="events-devis__forms">
           <form class="booking-form booking-form--devis events-quote-form" method="POST" action="/evenements/devis">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="requestKind" value="particulier" />
             <h3>Particulier</h3>
             <p class="events-quote-form__hint">Pour anniversaires, fêtes, soirées privées, mariages.</p>
@@ -186,7 +190,6 @@
           </form>
 
           <form class="booking-form booking-form--devis events-quote-form" method="POST" action="/evenements/devis">
-            <input type="hidden" name="_csrf" value="<%= csrfToken %>">
             <input type="hidden" name="requestKind" value="entreprise" />
             <h3>Entreprise</h3>
             <p class="events-quote-form__hint">Pour afterworks, team dinners, événements clients et corporate.</p>

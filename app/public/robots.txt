@@ -1,0 +1,7 @@
+User-agent: *
+Allow: /
+
+Disallow: /admin/
+Disallow: /login
+
+Sitemap: https://nata-lln.be/sitemap.xml

@@ -142,7 +142,7 @@
         <% if (images.length < 10) { %>
           <form
             method="POST"
-            action="/admin/actualites/<%= post.id %>/images"
+            action="/admin/actualites/<%= post.id %>/images?_csrf=<%= encodeURIComponent(csrfToken) %>"
             enctype="multipart/form-data"
             class="admin-upload-form"
           >

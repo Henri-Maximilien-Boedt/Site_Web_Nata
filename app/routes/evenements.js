@@ -2,20 +2,19 @@ const express = require('express')
 const router = express.Router()
 const { createQuoteRequest } = require('../lib/restaurantStore')
 const { sendQuoteRequestNotification } = require('../lib/quoteMailer')
-const { quoteLimiter } = require('../middleware/rateLimits')
 
 router.get('/', (req, res) => {
   const quoteStatus = String(req.query.quote || '').trim()
 
   res.render('evenements', {
-    title: 'Événements | NATA Bar',
-    description: 'Privatisations, afterworks et collaborations NATA Bar.',
+    title: 'Événements | NATA — Restaurant coréen Louvain-la-Neuve',
+    description: 'Privatisations, afterworks et food truck avec NATA à Louvain-la-Neuve.',
     clientStateJson: '{}',
     quoteStatus
   })
 })
 
-router.post('/devis', quoteLimiter, async (req, res, next) => {
+router.post('/devis', async (req, res, next) => {
   try {
     const quote = await createQuoteRequest(req.body)
 

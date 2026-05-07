@@ -5,6 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
+    <link rel="canonical" href="https://nata-lln.be/reservation" />
+    <meta property="og:title" content="<%= title %>" />
+    <meta property="og:description" content="<%= description %>" />
+    <meta property="og:url" content="https://nata-lln.be/reservation" />
+    <meta property="og:type" content="website" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -32,12 +37,11 @@
         <div>
           <p class="eyebrow">Contact</p>
           <h2>NATA</h2>
-          <p>Ouvert le : <br />Lundi de 18:00–22:00 et du<br />mardi au samedi, 12:00–14:30 18:00–22:00.</p>
+          <p>Ouvert le : <br />Lundi &amp; Samedi de 18:00–22:00 et du<br />mardi au vendredi, 12:00–14:30 &amp; 18:00–22:00.</p>
           <p>Grand-Place 51, 1348 Ottignies-Louvain-la-Neuve</p>
           <p>Tél: 01 23 45 67 89</p>
         </div>
         <form class="booking-form" action="/reservation" method="post">
-          <input type="hidden" name="_csrf" value="<%= csrfToken %>">
           <label>
             Nom
             <input type="text" name="name" placeholder="Ton nom" required />
@@ -111,7 +115,6 @@
     <%- include('partials/footer') %>
 
     <textarea id="nata-state" hidden><%- typeof clientStateJson !== 'undefined' ? clientStateJson : '{}' %></textarea>
-    <script>window.__csrfToken = '<%= csrfToken %>';</script>
     <script src="/js/app.js"></script>
   </body>
 </html>

@@ -20,6 +20,3 @@ Thumbs.db
 # IDE
 .vscode/
 .idea/
-
-# Audit interne
-audit.md

@@ -60,8 +60,8 @@ router.get('/', async (_req, res, next) => {
     `)
 
     res.render('actualites', {
-      title: 'Actualités | NATA Bar',
-      description: 'Les dernières actualités et événements de NATA Bar, restaurant coréen à Louvain-la-Neuve.',
+      title: 'Actualités | NATA — Restaurant coréen Louvain-la-Neuve',
+      description: 'Les dernières actualités et événements de NATA, restaurant coréen à Louvain-la-Neuve.',
       featuredPosts,
       upcomingPosts,
       pastPosts
@@ -92,8 +92,8 @@ router.get('/:id', async (req, res, next) => {
     )
 
     res.render('actualite-detail', {
-      title: `${post.title} | NATA Bar`,
-      description: post.content ? post.content.slice(0, 150).replace(/\s+/g, ' ') : 'Actualité NATA Bar',
+      title: `${post.title} | NATA`,
+      description: post.content ? post.content.slice(0, 150).replace(/\s+/g, ' ') : 'Actualité NATA Louvain-la-Neuve',
       post,
       images
     })

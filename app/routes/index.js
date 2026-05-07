@@ -26,8 +26,8 @@ router.get('/', async (_req, res, next) => {
     }
 
     res.render('index', {
-      title: 'NATA Bar | Korean Food & Bar',
-      description: 'NATA Bar — Cuisine coréenne, plats signature et boissons dans une ambiance chaleureuse à Louvain-la-Neuve.',
+      title: 'NATA | Korean Food & Bar — Louvain-la-Neuve',
+      description: 'NATA — Cuisine coréenne, plats signature et boissons dans une ambiance chaleureuse à Louvain-la-Neuve.',
       recentPosts
     })
   } catch (error) {
@@ -37,21 +37,21 @@ router.get('/', async (_req, res, next) => {
 
 router.get('/mentions-legales', (_req, res) => {
   res.render('mentions-legales', {
-    title: 'Mentions légales — NATA Bar',
-    description: 'Mentions légales du site NATA Bar.'
+    title: 'Mentions légales — NATA',
+    description: 'Mentions légales du site nata-lln.be.'
   })
 })
 
 router.get('/politique-confidentialite', (_req, res) => {
   res.render('politique-confidentialite', {
-    title: 'Politique de confidentialité — NATA Bar',
+    title: 'Politique de confidentialité — NATA',
     description: 'Politique de confidentialité et données personnelles.'
   })
 })
 
 router.get('/politique-cookies', (_req, res) => {
   res.render('politique-cookies', {
-    title: 'Politique cookies — NATA Bar',
+    title: 'Politique cookies — NATA',
     description: 'Information sur les cookies et traceurs utilisés.'
   })
 })

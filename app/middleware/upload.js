@@ -8,19 +8,6 @@ cloudinary.config({
   api_secret: process.env.CLOUDINARY_API_SECRET
 })
 
-const ALLOWED_MIMES = new Set(['image/jpeg', 'image/png', 'image/webp'])
-const ALLOWED_EXTS = /\.(jpe?g|png|webp)$/i
-
-const fileFilter = (_req, file, cb) => {
-  if (!ALLOWED_MIMES.has(file.mimetype)) {
-    return cb(new Error('Type de fichier non autorisé.'))
-  }
-  if (!ALLOWED_EXTS.test(file.originalname || '')) {
-    return cb(new Error('Extension de fichier non autorisée.'))
-  }
-  cb(null, true)
-}
-
 const storage = new CloudinaryStorage({
   cloudinary,
   params: {
@@ -32,14 +19,7 @@ const storage = new CloudinaryStorage({
 
 const upload = multer({
   storage,
-  fileFilter,
-  limits: {
-    fileSize: 5 * 1024 * 1024,    // 5 Mo / fichier
-    files: 10,                     // 10 fichiers max par requête
-    fields: 20,
-    parts: 30,
-    headerPairs: 50
-  }
+  limits: { fileSize: 10 * 1024 * 1024 }
 })
 
 module.exports = upload

@@ -3,6 +3,7 @@ const router = express.Router()
 const bcrypt = require('bcrypt')
 const { rateLimit } = require('express-rate-limit')
 const isAuth = require('../middleware/auth')
+const { verifyCsrf } = require('../middleware/csrf')
 const upload = require('../middleware/upload')
 const { cloudinary } = require('../middleware/upload')
 const pool = require('../db')
@@ -10,8 +11,10 @@ const { getPageViewStats } = require('../lib/pageAnalytics')
 const {
   deleteReservation,
   getClientState,
+  getLunchDisabled,
   replaceAdminBlocks,
   serializeStateForScript,
+  setLunchDisabled,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges
@@ -29,9 +32,12 @@ const loginLimiter = rateLimit({
   }
 })
 
-// Hash bcrypt factice servant de comparaison "lente" quand l'email est inconnu,
-// pour empêcher l'énumération d'emails par timing.
-const DUMMY_BCRYPT_HASH = '$2b$10$CwTycUXWue0Thq9StjUM0uJ8.gKnQzdGZvqrU6jgAQqW2HbVWZEhO'
+// CSRF obligatoire sur tous les POST/PUT/PATCH/DELETE admin
+router.use((req, res, next) => {
+  const mutating = ['POST', 'PUT', 'PATCH', 'DELETE']
+  if (mutating.includes(req.method)) return verifyCsrf(req, res, next)
+  next()
+})
 
 const renderDashboard = async (req, res, next, section, title) => {
   try {
@@ -67,48 +73,37 @@ router.get('/login', (req, res) => {
 })
 
 router.post('/login', loginLimiter, async (req, res) => {
-  const email = String(req.body?.email || '').trim().toLowerCase()
-  const password = String(req.body?.password || '')
+  const { email, password } = req.body
 
-  if (!email || !password || email.length > 200 || password.length > 200) {
+  if (!email || !password) {
     return res.render('login', { error: 'Veuillez renseigner email et mot de passe.' })
   }
 
-  if (!process.env.ADMIN_PASSWORD_HASH) {
-    console.error('FATAL login: ADMIN_PASSWORD_HASH non défini')
-    // Toujours exécuter bcrypt pour conserver un timing constant
-    await bcrypt.compare(password, DUMMY_BCRYPT_HASH).catch(() => false)
-    return res.render('login', { error: 'Configuration serveur invalide.' })
+  const validEmail = email.trim().toLowerCase() === (process.env.ADMIN_EMAIL || '').trim().toLowerCase()
+
+  let validPassword = false
+  if (process.env.ADMIN_PASSWORD_HASH) {
+    validPassword = await bcrypt.compare(password, process.env.ADMIN_PASSWORD_HASH)
+  } else if (process.env.ADMIN_PASSWORD) {
+    console.warn('⚠ Utilisez ADMIN_PASSWORD_HASH en production (bcrypt)')
+    validPassword = (password === process.env.ADMIN_PASSWORD)
   }
 
-  const expectedEmail = String(process.env.ADMIN_EMAIL || '').trim().toLowerCase()
-  const emailMatches = expectedEmail.length > 0 && email === expectedEmail
-
-  // Toujours exécuter bcrypt — même quand l'email ne matche pas — pour neutraliser
-  // l'énumération d'emails par timing.
-  const hashToCompare = emailMatches ? process.env.ADMIN_PASSWORD_HASH : DUMMY_BCRYPT_HASH
-  const passwordMatches = await bcrypt.compare(password, hashToCompare).catch(() => false)
-
-  if (!emailMatches || !passwordMatches) {
-    console.log(`✗ Tentative connexion échouée (${req.ip})`)
+  if (!validEmail || !validPassword) {
+    console.log(`✗ Tentative connexion échouée: ${email} (${req.ip})`)
     return res.render('login', { error: 'Identifiants incorrects.' })
   }
 
   req.session.regenerate((err) => {
     if (err) return res.render('login', { error: 'Erreur serveur. Réessayez.' })
-    req.session.admin = { email }
-    console.log(`✓ Admin connecté (${req.ip})`)
+    req.session.admin = { email: email.trim().toLowerCase() }
+    console.log(`✓ Admin connecté: ${email.trim().toLowerCase()} (${req.ip})`)
     res.redirect('/admin')
   })
 })
 
 router.post('/logout', (req, res) => {
   req.session.destroy(() => {
-    res.clearCookie('connect.sid', {
-      httpOnly: true,
-      sameSite: 'strict',
-      secure: process.env.NODE_ENV === 'production'
-    })
     res.redirect('/login')
   })
 })
@@ -385,16 +380,6 @@ router.post('/actualites/:id/delete', isAuth, async (req, res, next) => {
     const id = Number.parseInt(req.params.id, 10)
     if (!Number.isInteger(id)) return next()
 
-    // Destroy images on Cloudinary before cascade-delete
-    const { rows: images } = await pool.query(`SELECT cloudinary_id FROM news_images WHERE post_id = $1`, [id])
-    for (const img of images) {
-      if (img.cloudinary_id) {
-        await cloudinary.uploader.destroy(img.cloudinary_id)
-          .then(() => console.log(`✓ Cloudinary destroy: ${img.cloudinary_id}`))
-          .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
-      }
-    }
-
     await pool.query(`DELETE FROM news_posts WHERE id = $1`, [id])
     req.session.flash = { type: 'success', text: 'Article supprimé.' }
     res.redirect('/admin/actualites')
@@ -432,7 +417,7 @@ router.post('/actualites/:id/images', isAuth, upload.array('images', 10), async 
       )
     }
 
-    console.log(`✓ Cloudinary upload: ${toInsert.length} image(s) → article #${id}`)
+    console.log(`✓ Cloudinary upload: ${toInsert.length} image(s) → article #${id} | par ${req.session.admin?.email} (${req.ip})`)
 
     let flashText = `${toInsert.length} image(s) ajoutée(s).`
     if (toInsert.length === 0 && files.length > 0) {
@@ -482,7 +467,7 @@ router.post('/actualites/:id/images/:imgId/delete', isAuth, async (req, res, nex
     if (rows.length) {
       if (rows[0].cloudinary_id) {
         await cloudinary.uploader.destroy(rows[0].cloudinary_id)
-          .then(() => console.log(`✓ Cloudinary destroy: ${rows[0].cloudinary_id}`))
+          .then(() => console.log(`✓ Cloudinary destroy: ${rows[0].cloudinary_id} | par ${req.session.admin?.email} (${req.ip})`))
           .catch(err => console.error('✗ Cloudinary destroy échoué:', err.message))
       }
 
@@ -565,6 +550,25 @@ router.put('/api/blocks', isAuth, async (req, res, next) => {
   try {
     const adminBlocks = await replaceAdminBlocks(req.body?.adminBlocks)
     res.json({ ok: true, adminBlocks })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/api/settings/lunch-disabled', isAuth, async (req, res, next) => {
+  try {
+    const lunchDisabled = await getLunchDisabled()
+    res.json({ ok: true, lunchDisabled })
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.post('/api/settings/lunch-disabled', isAuth, async (req, res, next) => {
+  try {
+    const value = Boolean(req.body?.value)
+    const lunchDisabled = await setLunchDisabled(value)
+    res.json({ ok: true, lunchDisabled })
   } catch (error) {
     next(error)
   }
