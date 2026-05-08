@@ -1,6 +1,6 @@
 const express = require('express')
 const router = express.Router()
-const bcrypt = require('bcrypt')
+const bcrypt = require('bcryptjs')
 const { rateLimit } = require('express-rate-limit')
 const isAuth = require('../middleware/auth')
 const { verifyCsrf } = require('../middleware/csrf')

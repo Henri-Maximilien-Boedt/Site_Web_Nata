@@ -85,8 +85,13 @@ const sendQuoteRequestNotification = async (quote) => {
     .filter(Boolean)
     .join('\n')
 
-  await apiInstance.sendTransacEmail(payload)
-  return true
+  try {
+    await apiInstance.sendTransacEmail(payload)
+    return true
+  } catch (err) {
+    console.error('Erreur envoi email devis:', err.message)
+    return false
+  }
 }
 
 module.exports = {
