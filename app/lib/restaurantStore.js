@@ -8,7 +8,8 @@ const {
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
   terraceLayoutVersion: 'terrace_layout_version_v1',
-  interiorLayoutVersion: 'interior_layout_version_v1'
+  interiorLayoutVersion: 'interior_layout_version_v1',
+  lunchDisabled: 'lunch_disabled_v1'
 }
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
@@ -310,12 +311,12 @@ const ensureDefaultTables = async (client) => {
 
 const ensureSettingsDefaults = async (client) => {
   await client.query(
-    `
-      INSERT INTO settings (key, value)
-      VALUES ($1, $2)
-      ON CONFLICT (key) DO NOTHING
-    `,
+    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
     [SETTINGS_KEYS.tableMerges, '[]']
+  )
+  await client.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
+    [SETTINGS_KEYS.lunchDisabled, 'false']
   )
 }
 
@@ -638,6 +639,25 @@ const listAdminBlocks = async (tables) => {
     .filter(Boolean)
 }
 
+const getLunchDisabled = async () => {
+  await ensureInitialized()
+  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [
+    SETTINGS_KEYS.lunchDisabled
+  ])
+  return rows?.[0]?.value === 'true'
+}
+
+const setLunchDisabled = async (value) => {
+  await ensureInitialized()
+  const normalized = Boolean(value)
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [SETTINGS_KEYS.lunchDisabled, normalized ? 'true' : 'false']
+  )
+  return normalized
+}
+
 const getClientState = async () => {
   const tables = await listTables()
   const validIds = new Set(tables.map((table) => table.id))
@@ -645,13 +665,15 @@ const getClientState = async () => {
   const tableMerges = await getTableMerges(validIds, tableZonesById)
   const reservations = await listReservations(tables, tableMerges, { statuses: ['pending', 'confirmed'] })
   const adminBlocks = await listAdminBlocks(tables)
+  const lunchDisabled = await getLunchDisabled()
 
   return {
     tables,
     tableLayout: getTableLayoutMap(tables),
     tableMerges,
     reservations,
-    adminBlocks
+    adminBlocks,
+    lunchDisabled
   }
 }
 
@@ -1186,8 +1208,10 @@ module.exports = {
   createReservation,
   deleteReservation,
   getClientState,
+  getLunchDisabled,
   replaceAdminBlocks,
   serializeStateForScript,
+  setLunchDisabled,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges

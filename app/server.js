@@ -87,7 +87,7 @@ app.use(cookieParser())
 // Sessions (PostgreSQL store)
 // ============================================================
 app.use(session({
-  store: new PgSession({ pool }),
+  store: new PgSession({ pool, createTableIfMissing: true }),
   secret: process.env.SESSION_SECRET || 'dev-secret-key-change-in-prod',
   resave: false,
   saveUninitialized: false,
