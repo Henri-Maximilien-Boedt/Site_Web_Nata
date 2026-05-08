@@ -611,7 +611,7 @@ const toPeopleCount = (value) => {
   return parsed;
 };
 
-const getServiceTypeFromTime = (timeValue) => (toMinutes(timeValue) < 17 * 60 ? 'lunch' : 'evening');
+const getServiceTypeFromTime = (_timeValue) => 'evening';
 
 const getOpeningServicesForDay = (day) => {
   if (day === 0) return [];
@@ -660,7 +660,7 @@ const buildOpenServiceSlotsForWeek = (iso) => {
 };
 
 const SERVICE_SLOT_RANGES = {
-  evening: { start: 15 * 60, end: 23 * 60 },
+  evening: { start: 18 * 60, end: 22 * 60 },
 };
 
 const buildSlotsFromRange = (startMinutes, endMinutes) => {
@@ -1257,7 +1257,7 @@ if (bookingForms.length) {
     if (day === 0) return [];
 
     const slots = [];
-    for (let value = 15 * 60; value <= 23 * 60; value += 30) {
+    for (let value = 18 * 60; value <= 22 * 60; value += 30) {
       slots.push(fromMinutes(value));
     }
 
