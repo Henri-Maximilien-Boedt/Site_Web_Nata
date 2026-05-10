@@ -703,9 +703,9 @@ const parseMemberIds = (tableMembers, tableId, tablesById) => {
     .sort((a, b) => a.localeCompare(b))
 }
 
-const hasConflict = ({ members, date, time, reservations, adminBlocks }) => {
+const hasConflict = ({ members, date, time, reservations, adminBlocks, duration = 90 }) => {
   const targetStart = toMinutes(time)
-  const targetEnd = targetStart + 90
+  const targetEnd = targetStart + duration
 
   const reservationConflict = reservations.some((reservation) => {
     if (reservation.status === 'cancelled') return false
@@ -713,7 +713,7 @@ const hasConflict = ({ members, date, time, reservations, adminBlocks }) => {
     if (!reservation.tableMembers.some((memberId) => members.includes(memberId))) return false
 
     const start = toMinutes(reservation.time)
-    const end = start + 90
+    const end = start + duration
     return overlaps(targetStart, targetEnd, start, end)
   })
 
@@ -767,7 +767,8 @@ const createReservation = async (payload) => {
     date,
     time,
     reservations: state.reservations,
-    adminBlocks: state.adminBlocks
+    adminBlocks: state.adminBlocks,
+    duration: 120
   })) {
     throw createError(409, 'Cette table n\'est plus disponible sur ce créneau.')
   }

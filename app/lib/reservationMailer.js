@@ -60,6 +60,7 @@ const sendReservationAcknowledgement = async (reservation) => {
         <p style="margin:0 0 14px;color:#50667d;">Nous revenons vers vous rapidement pour confirmer.</p>
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
+        <p style="margin:0 0 6px;">Durée : <strong>1h30</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
         ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
@@ -70,6 +71,7 @@ const sendReservationAcknowledgement = async (reservation) => {
     'Nous avons bien reçu votre demande de réservation.',
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
+    'Durée : 1h30',
     `Personnes : ${reservation.people}`,
     reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`
@@ -100,6 +102,7 @@ const sendReservationStatusEmail = async (reservation, status) => {
         <p style="margin:0 0 14px;color:#50667d;">NATA — Louvain-la-Neuve</p>
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
+        <p style="margin:0 0 6px;">Durée : <strong>1h30</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
         ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
@@ -111,6 +114,7 @@ const sendReservationStatusEmail = async (reservation, status) => {
     lead,
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
+    'Durée : 1h30',
     `Personnes : ${reservation.people}`,
     reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`

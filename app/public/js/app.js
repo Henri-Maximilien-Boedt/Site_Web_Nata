@@ -1165,8 +1165,9 @@ const getReservationMembers = (reservation) => {
 };
 
 const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => {
+  const duration = isAdminPage() ? 90 : 120;
   const targetStart = toMinutes(timeHHMM);
-  const targetEnd = targetStart + 90;
+  const targetEnd = targetStart + duration;
 
   const hasReservationOverlap = readReservations().some((reservation) => {
     if (ignoreReservationId && reservation.id === ignoreReservationId) return false;
@@ -1174,7 +1175,7 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
     const members = getReservationMembers(reservation);
     if (!members.includes(tableId)) return false;
     const start = toMinutes(reservation.time);
-    const end = start + 90;
+    const end = start + duration;
     return overlaps(targetStart, targetEnd, start, end);
   });
 
