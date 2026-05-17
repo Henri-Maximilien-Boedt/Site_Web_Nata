@@ -1170,10 +1170,6 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
   const targetStart = toMinutes(timeHHMM);
   const targetEnd = targetStart + duration;
 
-  const now = new Date();
-  const todayISO = toISODate(now);
-  const nowMinutes = now.getHours() * 60 + now.getMinutes();
-
   const hasReservationOverlap = readReservations().some((reservation) => {
     if (ignoreReservationId && reservation.id === ignoreReservationId) return false;
     if (reservation.noShow) return false;
@@ -1181,8 +1177,6 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
     const members = getReservationMembers(reservation);
     if (!members.includes(tableId)) return false;
     const start = toMinutes(reservation.time);
-    // Réservation du jour passée depuis plus de 15 min → table libérée
-    if (reservation.date === todayISO && (start + 15) <= nowMinutes) return false;
     const end = start + duration;
     return overlaps(targetStart, targetEnd, start, end);
   });
@@ -2089,7 +2083,7 @@ if (adminRoot) {
     return reservations.find((reservation) => {
       if (reservation.noShow) return false; // no-show → table libre immédiatement
       const start = toMinutes(reservation.time);
-      const end = start + 15; // sans action → libère après 15 min
+      const end = start + 90;
       return point >= start && point < end;
     });
   };

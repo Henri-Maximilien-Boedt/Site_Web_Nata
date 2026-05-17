@@ -714,10 +714,6 @@ const hasConflict = ({ members, date, time, reservations, adminBlocks, duration 
   const targetStart = toMinutes(time)
   const targetEnd = targetStart + duration
 
-  const now = new Date()
-  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
-  const nowMinutes = now.getHours() * 60 + now.getMinutes()
-
   const reservationConflict = reservations.some((reservation) => {
     if (reservation.status === 'cancelled') return false
     if (reservation.noShow) return false
@@ -725,9 +721,6 @@ const hasConflict = ({ members, date, time, reservations, adminBlocks, duration 
     if (!reservation.tableMembers.some((memberId) => members.includes(memberId))) return false
 
     const start = toMinutes(reservation.time)
-    // Réservation du jour passée depuis plus de 15 min → table libérée
-    if (reservation.date === todayISO && (start + 15) <= nowMinutes) return false
-
     const end = start + duration
     return overlaps(targetStart, targetEnd, start, end)
   })
@@ -814,7 +807,6 @@ const createReservation = async (payload) => {
         WHERE r.date = $1
           AND r.status <> 'cancelled'
           AND r.no_show IS NOT TRUE
-          AND NOT (r.date = CURRENT_DATE AND (r.time_start + interval '15 minutes') <= NOW()::time)
           AND rt.table_id = ANY($2::integer[])
           AND r.time_start < ($3::time + interval '120 minutes')
           AND ($3::time) < (r.time_start + interval '120 minutes')
