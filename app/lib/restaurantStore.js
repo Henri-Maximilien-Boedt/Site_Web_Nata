@@ -279,6 +279,11 @@ const ensureRuntimeSchema = async (client) => {
     ADD COLUMN IF NOT EXISTS cloudinary_id text
   `)
 
+  await client.query(`
+    ALTER TABLE reservations
+    ADD COLUMN IF NOT EXISTS no_show BOOLEAN DEFAULT false
+  `)
+
   console.log('✓ Schema BDD vérifié')
 }
 
@@ -542,6 +547,7 @@ const listReservations = async (tables, tableMerges, options = {}) => {
       r.message,
       r.source,
       r.status,
+      r.no_show,
       r.created_at,
       COALESCE(
         array_agg(rt.table_id ORDER BY rt.table_id)
@@ -594,6 +600,7 @@ const listReservations = async (tables, tableMerges, options = {}) => {
       message: row.message || '',
       source: row.source || 'online',
       status: row.status || 'confirmed',
+      noShow: row.no_show || false,
       createdAt: row.created_at instanceof Date ? row.created_at.toISOString() : String(row.created_at || '')
     }
   })
@@ -707,12 +714,20 @@ const hasConflict = ({ members, date, time, reservations, adminBlocks, duration 
   const targetStart = toMinutes(time)
   const targetEnd = targetStart + duration
 
+  const now = new Date()
+  const todayISO = `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, '0')}-${String(now.getDate()).padStart(2, '0')}`
+  const nowMinutes = now.getHours() * 60 + now.getMinutes()
+
   const reservationConflict = reservations.some((reservation) => {
     if (reservation.status === 'cancelled') return false
+    if (reservation.noShow) return false
     if (reservation.date !== date) return false
     if (!reservation.tableMembers.some((memberId) => members.includes(memberId))) return false
 
     const start = toMinutes(reservation.time)
+    // Réservation du jour passée depuis plus de 15 min → table libérée
+    if (reservation.date === todayISO && (start + 15) <= nowMinutes) return false
+
     const end = start + duration
     return overlaps(targetStart, targetEnd, start, end)
   })
@@ -778,12 +793,38 @@ const createReservation = async (payload) => {
   try {
     await client.query('BEGIN')
 
+    // Verrou pour éviter les insertions simultanées sur la même table/créneau
     const memberDbIds = members
       .map((memberId) => Number(tablesByUiId[memberId]?.dbId))
       .filter((value) => Number.isInteger(value))
 
     if (!memberDbIds.length) {
       throw createError(400, 'Table invalide.')
+    }
+
+    await client.query(
+      `SELECT id FROM tables WHERE id = ANY($1::integer[]) FOR UPDATE`,
+      [memberDbIds]
+    )
+
+    const conflictCheck = await client.query(
+      `
+        SELECT r.id FROM reservations r
+        JOIN reservation_tables rt ON rt.reservation_id = r.id
+        WHERE r.date = $1
+          AND r.status <> 'cancelled'
+          AND r.no_show IS NOT TRUE
+          AND NOT (r.date = CURRENT_DATE AND (r.time_start + interval '15 minutes') <= NOW()::time)
+          AND rt.table_id = ANY($2::integer[])
+          AND r.time_start < ($3::time + interval '120 minutes')
+          AND ($3::time) < (r.time_start + interval '120 minutes')
+        LIMIT 1
+      `,
+      [date, memberDbIds, time]
+    )
+
+    if (conflictCheck.rows.length) {
+      throw createError(409, "Cette table n'est plus disponible sur ce créneau.")
     }
 
     const anchorTableId = memberDbIds[0]
@@ -953,6 +994,21 @@ const createQuoteRequest = async (payload) => {
   }
 }
 
+const markNoShow = async (reservationId) => {
+  await ensureInitialized()
+
+  const id = Number.parseInt(String(reservationId || '').trim(), 10)
+  if (!Number.isInteger(id)) {
+    throw createError(400, 'ID de réservation invalide.')
+  }
+
+  const { rowCount } = await pool.query(
+    `UPDATE reservations SET no_show = true WHERE id = $1 AND status <> 'cancelled'`,
+    [id]
+  )
+  return rowCount > 0
+}
+
 const deleteReservation = async (reservationId) => {
   await ensureInitialized()
 
@@ -1005,6 +1061,7 @@ const updateReservationStatus = async (reservationId, nextStatus) => {
           message,
           source,
           status,
+          no_show,
           created_at
       `,
       [id, normalizedStatus]
@@ -1053,6 +1110,7 @@ const updateReservationStatus = async (reservationId, nextStatus) => {
       message: base.message || '',
       source: base.source || 'online',
       status: base.status || normalizedStatus,
+      noShow: base.no_show || false,
       createdAt: base.created_at instanceof Date ? base.created_at.toISOString() : String(base.created_at || '')
     }
 
@@ -1210,6 +1268,7 @@ module.exports = {
   deleteReservation,
   getClientState,
   getLunchDisabled,
+  markNoShow,
   replaceAdminBlocks,
   serializeStateForScript,
   setLunchDisabled,

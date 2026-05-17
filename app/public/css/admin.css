@@ -1085,6 +1085,30 @@
   font-size: 0.8rem;
 }
 
+.btn-noshow {
+  background: linear-gradient(130deg, #d97706, #f59e0b);
+  color: #fff;
+  border: none;
+  min-height: 42px;
+  font-weight: 800;
+  font-size: 0.88rem;
+}
+
+.btn-noshow:hover {
+  background: linear-gradient(130deg, #b45309, #d97706);
+}
+
+.badge--noshow {
+  background: #fef3c7;
+  color: #78350f;
+  border: 1px solid #fbbf24;
+}
+
+.reservation-card--noshow {
+  border-color: #fbbf24;
+  background: #fffbeb;
+}
+
 .admin-empty {
   margin: 0;
   color: #546779;

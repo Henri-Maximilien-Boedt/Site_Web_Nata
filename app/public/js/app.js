@@ -34,6 +34,7 @@ const ADMIN_API = {
   updateMerges: adminApiNode?.dataset?.updateMerges || '/admin/api/merges',
   updateBlocks: adminApiNode?.dataset?.updateBlocks || '/admin/api/blocks',
   updateLunchDisabled: adminApiNode?.dataset?.updateLunchDisabled || '/admin/api/settings/lunch-disabled',
+  markNoShow: adminApiNode?.dataset?.markNoShow || '/admin/api/reservations',
 };
 
 const isAdminPage = () => Boolean(document.querySelector('[data-admin-page]'));
@@ -1169,12 +1170,19 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
   const targetStart = toMinutes(timeHHMM);
   const targetEnd = targetStart + duration;
 
+  const now = new Date();
+  const todayISO = toISODate(now);
+  const nowMinutes = now.getHours() * 60 + now.getMinutes();
+
   const hasReservationOverlap = readReservations().some((reservation) => {
     if (ignoreReservationId && reservation.id === ignoreReservationId) return false;
+    if (reservation.noShow) return false;
     if (reservation.date !== dateISO) return false;
     const members = getReservationMembers(reservation);
     if (!members.includes(tableId)) return false;
     const start = toMinutes(reservation.time);
+    // Réservation du jour passée depuis plus de 15 min → table libérée
+    if (reservation.date === todayISO && (start + 15) <= nowMinutes) return false;
     const end = start + duration;
     return overlaps(targetStart, targetEnd, start, end);
   });
@@ -1711,8 +1719,10 @@ if (bookingForms.length) {
       resetTable(booking);
     });
 
+    let isSubmitting = false;
     booking.form.addEventListener('submit', async (event) => {
       event.preventDefault();
+      if (isSubmitting) return;
       const formData = new FormData(booking.form);
       const name = String(formData.get('name') || '').trim();
       const email = String(formData.get('email') || '').trim();
@@ -1778,6 +1788,11 @@ if (bookingForms.length) {
         return;
       }
 
+      // Toutes les validations sont passées — poser le verrou avant le fetch
+      const submitBtn = booking.form.querySelector('[type="submit"]');
+      isSubmitting = true;
+      if (submitBtn) submitBtn.disabled = true;
+
       try {
         const createdReservation = await createReservationOnServer({
           name,
@@ -1805,6 +1820,9 @@ if (bookingForms.length) {
           error?.message || 'La réservation a échoué. Merci de réessayer.',
           'error'
         );
+      } finally {
+        isSubmitting = false;
+        if (submitBtn) submitBtn.disabled = false;
       }
     });
   });
@@ -2069,8 +2087,9 @@ if (adminRoot) {
       .sort((a, b) => toMinutes(a.time) - toMinutes(b.time));
 
     return reservations.find((reservation) => {
+      if (reservation.noShow) return false; // no-show → table libre immédiatement
       const start = toMinutes(reservation.time);
-      const end = start + 90;
+      const end = start + 15; // sans action → libère après 15 min
       return point >= start && point < end;
     });
   };
@@ -2455,10 +2474,13 @@ if (adminRoot) {
     } else {
       list.innerHTML = filteredReservations
         .map(
-          (item) => `
-            <article class="reservation-card">
+          (item) => {
+            const showNoShowBtn = !item.noShow;
+            return `
+            <article class="reservation-card${item.noShow ? ' reservation-card--noshow' : ''}">
               <div class="reservation-card__head">
                 <h4>${escapeHTML(item.name)}</h4>
+                ${item.noShow ? '<span class="badge badge--noshow">Non présent</span>' : ''}
               </div>
               <p class="reservation-card__status">
                 ${item.status === 'pending'
@@ -2473,13 +2495,15 @@ if (adminRoot) {
               <p><strong>Table :</strong> ${escapeHTML(item.tableLabel || item.tableId || 'Non définie')}</p>
               <p><strong>Message :</strong> ${escapeHTML(item.message || 'Aucun message')}</p>
               <div class="reservation-card__actions">
+                ${showNoShowBtn ? `<button type="button" class="btn btn-noshow" data-reservation-noshow="${escapeHTML(item.id)}">Non présent</button>` : ''}
                 ${item.status === 'pending'
                   ? `<button type="button" class="btn btn-primary" data-reservation-accept="${escapeHTML(item.id)}">Confirmer</button>
                      <button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Refuser</button>`
                   : `<button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Annuler</button>`}
               </div>
             </article>
-          `
+          `;
+          }
         )
         .join('');
     }
@@ -2862,6 +2886,23 @@ if (adminRoot) {
           renderAdmin();
         } catch (error) {
           setActionFeedback(error?.message || 'Annulation impossible.', 'error');
+        }
+        return;
+      }
+
+      const noShowId = target.getAttribute('data-reservation-noshow');
+      if (noShowId) {
+        try {
+          await requestJSON(`${ADMIN_API.markNoShow}/${encodeURIComponent(noShowId)}/no-show`, {
+            method: 'PATCH',
+          });
+          const existing = readReservationsRaw();
+          const next = existing.map((item) => item.id === noShowId ? { ...item, noShow: true } : item);
+          writeReservations(next);
+          setActionFeedback('Client marqué non présent. La table reste indisponible.');
+          renderAdmin();
+        } catch (error) {
+          setActionFeedback(error?.message || 'Action impossible.', 'error');
         }
         return;
       }

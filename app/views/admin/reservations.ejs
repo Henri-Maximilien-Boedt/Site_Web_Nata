@@ -68,12 +68,18 @@
                   <% } else { %>
                     <span class="badge badge--inactive">Annulée</span>
                   <% } %>
+                  <% if (r.no_show) { %>
+                    <span class="badge badge--noshow">Non présent</span>
+                  <% } %>
                 </td>
                 <td>
                   <% if (r.status === 'pending') { %>
                     <button class="btn btn-primary btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Confirmer</button>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Refuser</button>
                   <% } else if (r.status === 'confirmed') { %>
+                    <% if (!r.no_show) { %>
+                      <button class="btn btn-noshow btn--tiny" data-res-noshow data-id="<%= r.id %>">Non présent</button>
+                    <% } %>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Annuler</button>
                   <% } else { %>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Reconfirmer</button>
@@ -103,6 +109,29 @@
               method: 'PATCH',
               headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF },
               body: JSON.stringify({ status })
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.message || `Erreur ${res.status}`);
+            }
+            window.location.reload();
+          } catch (err) {
+            alert(err.message || 'Action impossible.');
+            btn.disabled = false;
+          }
+        });
+      });
+
+      const noShowButtons = root.querySelectorAll('[data-res-noshow]');
+      noShowButtons.forEach((btn) => {
+        btn.addEventListener('click', async () => {
+          const id = btn.getAttribute('data-id');
+          if (!id) return;
+          btn.disabled = true;
+          try {
+            const res = await fetch(`/admin/api/reservations/${encodeURIComponent(id)}/no-show`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF }
             });
             if (!res.ok) {
               const data = await res.json().catch(() => ({}));

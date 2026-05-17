@@ -12,6 +12,7 @@ const {
   deleteReservation,
   getClientState,
   getLunchDisabled,
+  markNoShow,
   replaceAdminBlocks,
   serializeStateForScript,
   setLunchDisabled,
@@ -148,6 +149,7 @@ router.get('/reservations', isAuth, async (req, res, next) => {
         r.name,
         r.source,
         r.status,
+        r.no_show,
         t.code AS table_code
       FROM reservations r
       LEFT JOIN tables t ON t.id = r.table_id
@@ -535,6 +537,19 @@ router.patch('/api/reservations/:id/status', isAuth, async (req, res, next) => {
     const { status } = req.body || {}
     const reservation = await updateReservationStatus(req.params.id, status)
     res.json({ ok: true, reservation })
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ ok: false, message: error.message })
+    }
+    next(error)
+  }
+})
+
+router.patch('/api/reservations/:id/no-show', isAuth, async (req, res, next) => {
+  try {
+    const marked = await markNoShow(req.params.id)
+    if (!marked) return res.status(404).json({ ok: false, message: 'Réservation introuvable.' })
+    res.json({ ok: true })
   } catch (error) {
     if (error.status) {
       return res.status(error.status).json({ ok: false, message: error.message })
