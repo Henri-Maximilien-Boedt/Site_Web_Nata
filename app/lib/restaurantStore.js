@@ -9,7 +9,24 @@ const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
   terraceLayoutVersion: 'terrace_layout_version_v1',
   interiorLayoutVersion: 'interior_layout_version_v1',
-  lunchDisabled: 'lunch_disabled_v1'
+  lunchDisabled: 'lunch_disabled_v1',
+  kitchenClosure: 'kitchen_closure_v1',
+  siteAnnouncement: 'site_announcement_v1'
+}
+
+const KITCHEN_CLOSURE_DEFAULT = { active: false, from: null, to: null, message: '', scope: 'cuisine' }
+const SITE_ANNOUNCEMENT_DEFAULT = { active: false, from: null, to: null, message: '' }
+const CLOSURE_SCOPES = new Set(['cuisine', 'restaurant'])
+const MAX_CLOSURE_MESSAGE_LEN = 400
+
+const REPORT_TIME_ZONE = process.env.APP_TIMEZONE || 'Europe/Brussels'
+// Date du jour (YYYY-MM-DD) dans le fuseau du restaurant.
+const todayISOInZone = () => {
+  try {
+    return new Date().toLocaleDateString('en-CA', { timeZone: REPORT_TIME_ZONE })
+  } catch {
+    return new Date().toISOString().slice(0, 10)
+  }
 }
 
 const TERRACE_LAYOUT_VERSION_TARGET = '3'
@@ -322,6 +339,14 @@ const ensureSettingsDefaults = async (client) => {
   await client.query(
     `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
     [SETTINGS_KEYS.lunchDisabled, 'false']
+  )
+  await client.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
+    [SETTINGS_KEYS.kitchenClosure, JSON.stringify(KITCHEN_CLOSURE_DEFAULT)]
+  )
+  await client.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2) ON CONFLICT (key) DO NOTHING`,
+    [SETTINGS_KEYS.siteAnnouncement, JSON.stringify(SITE_ANNOUNCEMENT_DEFAULT)]
   )
 }
 
@@ -665,6 +690,107 @@ const setLunchDisabled = async (value) => {
   return normalized
 }
 
+// Normalise l'objet de fermeture réservations. `active` effectif seulement si
+// une plage complète et cohérente (from <= to) est fournie.
+const normalizeKitchenClosure = (raw) => {
+  const source = raw && typeof raw === 'object' ? raw : {}
+  const from = normalizeDate(source.from)
+  const to = normalizeDate(source.to)
+  const message = truncSafe(source.message, MAX_CLOSURE_MESSAGE_LEN) || ''
+  const scope = CLOSURE_SCOPES.has(String(source.scope || '').trim()) ? String(source.scope).trim() : 'cuisine'
+  const rangeValid = Boolean(from && to && from <= to)
+  const active = Boolean(source.active) && rangeValid
+  return { active, from: rangeValid ? from : null, to: rangeValid ? to : null, message, scope }
+}
+
+const getKitchenClosure = async () => {
+  await ensureInitialized()
+  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [
+    SETTINGS_KEYS.kitchenClosure
+  ])
+  try {
+    return normalizeKitchenClosure(JSON.parse(rows?.[0]?.value || '{}'))
+  } catch {
+    return { ...KITCHEN_CLOSURE_DEFAULT }
+  }
+}
+
+const setKitchenClosure = async (payload) => {
+  await ensureInitialized()
+  const normalized = normalizeKitchenClosure(payload)
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [SETTINGS_KEYS.kitchenClosure, JSON.stringify(normalized)]
+  )
+  return normalized
+}
+
+// Vrai si la date (YYYY-MM-DD) tombe dans une fermeture réservations active.
+const isDateWithinClosure = (closure, date) => {
+  if (!closure?.active || !closure.from || !closure.to || !date) return false
+  return date >= closure.from && date <= closure.to
+}
+
+// Annonce site — indépendante d'une fermeture. Bornes d'affichage optionnelles.
+const normalizeSiteAnnouncement = (raw) => {
+  const source = raw && typeof raw === 'object' ? raw : {}
+  const from = normalizeDate(source.from)
+  const to = normalizeDate(source.to)
+  const message = truncSafe(source.message, MAX_CLOSURE_MESSAGE_LEN) || ''
+  // Fenêtre valide si absente, ou si les deux bornes cohérentes.
+  const rangeValid = (!from && !to) || Boolean(from && to && from <= to)
+  const active = Boolean(source.active) && rangeValid && Boolean(message)
+  return { active, from: rangeValid ? from : null, to: rangeValid ? to : null, message }
+}
+
+const getSiteAnnouncement = async () => {
+  await ensureInitialized()
+  const { rows } = await pool.query('SELECT value FROM settings WHERE key = $1', [
+    SETTINGS_KEYS.siteAnnouncement
+  ])
+  try {
+    return normalizeSiteAnnouncement(JSON.parse(rows?.[0]?.value || '{}'))
+  } catch {
+    return { ...SITE_ANNOUNCEMENT_DEFAULT }
+  }
+}
+
+const setSiteAnnouncement = async (payload) => {
+  await ensureInitialized()
+  const normalized = normalizeSiteAnnouncement(payload)
+  await pool.query(
+    `INSERT INTO settings (key, value) VALUES ($1, $2)
+     ON CONFLICT (key) DO UPDATE SET value = EXCLUDED.value`,
+    [SETTINGS_KEYS.siteAnnouncement, JSON.stringify(normalized)]
+  )
+  return normalized
+}
+
+// Annonce visible aujourd'hui si active + message + dans la fenêtre (bornes optionnelles).
+const isAnnouncementVisible = (ann, todayISO) => {
+  if (!ann?.active || !ann.message) return false
+  if (ann.from && todayISO < ann.from) return false
+  if (ann.to && todayISO > ann.to) return false
+  return true
+}
+
+// Bandeaux publics à afficher aujourd'hui (fermeture auto-annoncée + annonce planifiée).
+const getActiveBanners = async () => {
+  const today = todayISOInZone()
+  const [closure, announcement] = await Promise.all([getKitchenClosure(), getSiteAnnouncement()])
+  const banners = []
+
+  if (closure.active && closure.message) {
+    banners.push({ kind: 'closure', message: closure.message, from: closure.from, to: closure.to, scope: closure.scope })
+  }
+  if (isAnnouncementVisible(announcement, today)) {
+    banners.push({ kind: 'announcement', message: announcement.message, from: announcement.from, to: announcement.to })
+  }
+
+  return banners
+}
+
 const getClientState = async () => {
   const tables = await listTables()
   const validIds = new Set(tables.map((table) => table.id))
@@ -673,6 +799,7 @@ const getClientState = async () => {
   const reservations = await listReservations(tables, tableMerges, { statuses: ['pending', 'confirmed'] })
   const adminBlocks = await listAdminBlocks(tables)
   const lunchDisabled = await getLunchDisabled()
+  const kitchenClosure = await getKitchenClosure()
 
   return {
     tables,
@@ -680,7 +807,8 @@ const getClientState = async () => {
     tableMerges,
     reservations,
     adminBlocks,
-    lunchDisabled
+    lunchDisabled,
+    kitchenClosure
   }
 }
 
@@ -758,6 +886,13 @@ const createReservation = async (payload) => {
 
   if (people < 1 || people > 10) {
     throw createError(400, 'Le nombre de personnes doit être entre 1 et 10.')
+  }
+
+  if (isDateWithinClosure(state.kitchenClosure, date)) {
+    throw createError(
+      409,
+      state.kitchenClosure.message || 'Les réservations sont fermées à cette date.'
+    )
   }
 
   const members = parseMemberIds(payload?.tableMembers, payload?.tableId, tablesByUiId)
@@ -1258,12 +1393,17 @@ module.exports = {
   createQuoteRequest,
   createReservation,
   deleteReservation,
+  getActiveBanners,
   getClientState,
+  getKitchenClosure,
   getLunchDisabled,
+  getSiteAnnouncement,
   markNoShow,
   replaceAdminBlocks,
   serializeStateForScript,
+  setKitchenClosure,
   setLunchDisabled,
+  setSiteAnnouncement,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges

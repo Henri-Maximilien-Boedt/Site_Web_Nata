@@ -84,6 +84,14 @@ if (initialServerState && Array.isArray(initialServerState.tables)) {
 let lunchDisabled = initialServerState?.lunchDisabled === true
   || localStorage.getItem(STORAGE_KEYS.lunchDisabled) === 'true';
 
+// Fermeture cuisine : plage de dates où les réservations sont bloquées.
+const KITCHEN_CLOSURE = (initialServerState && initialServerState.kitchenClosure) || null;
+const isDateClosed = (iso) => {
+  if (!KITCHEN_CLOSURE || !KITCHEN_CLOSURE.active) return false;
+  if (!KITCHEN_CLOSURE.from || !KITCHEN_CLOSURE.to || !iso) return false;
+  return iso >= KITCHEN_CLOSURE.from && iso <= KITCHEN_CLOSURE.to;
+};
+
 
 const TABLES = [
   { id: 'T2-1', code: 'T-1', seats: 2, label: 'T-1', zone: 'interieur' },
@@ -1256,6 +1264,7 @@ if (bookingForms.length) {
 
   const getSlotsForDate = (date) => {
     if (!date) return [];
+    if (isDateClosed(toISODate(date))) return [];
     const day = date.getDay();
     if (day === 0) return [];
 
@@ -1582,16 +1591,18 @@ if (bookingForms.length) {
       const iso = toISODate(date);
       const isCurrentMonth = date.getMonth() === monthValue;
       const isPast = date < todayStart;
+      const isClosed = isDateClosed(iso);
       const button = document.createElement('button');
       button.type = 'button';
       button.className = 'date-cell';
       if (!isCurrentMonth) button.classList.add('is-out');
       if (isPast) button.classList.add('is-past');
+      if (isClosed) button.classList.add('is-closed');
       if (iso === selectedISO) button.classList.add('is-selected');
       button.textContent = String(date.getDate());
-      button.title = fullLabel.format(date);
+      button.title = isClosed ? 'Fermé — réservations indisponibles' : fullLabel.format(date);
 
-      if (isPast) {
+      if (isPast || isClosed) {
         button.disabled = true;
       } else {
         button.addEventListener('click', () => selectDate(date));

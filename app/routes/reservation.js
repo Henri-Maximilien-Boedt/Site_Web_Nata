@@ -2,6 +2,7 @@ const express = require('express')
 const router = express.Router()
 const {
   createReservation,
+  getActiveBanners,
   getClientState,
   serializeStateForScript
 } = require('../lib/restaurantStore')
@@ -9,12 +10,13 @@ const { reservationLimiter } = require('../middleware/rateLimits')
 
 router.get('/', async (req, res, next) => {
   try {
-    const clientState = await getClientState()
+    const [clientState, banners] = await Promise.all([getClientState(), getActiveBanners()])
 
     res.render('reservation', {
       title: 'Réservation | NATA Bar',
       description: 'Réservez votre table chez NATA Bar.',
-      clientStateJson: serializeStateForScript(clientState)
+      clientStateJson: serializeStateForScript(clientState),
+      banners
     })
   } catch (error) {
     next(error)

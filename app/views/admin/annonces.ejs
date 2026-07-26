@@ -1,0 +1,126 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title><%= title %></title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-page">
+  <div class="noise"></div>
+  <%- include('../partials/admin-topbar', { currentSection: 'annonces' }) %>
+
+  <%
+    const kc = kitchenClosure || { active: false, from: '', to: '', message: '', scope: 'cuisine' }
+    const an = siteAnnouncement || { active: false, from: '', to: '', message: '' }
+  %>
+
+  <div class="admin-standalone">
+    <div class="admin-page-head">
+      <div>
+        <h1>Fermetures et annonces</h1>
+      </div>
+    </div>
+
+    <% if (typeof flash !== 'undefined' && flash) { %>
+      <div class="admin-flash admin-flash--<%= flash.type %>"><%= flash.text %></div>
+    <% } %>
+
+    <!-- ── Fermeture des réservations ─────────────────────── -->
+    <section class="admin-images-section">
+      <h2 class="admin-images-section__title">Fermeture des réservations</h2>
+      <p class="admin-form__hint admin-form__hint--spaced">
+        Bloque les réservations en ligne sur une plage de dates et affiche automatiquement un
+        bandeau d'alerte sur le site. Les réservations déjà enregistrées ne sont pas annulées.
+      </p>
+
+      <form method="POST" action="/admin/settings/kitchen-closure" class="admin-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="admin-form__group">
+          <label class="admin-check">
+            <input type="checkbox" name="active" value="1" <%= kc.active ? 'checked' : '' %> />
+            Activer la fermeture
+          </label>
+        </div>
+
+        <div class="admin-form__group">
+          <label for="kc-scope">Portée</label>
+          <select id="kc-scope" name="scope">
+            <option value="cuisine" <%= kc.scope !== 'restaurant' ? 'selected' : '' %>>Cuisine (le bar reste ouvert)</option>
+            <option value="restaurant" <%= kc.scope === 'restaurant' ? 'selected' : '' %>>Restaurant entier</option>
+          </select>
+        </div>
+
+        <div class="admin-form__row">
+          <div class="admin-form__group">
+            <label for="kc-from">Du</label>
+            <input type="date" id="kc-from" name="from" value="<%= kc.from || '' %>" />
+          </div>
+          <div class="admin-form__group">
+            <label for="kc-to">Au <span class="admin-form__hint-inline">(inclus)</span></label>
+            <input type="date" id="kc-to" name="to" value="<%= kc.to || '' %>" />
+          </div>
+        </div>
+
+        <div class="admin-form__group">
+          <label for="kc-message">Message affiché</label>
+          <textarea id="kc-message" name="message" rows="3" maxlength="400"
+            placeholder="Ex : Fermeture de la cuisine du 3 au 10 août inclus. Le bar reste ouvert !"><%= kc.message || '' %></textarea>
+        </div>
+
+        <div class="admin-form__actions">
+          <button type="submit" class="btn btn-primary">Enregistrer la fermeture</button>
+        </div>
+      </form>
+    </section>
+
+    <!-- ── Annonce ────────────────────────────────────────── -->
+    <section class="admin-images-section">
+      <h2 class="admin-images-section__title">Annonce</h2>
+      <p class="admin-form__hint admin-form__hint--spaced">
+        Affiche un bandeau d'information sur l'accueil et la page réservation pendant la période
+        choisie. Sans effet sur les réservations. Dates vides = affichage continu tant qu'active.
+      </p>
+
+      <form method="POST" action="/admin/settings/announcement" class="admin-form">
+        <input type="hidden" name="_csrf" value="<%= csrfToken %>">
+
+        <div class="admin-form__group">
+          <label class="admin-check">
+            <input type="checkbox" name="active" value="1" <%= an.active ? 'checked' : '' %> />
+            Activer l'annonce
+          </label>
+        </div>
+
+        <div class="admin-form__row">
+          <div class="admin-form__group">
+            <label for="an-from">Afficher du</label>
+            <input type="date" id="an-from" name="from" value="<%= an.from || '' %>" />
+          </div>
+          <div class="admin-form__group">
+            <label for="an-to">Jusqu'au <span class="admin-form__hint-inline">(inclus)</span></label>
+            <input type="date" id="an-to" name="to" value="<%= an.to || '' %>" />
+          </div>
+        </div>
+
+        <div class="admin-form__group">
+          <label for="an-message">Message de l'annonce</label>
+          <textarea id="an-message" name="message" rows="3" maxlength="400"
+            placeholder="Ex : Lundi 28 juillet — soirée karaoké 🎤"><%= an.message || '' %></textarea>
+        </div>
+
+        <div class="admin-form__actions">
+          <button type="submit" class="btn btn-primary">Enregistrer l'annonce</button>
+        </div>
+      </form>
+    </section>
+  </div>
+
+  <script src="/js/app.js"></script>
+</body>
+</html>

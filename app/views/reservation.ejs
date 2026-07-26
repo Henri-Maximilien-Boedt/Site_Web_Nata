@@ -20,6 +20,8 @@
     <%- include('partials/header', { currentPath: '/reservation' }) %>
 
     <main>
+      <%- include('partials/announcement', { banners: typeof banners !== 'undefined' ? banners : [] }) %>
+
       <section class="story reveal">
         <div class="story-card">
           <p class="eyebrow">Réservation</p>

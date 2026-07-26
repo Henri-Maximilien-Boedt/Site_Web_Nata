@@ -622,3 +622,50 @@ footer {
     padding: 1rem;
   }
 }
+
+/* ── Annonce site (fermeture cuisine, etc.) ───────────────── */
+.site-announcement {
+  margin: 0;
+  padding: clamp(0.9rem, 3vw, 1.4rem) 1rem;
+  background: linear-gradient(130deg, #e86e2f, #ff8f4f);
+  color: #1a0d06;
+  border-bottom: 2px solid #ff9c62;
+}
+
+.site-announcement__inner {
+  max-width: 960px;
+  margin: 0 auto;
+  display: flex;
+  gap: 0.85rem;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+}
+
+.site-announcement__icon {
+  font-size: clamp(1.4rem, 5vw, 2rem);
+  line-height: 1;
+  flex: none;
+}
+
+.site-announcement__message {
+  margin: 0;
+  font-weight: 800;
+  font-size: clamp(1.05rem, 3.6vw, 1.5rem);
+  letter-spacing: 0.01em;
+}
+
+.site-announcement__range {
+  margin: 0.2rem 0 0;
+  font-weight: 700;
+  font-size: clamp(0.85rem, 2.6vw, 1.05rem);
+  opacity: 0.85;
+}
+
+/* Variante information (annonce non-fermeture) */
+.site-announcement--info {
+  background: linear-gradient(130deg, #1c1916, #2a2620);
+  color: var(--text);
+  border-bottom: 2px solid var(--orange);
+}
+

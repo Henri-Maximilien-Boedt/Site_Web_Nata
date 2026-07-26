@@ -1,9 +1,17 @@
 const express = require('express')
 const router = express.Router()
 const pool = require('../db')
+const { getActiveBanners } = require('../lib/restaurantStore')
 
 router.get('/', async (_req, res, next) => {
   try {
+    let banners = []
+    try {
+      banners = await getActiveBanners()
+    } catch {
+      banners = []
+    }
+
     let recentPosts = []
     try {
       const { rows } = await pool.query(`
@@ -28,7 +36,8 @@ router.get('/', async (_req, res, next) => {
     res.render('index', {
       title: 'NATA | Korean Food & Bar — Louvain-la-Neuve',
       description: 'NATA — Cuisine coréenne, plats signature et boissons dans une ambiance chaleureuse à Louvain-la-Neuve.',
-      recentPosts
+      recentPosts,
+      banners
     })
   } catch (error) {
     next(error)

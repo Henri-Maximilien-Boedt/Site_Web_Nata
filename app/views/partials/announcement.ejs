@@ -1,0 +1,24 @@
+<%
+  const bannerList = (typeof banners !== 'undefined' && Array.isArray(banners)) ? banners : []
+  const fmtRange = (from, to) => {
+    if (!from || !to) return ''
+    try {
+      const opts = { day: 'numeric', month: 'long' }
+      const dFrom = new Date(from + 'T00:00:00').toLocaleDateString('fr-BE', opts)
+      const dTo = new Date(to + 'T00:00:00').toLocaleDateString('fr-BE', { ...opts, year: 'numeric' })
+      return `Du ${dFrom} au ${dTo} inclus`
+    } catch (_) { return '' }
+  }
+%>
+<% bannerList.forEach((b) => { %>
+  <aside class="site-announcement site-announcement--<%= b.kind === 'closure' ? 'closure' : 'info' %>" role="status" aria-live="polite">
+    <div class="site-announcement__inner">
+      <span class="site-announcement__icon" aria-hidden="true"><%= b.kind === 'closure' ? '⚠️' : '📣' %></span>
+      <div class="site-announcement__text">
+        <p class="site-announcement__message"><%= b.message %></p>
+        <% const range = b.kind === 'closure' ? fmtRange(b.from, b.to) : '' %>
+        <% if (range) { %><p class="site-announcement__range"><%= range %></p><% } %>
+      </div>
+    </div>
+  </aside>
+<% }) %>

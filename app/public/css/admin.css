@@ -1344,7 +1344,8 @@
 }
 
 .admin-page input,
-.admin-page textarea {
+.admin-page textarea,
+.admin-page select {
   border-color: #c8d9eb;
   background: #ffffff;
   color: #1f3145;

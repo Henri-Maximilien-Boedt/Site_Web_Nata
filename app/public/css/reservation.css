@@ -188,6 +188,19 @@
   cursor: not-allowed;
 }
 
+.date-cell.is-closed {
+  opacity: 0.45;
+  cursor: not-allowed;
+  background: #2a1512;
+  border-color: #6b2b1f;
+  color: #d98a76;
+  text-decoration: line-through;
+}
+
+.date-cell.is-closed:hover {
+  border-color: #6b2b1f;
+}
+
 .date-cell.is-selected {
   background: linear-gradient(140deg, #e86e2f, #ff8f4f);
   border-color: #ff9c62;

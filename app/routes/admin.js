@@ -11,11 +11,15 @@ const { getPageViewStats } = require('../lib/pageAnalytics')
 const {
   deleteReservation,
   getClientState,
+  getKitchenClosure,
   getLunchDisabled,
+  getSiteAnnouncement,
   markNoShow,
   replaceAdminBlocks,
   serializeStateForScript,
+  setKitchenClosure,
   setLunchDisabled,
+  setSiteAnnouncement,
   updateReservationStatus,
   updateTableLayout,
   updateTableMerges
@@ -200,6 +204,29 @@ router.get('/menu', isAuth, async (req, res, next) => {
       currentSection: 'menu',
       items
     })
+  } catch (err) {
+    next(err)
+  }
+})
+
+// ============================================================
+// Fermetures et annonces — page dédiée
+// ============================================================
+
+router.get('/annonces', isAuth, async (req, res, next) => {
+  try {
+    const [kitchenClosure, siteAnnouncement] = await Promise.all([
+      getKitchenClosure(),
+      getSiteAnnouncement()
+    ])
+    res.render('admin/annonces', {
+      title: 'Fermetures et annonces — Admin NATA',
+      currentSection: 'annonces',
+      kitchenClosure,
+      siteAnnouncement,
+      flash: req.session.flash || null
+    })
+    delete req.session.flash
   } catch (err) {
     next(err)
   }
@@ -599,6 +626,54 @@ router.post('/api/settings/lunch-disabled', isAuth, async (req, res, next) => {
     const value = Boolean(req.body?.value)
     const lunchDisabled = await setLunchDisabled(value)
     res.json({ ok: true, lunchDisabled })
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ============================================================
+// Fermeture des réservations (bloque la résa + s'auto-annonce)
+// ============================================================
+
+router.post('/settings/kitchen-closure', isAuth, async (req, res, next) => {
+  try {
+    await setKitchenClosure({
+      active: req.body?.active === '1' || req.body?.active === 'on',
+      from: req.body?.from,
+      to: req.body?.to,
+      message: req.body?.message,
+      scope: req.body?.scope
+    })
+    req.session.flash = { type: 'success', text: 'Fermeture des réservations mise à jour.' }
+    res.redirect('/admin/annonces')
+  } catch (error) {
+    next(error)
+  }
+})
+
+// ============================================================
+// Annonce site (bandeau planifié, sans effet sur la résa)
+// ============================================================
+
+router.post('/settings/announcement', isAuth, async (req, res, next) => {
+  try {
+    await setSiteAnnouncement({
+      active: req.body?.active === '1' || req.body?.active === 'on',
+      from: req.body?.from,
+      to: req.body?.to,
+      message: req.body?.message
+    })
+    req.session.flash = { type: 'success', text: 'Annonce mise à jour.' }
+    res.redirect('/admin/annonces')
+  } catch (error) {
+    next(error)
+  }
+})
+
+router.get('/api/settings/kitchen-closure', isAuth, async (req, res, next) => {
+  try {
+    const kitchenClosure = await getKitchenClosure()
+    res.json({ ok: true, kitchenClosure })
   } catch (error) {
     next(error)
   }

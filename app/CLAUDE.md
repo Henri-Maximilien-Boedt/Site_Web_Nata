@@ -4,6 +4,59 @@ Lis ce fichier en entier avant d'écrire la moindre ligne de code.
 
 ---
 
+## ⚠️ État réel du code (MAJ juillet 2026) — LIRE EN PREMIER
+
+Ce document décrit l'intention de départ. Le code a évolué et **le site est en production**.
+Points où la réalité diffère des sections ci-dessous :
+
+- **Hébergement : AlwaysData** (Apache en reverse proxy, `app.set('trust proxy', 1)`), pas Render.
+- **Images : Cloudinary** (`multer-storage-cloudinary`, dossier `nata-bar`), pas de stockage local `/public/uploads/`. Voir `middleware/upload.js`.
+- **Auth admin : un seul compte via variables d'env** `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` (bcrypt). La table `admin_users` du schéma n'est **pas** utilisée pour le login. Voir `routes/admin.js`.
+- **Cœur métier : `lib/restaurantStore.js`.** Toute la logique résa/plan de salle passe par lui (tables `reservation_tables`, `admin_blocks`, fusion de tables, `no_show`, réglages `settings`). Le modèle `live_status` par table décrit plus bas n'est pas la logique réelle.
+- **Statuts réservation : `pending` / `confirmed` / `cancelled`.** Le client crée en `pending`, l'admin confirme (email au client sur `confirmed`/`cancelled`). Créneau = 120 min.
+- **Sécurité déjà en place** : Helmet + CSP (`server.js`), CSRF global (`middleware/csrf.js`), rate-limits (`middleware/rateLimits.js`), login anti-énumération par timing, sanitize maison (`lib/sanitize.js`).
+- **Front = un seul `public/js/app.js`** (~3000 lignes), hydraté par `clientStateJson` injecté dans la page. Pas de framework.
+- **Analytics maison** de pages vues : `lib/pageAnalytics.js` (+ cookie visiteur soumis au consentement, `middleware/visitor.js`).
+- **Le schéma s'auto-migre au démarrage** via `ensureRuntimeSchema()` dans `restaurantStore.js` (`CREATE TABLE IF NOT EXISTS` / `ALTER … ADD COLUMN IF NOT EXISTS`). Toute nouvelle colonne/table doit rester additive (site live).
+
+### Lancer en local
+
+```bash
+cd app
+npm install
+brew services start postgresql@15         # Postgres local
+createdb nata_bar                          # si absente
+psql nata_bar < db/schema.sql              # charge le schéma (idempotent)
+# .env local : DATABASE_URL=postgresql://localhost/nata_bar, NODE_ENV=development
+# Le login exige ADMIN_PASSWORD_HASH (hash bcrypt), PAS ADMIN_PASSWORD :
+node -e "console.log(require('bcryptjs').hashSync('MON_MDP',12))"   # -> coller dans ADMIN_PASSWORD_HASH
+HOST=127.0.0.1 npm start                   # HOST=127.0.0.1 sinon écoute IPv6 seule
+```
+
+Accès : http://127.0.0.1:3000 · Admin : http://127.0.0.1:3000/admin/login
+
+### Fermetures & annonces (feature)
+
+Page admin dédiée **`/admin/annonces`** (« Fermetures et annonces », dans le menu admin) avec
+**deux réglages indépendants** stockés dans `settings` :
+
+**1. Fermeture des réservations** — clé `kitchen_closure_v1` = `{active, from, to, message, scope}`
+(`scope` ∈ `cuisine` | `restaurant`).
+- Bloque les réservations sur la plage : **barrière serveur** dans `createReservation()` (409, protège aussi l'API directe) + dates grisées dans le calendrier (`app.js`, lit `clientState.kitchenClosure`).
+- **S'auto-annonce** : quand active, affiche son propre bandeau d'alerte sur le site.
+- ⚠️ Ne **pas** oublier : fermer la période n'annule pas les réservations déjà enregistrées.
+
+**2. Annonce site** — clé `site_announcement_v1` = `{active, from, to, message}`.
+- Bandeau d'information planifié (fenêtre `from`→`to` en dates ; bornes optionnelles = affichage continu tant qu'actif). **Aucun effet sur les réservations.**
+
+**Rendu public** : `getActiveBanners()` (store) renvoie les bandeaux visibles aujourd'hui
+(fuseau `Europe/Brussels`) ; routes `/` et `/reservation` passent `banners` au partial
+`views/partials/announcement.ejs` (styles `--closure` alerte / `--info` information).
+Store : `get/setKitchenClosure`, `get/setSiteAnnouncement`, `getActiveBanners`.
+Routes : `POST /admin/settings/kitchen-closure`, `POST /admin/settings/announcement`.
+
+---
+
 ## Projet
 
 Site web complet pour **NATA Bar**, restaurant coréen à Louvain-la-Neuve (Belgique).
@@ -674,11 +727,12 @@ Mobile-first. Coder pour 375px d'abord.
 
 ## État du projet
 
-- [x] Setup repo Git + structure dossiers
-- [x] Dépendances npm installées
-- [ ] Phase 1 — server.js, db.js, auth, layout EJS de base
-- [ ] Phase 2 — Pages publiques : Accueil, Menu, Événements, Actualités
-- [ ] Phase 3 — Réservation : plan de salle CSS, formulaire, logique dispo
-- [ ] Phase 4 — Admin : dashboard, réservations, tables, menu, actualités
-- [ ] Phase 5 — Emails Brevo, SEO, RGPD
-- [ ] Phase 6 — Déploiement Render, tests, mise en ligne
+Le site est **en production sur AlwaysData**. Toutes les phases initiales sont livrées :
+
+- [x] server.js, db.js, auth admin (env + bcrypt), layout EJS
+- [x] Pages publiques : Accueil, Menu, Événements, Actualités (+ détail)
+- [x] Réservation : plan de salle, formulaire, logique dispo (via `restaurantStore.js`)
+- [x] Admin : dashboard, réservations, tables (drag & drop + fusion), menu, actualités (+ Cloudinary)
+- [x] Emails Brevo, SEO (sitemap, JSON-LD), pages RGPD, analytics maison
+- [x] Sécurité : Helmet/CSP, CSRF global, rate-limits
+- [x] Fermeture cuisine / annonce site (voir section en haut)

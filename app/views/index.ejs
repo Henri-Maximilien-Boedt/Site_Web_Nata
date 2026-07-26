@@ -42,6 +42,8 @@
 
     <%- include('partials/header', { currentPath: '/' }) %>
 
+    <%- include('partials/announcement', { banners: typeof banners !== 'undefined' ? banners : [] }) %>
+
     <!-- ── Hero plein écran ───────────────────────────────── -->
     <section class="home-hero">
       <div class="home-hero__media" aria-hidden="true">

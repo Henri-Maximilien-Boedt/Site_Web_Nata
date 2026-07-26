@@ -1,3 +1,9 @@
+> ⚠️ **Doc partiellement périmée.** Le site est **en production sur AlwaysData** (pas Render),
+> les images sont sur **Cloudinary**, et le login admin se fait via les variables d'env
+> `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` (bcrypt) — pas la table `admin_users`, pas les
+> identifiants ci-dessous. Pour lancer en local et connaître l'état réel, voir la section
+> « ⚠️ État réel du code » en haut de `CLAUDE.md`.
+
 # 🍜 NATA Bar — Documentation Complète
 
 ## 📋 Table des matières
