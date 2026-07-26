@@ -13,7 +13,6 @@
 <% bannerList.forEach((b) => { %>
   <aside class="site-announcement site-announcement--<%= b.kind === 'closure' ? 'closure' : 'info' %>" role="status" aria-live="polite">
     <div class="site-announcement__inner">
-      <span class="site-announcement__icon" aria-hidden="true"><%= b.kind === 'closure' ? '⚠️' : '📣' %></span>
       <div class="site-announcement__text">
         <p class="site-announcement__message"><%= b.message %></p>
         <% const range = b.kind === 'closure' ? fmtRange(b.from, b.to) : '' %>
