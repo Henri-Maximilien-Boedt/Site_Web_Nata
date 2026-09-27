@@ -1104,6 +1104,72 @@
   border: 1px solid #fbbf24;
 }
 
+/* Interrupteur de présence.
+   Décoché = le client est venu (état par défaut). Coché = absent. */
+.noshow-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  min-height: 48px;
+  padding: 0 0.25rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.noshow-switch input {
+  position: absolute;
+  opacity: 0;
+  width: 1px;
+  height: 1px;
+}
+
+.noshow-switch__track {
+  position: relative;
+  flex: 0 0 auto;
+  width: 46px;
+  height: 26px;
+  border-radius: 999px;
+  background: #d1d5db;
+  border: 1px solid #b9bfc7;
+  transition: background 0.15s ease, border-color 0.15s ease;
+}
+
+.noshow-switch__track::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: #fff;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.3);
+  transition: transform 0.15s ease;
+}
+
+.noshow-switch input:checked + .noshow-switch__track {
+  background: #f59e0b;
+  border-color: #d97706;
+}
+
+.noshow-switch input:checked + .noshow-switch__track::after {
+  transform: translateX(20px);
+}
+
+.noshow-switch input:focus-visible + .noshow-switch__track {
+  outline: 2px solid var(--accent, #e8621a);
+  outline-offset: 2px;
+}
+
+.noshow-switch input:disabled + .noshow-switch__track {
+  opacity: 0.55;
+}
+
+.noshow-switch__label {
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
 .reservation-card--noshow {
   border-color: #fbbf24;
   background: #fffbeb;
@@ -1439,5 +1505,87 @@
 
   .admin-service-summary__grid {
     grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
+/* Attribution manuelle d'une table depuis la liste des réservations */
+.table-assign select {
+  margin-top: 0.4rem;
+  min-height: 48px;
+  width: 100%;
+  max-width: 260px;
+  padding: 0 0.6rem;
+  border-radius: 8px;
+}
+
+/* ===== Page Statistiques ===== */
+/* Palette claire, cohérente avec le reste de l'admin (.admin-service-card). */
+.stats-window {
+  margin-bottom: 1.25rem;
+}
+
+.stats-window__title {
+  margin: 0 0 0.9rem;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.04em;
+  font-size: 1.5rem;
+  color: #153f70;
+}
+
+.stats-cards {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 0.75rem;
+}
+
+.stats-card {
+  padding: 0.85rem 0.9rem;
+  border: 1px solid #c8d9eb;
+  border-radius: 12px;
+  background: #f7fbff;
+}
+
+.stats-card__label {
+  margin: 0 0 0.3rem;
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #214a75;
+}
+
+.stats-card__value {
+  margin: 0;
+  font-family: "Bebas Neue", sans-serif;
+  letter-spacing: 0.03em;
+  line-height: 1;
+  font-size: clamp(2rem, 3.7vw, 2.75rem);
+  color: #153f70;
+}
+
+.stats-card__trend {
+  margin: 0.35rem 0 0;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #50667d;
+}
+
+.stats-card__trend.is-up {
+  color: #15803d;
+}
+
+.stats-card__trend.is-down {
+  color: #b91c1c;
+}
+
+@media (min-width: 640px) {
+  .stats-cards {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .stats-cards {
+    grid-template-columns: repeat(4, 1fr);
   }
 }

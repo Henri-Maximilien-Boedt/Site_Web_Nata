@@ -372,6 +372,20 @@ footer {
   font-weight: 800;
 }
 
+/* Intitulé au-dessus de chaque bloc d'horaires (Bar / Cuisine) */
+.footer-hours-title {
+  margin: 0.9rem 0 0.35rem;
+  font-weight: 800;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  font-size: 0.78rem;
+  color: var(--text-secondary, #a89880);
+}
+
+.footer-hours-title:first-of-type {
+  margin-top: 0;
+}
+
 .footer-address {
   font-style: normal;
   line-height: 1.6;

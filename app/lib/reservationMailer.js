@@ -1,5 +1,7 @@
 const brevo = require('@getbrevo/brevo')
 
+const { getDurationLabel } = require('./openingHours')
+
 const escapeHTML = (value) =>
   String(value ?? '')
     .replaceAll('&', '&amp;')
@@ -60,7 +62,7 @@ const sendReservationAcknowledgement = async (reservation) => {
         <p style="margin:0 0 14px;color:#50667d;">Nous revenons vers vous rapidement pour confirmer.</p>
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
-        <p style="margin:0 0 6px;">Durée : <strong>1h30</strong></p>
+        <p style="margin:0 0 6px;">Durée : <strong>${getDurationLabel()}</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
         ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
@@ -71,7 +73,7 @@ const sendReservationAcknowledgement = async (reservation) => {
     'Nous avons bien reçu votre demande de réservation.',
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
-    'Durée : 1h30',
+    `Durée : ${getDurationLabel()}`,
     `Personnes : ${reservation.people}`,
     reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`
@@ -102,7 +104,7 @@ const sendReservationStatusEmail = async (reservation, status) => {
         <p style="margin:0 0 14px;color:#50667d;">NATA — Louvain-la-Neuve</p>
         <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
         <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
-        <p style="margin:0 0 6px;">Durée : <strong>1h30</strong></p>
+        <p style="margin:0 0 6px;">Durée : <strong>${getDurationLabel()}</strong></p>
         <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
         ${reservation.message ? `<p style="margin:0 0 6px;">Votre message : <strong>${escapeHTML(reservation.message)}</strong></p>` : ''}
         <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
@@ -114,7 +116,7 @@ const sendReservationStatusEmail = async (reservation, status) => {
     lead,
     `Nom : ${reservation.name}`,
     `Date/heure : ${reservation.date} ${reservation.time}`,
-    'Durée : 1h30',
+    `Durée : ${getDurationLabel()}`,
     `Personnes : ${reservation.people}`,
     reservation.message ? `Votre message : ${reservation.message}` : '',
     `ID : ${reservation.id || ''}`
@@ -165,7 +167,80 @@ const sendManagerNewReservationNotification = async (reservation) => {
   })
 }
 
+// Premier mot du nom saisi, faute de champ prénom séparé.
+const getFirstName = (name) => String(name || '').trim().split(/\s+/)[0] || ''
+
+const sendClientCancellationEmail = async (reservation) => {
+  if (!reservation?.email) return false
+  const firstName = getFirstName(reservation.name)
+  const greeting = firstName ? `Bonjour ${firstName},` : 'Bonjour,'
+  const subject = 'Réservation annulée - NATA'
+
+  const htmlContent = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#f6fbff;padding:16px;">
+      <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #d8e5f2;border-radius:12px;padding:18px;">
+        <p style="margin:0 0 10px;color:#153f70;font-size:17px;">${escapeHTML(greeting)}</p>
+        <p style="margin:0 0 10px;">Votre réservation du <strong>${formatDateTime(reservation.date, reservation.time)}</strong>
+          (${escapeHTML(String(reservation.people || ''))} pers.) a bien été annulée.</p>
+        <p style="margin:0 0 14px;">En espérant vous revoir très bientôt chez NATA !</p>
+        <p style="margin:0;color:#50667d;">L'équipe NATA — Louvain-la-Neuve</p>
+      </div>
+    </div>
+  `
+
+  const textContent = [
+    greeting,
+    '',
+    `Votre réservation du ${reservation.date} à ${reservation.time} (${reservation.people} pers.) a bien été annulée.`,
+    'En espérant vous revoir très bientôt chez NATA !',
+    '',
+    "L'équipe NATA — Louvain-la-Neuve"
+  ].join('\n')
+
+  return sendEmail({
+    to: [{ email: reservation.email, name: reservation.name || '' }],
+    subject,
+    htmlContent,
+    textContent
+  })
+}
+
+const sendManagerClientCancellationNotification = async (reservation) => {
+  const { adminEmail } = getMailerConfig()
+  if (!adminEmail) return false
+
+  const subject = `[NATA] Réservation annulée par le client — ${reservation.name}`
+  const htmlContent = `
+    <div style="font-family:Arial,Helvetica,sans-serif;background:#f6fbff;padding:16px;">
+      <div style="max-width:620px;margin:0 auto;background:#fff;border:1px solid #d8e5f2;border-radius:12px;padding:18px;">
+        <h2 style="margin:0 0 8px;color:#153f70;">Un client a annulé sa réservation</h2>
+        <p style="margin:0 0 6px;">Nom : <strong>${escapeHTML(reservation.name)}</strong></p>
+        <p style="margin:0 0 6px;">Date/heure : <strong>${formatDateTime(reservation.date, reservation.time)}</strong></p>
+        <p style="margin:0 0 6px;">Personnes : <strong>${escapeHTML(String(reservation.people || ''))}</strong></p>
+        <p style="margin:0 0 6px;">Téléphone : <strong>${escapeHTML(reservation.phone || '')}</strong></p>
+        <p style="margin:0;color:#789">ID : ${escapeHTML(reservation.id || '')}</p>
+      </div>
+    </div>
+  `
+
+  return sendEmail({
+    to: [{ email: adminEmail }],
+    subject,
+    htmlContent,
+    textContent: [
+      'Un client a annulé sa réservation depuis le site.',
+      `Nom : ${reservation.name}`,
+      `Date/heure : ${reservation.date} ${reservation.time}`,
+      `Personnes : ${reservation.people}`,
+      `Téléphone : ${reservation.phone}`,
+      `ID : ${reservation.id || ''}`
+    ].join('\n')
+  })
+}
+
 module.exports = {
+  sendClientCancellationEmail,
+  sendManagerClientCancellationNotification,
   sendReservationAcknowledgement,
   sendReservationStatusEmail,
   sendManagerNewReservationNotification

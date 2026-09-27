@@ -18,4 +18,13 @@ const quoteLimiter = rateLimit({
   message: { ok: false, message: 'Trop de demandes de devis. Réessayez plus tard.' }
 })
 
-module.exports = { reservationLimiter, quoteLimiter }
+// Annulation client : 5 / 15 min / IP (limite les essais de combinaisons)
+const cancelLimiter = rateLimit({
+  windowMs: 15 * 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { ok: false, message: 'Trop de tentatives. Réessayez dans quelques minutes.' }
+})
+
+module.exports = { reservationLimiter, quoteLimiter, cancelLimiter }

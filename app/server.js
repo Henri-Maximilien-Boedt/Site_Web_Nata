@@ -39,6 +39,12 @@ app.set('views', path.join(__dirname, 'views'))
 app.locals.renderUserText = renderUserText
 app.locals.escapeHTML = escapeHTML
 
+// Horaires : source unique de vérité, voir lib/openingHours.js
+const openingHours = require('./lib/openingHours')
+app.locals.openingHours = openingHours
+app.locals.displayHours = openingHours.getDisplayHours()
+app.locals.structuredDataHours = openingHours.getStructuredDataHours()
+
 // Reverse proxy (AlwaysData : un seul Apache devant)
 app.set('trust proxy', 1)
 

@@ -29,9 +29,17 @@
 
     <div class="footer-col">
       <p class="footer-label">Horaires</p>
-      <ul class="footer-hours">  
-        <li><span>Lundi – Samedi</span> 15:00 – 23:00</li>
-        <li><span>Dimanche</span> Fermé</li>
+      <p class="footer-hours-title">Bar</p>
+      <ul class="footer-hours">
+        <% displayHours.bar.forEach((row) => { %>
+          <li><span><%= row.days %></span> <%= row.value %></li>
+        <% }) %>
+      </ul>
+      <p class="footer-hours-title">Cuisine</p>
+      <ul class="footer-hours">
+        <% displayHours.kitchen.forEach((row) => { %>
+          <li><span><%= row.days %></span> <%= row.value %></li>
+        <% }) %>
       </ul>
     </div>
 

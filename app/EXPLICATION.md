@@ -1,8 +1,9 @@
-> ⚠️ **Doc partiellement périmée.** Le site est **en production sur AlwaysData** (pas Render),
-> les images sont sur **Cloudinary**, et le login admin se fait via les variables d'env
-> `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` (bcrypt) — pas la table `admin_users`, pas les
-> identifiants ci-dessous. Pour lancer en local et connaître l'état réel, voir la section
-> « ⚠️ État réel du code » en haut de `CLAUDE.md`.
+> ⚠️ **Document de découverte, pas la référence.**
+> La référence à jour est `CLAUDE.md` (section « État réel du code »).
+> Rappels : le site tourne **sur AlwaysData** (pas Render), les images sont sur
+> **Cloudinary**, et le login admin utilise les variables d'env `ADMIN_EMAIL` +
+> `ADMIN_PASSWORD_HASH` (bcrypt) — la table `admin_users` et les identifiants
+> cités plus bas ne servent plus.
 
 # 🍜 NATA Bar — Documentation Complète
 
@@ -69,7 +70,7 @@ Stack Frontend        Stack Backend           Base de données
 
 ```bash
 # 1. Naviguer dans le dossier app
-cd /Users/henrimaximilienboedt/Documents/Perso/Projects/Site_Web_Nata/app
+cd <racine du dépôt>/app
 
 # 2. Installer les dépendances npm
 npm install
@@ -80,17 +81,16 @@ createdb nata_bar
 # 4. Charger le schéma SQL
 psql nata_bar < db/schema.sql
 
-# 5. Créer un admin (une seule fois)
-node db/create-admin.js gerant@natabar.be Password123!
+# 5. Générer le hash du mot de passe admin et le mettre dans .env
+node -e "console.log(require('bcryptjs').hashSync('MON_MDP',12))"
 ```
-# woula jai eu des problemes de connection mtn le mdp cest  admin123
 ---
 
 ## ⚡ Lancer le serveur
 
 ### Méthode simple
 ```bash
-cd /Users/henrimaximilienboedt/Documents/Perso/Projects/Site_Web_Nata/app
+cd <racine du dépôt>/app
 npm start
 ```
 
@@ -106,10 +106,8 @@ Vous verrez :
 - **Admin** : http://localhost:3000/admin (après connexion)
 
 ### Identifiants admin
-```
-Email : gerant@natabar.be
-Mot de passe : Password123!
-```
+Définis par les variables d'environnement `ADMIN_EMAIL` et `ADMIN_PASSWORD_HASH`.
+Aucun identifiant n'est stocké dans ce dépôt.
 
 ### Arrêter le serveur
 ```bash
@@ -130,7 +128,7 @@ app/
 │
 ├── db/
 │   ├── schema.sql                 # Schéma PostgreSQL (10 tables)
-│   └── create-admin.js            # Script création admin
+│   └── create-admin.js            # Ancien script, plus utilisé (login par env)
 │
 ├── routes/                        # Routeurs Express
 │   ├── index.js                   # GET / (accueil)
@@ -262,18 +260,14 @@ id | email | password_hash | created_at
    - Redirige vers `/login` si pas authentifié
 
 ### Identifiants
-```
-Email : gerant@natabar.be
-Mot de passe : Password123!
-Hash bcrypt : $2b$12$dL00jcm2VbRsH8zdXrYo0OFWz0xwmYDul17JEs2Meqs5KLisdneuu
-```
+Un seul compte, via l'environnement : `ADMIN_EMAIL` et `ADMIN_PASSWORD_HASH`.
 
 ### Changer le mot de passe
 
 ```bash
-# Dans le terminal
-cd /Users/henrimaximilienboedt/Documents/Perso/Projects/Site_Web_Nata/app
-node db/create-admin.js gerant@natabar.be NOUVEAU_MOT_DE_PASSE
+cd app
+node -e "console.log(require('bcryptjs').hashSync('NOUVEAU_MDP',12))"
+# coller le résultat dans ADMIN_PASSWORD_HASH puis redémarrer
 ```
 
 ---
@@ -301,6 +295,8 @@ node db/create-admin.js gerant@natabar.be NOUVEAU_MOT_DE_PASSE
 | `/admin/tables` | Gestion plan de salle | views/admin/tables.ejs |
 | `/admin/menu` | Gestion menu | views/admin/menu.ejs |
 | `/admin/actualites` | Gestion actualités | views/admin/actualites.ejs |
+| `/admin/annonces` | Fermetures et annonces | views/admin/annonces.ejs |
+| `/admin/statistiques` | Statistiques de réservation | views/admin/statistiques.ejs |
 | `/admin/logout` | Déconnexion | Détruit session |
 
 ---
@@ -416,23 +412,17 @@ psql nata_bar < db/schema.sql
 ```
 
 ### "Identifiants incorrects"
-```bash
-# Réinitialiser le mot de passe admin
-node db/create-admin.js gerant@natabar.be Password123!
-```
+Vérifier `ADMIN_EMAIL` et `ADMIN_PASSWORD_HASH` dans `.env`, puis redémarrer.
 
 ---
 
 ## 📚 Prochaines étapes
 
-- [ ] Rendre les stats du dashboard dynamiques
-- [ ] Implémenter les API de réservation
-- [ ] Implémenter les API d'actualités
-- [ ] Intégration Brevo pour les emails
-- [ ] Upload et galerie d'images
-- [ ] Plan de salle avec drag & drop
-- [ ] Tests unitaires
-- [ ] Déploiement sur Render
+Tout le périmètre initial est livré et en production. Reste ouvert :
+
+- [ ] Tests automatisés (aucun pour l'instant)
+- [ ] Découpage de `public/js/app.js`, devenu volumineux
+- [ ] Ajuster `ADJACENCY_MAX_DISTANCE` après un service réel
 
 ---
 
@@ -446,4 +436,4 @@ node db/create-admin.js gerant@natabar.be Password123!
 
 ---
 
-**Dernière mise à jour** : 8 mars 2026
+**Dernière mise à jour** : 25 septembre 2026

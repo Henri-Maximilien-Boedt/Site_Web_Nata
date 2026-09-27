@@ -609,10 +609,31 @@ const shiftISODate = (iso, deltaDays) => {
 };
 
 const DAY_LABEL_SHORT_FR = ['Dim', 'Lun', 'Mar', 'Mer', 'Jeu', 'Ven', 'Sam'];
-const SERVICE_LABELS = {
-  lunch: 'Midi',
-  evening: 'Soir',
+
+// Horaires : tout vient de lib/openingHours.js via clientState.
+// Les valeurs ci-dessous ne servent que si l'état serveur est absent.
+const OPENING_HOURS = (initialServerState && initialServerState.openingHours) || {
+  durationMinutes: 120,
+  durationLabel: '2h',
+  slotStepMinutes: 30,
+  closedWeekdays: [0],
+  services: [
+    { key: 'lunch', label: 'Midi', start: '12:00', end: '14:00', slots: [] },
+    { key: 'evening', label: 'Soir', start: '18:00', end: '22:00', slots: [] },
+  ],
 };
+
+const SERVICE_LABELS = Object.fromEntries(
+  (OPENING_HOURS.services || []).map((service) => [service.key, service.label])
+);
+
+const RESERVATION_DURATION_MIN = Number(OPENING_HOURS.durationMinutes) || 120;
+const RESERVATION_DURATION_LABEL = OPENING_HOURS.durationLabel || '2h';
+const MANUAL_BLOCK_DURATION_MIN = RESERVATION_DURATION_MIN;
+
+// Groupe maximum accepté par le formulaire public.
+const MAX_GROUP_SIZE = Number(initialServerState?.maxGroupSize) || 18;
+const CLOSED_WEEKDAYS = OPENING_HOURS.closedWeekdays || [0];
 
 const toPeopleCount = (value) => {
   const parsed = Number.parseInt(String(value || '').trim(), 10);
@@ -620,11 +641,20 @@ const toPeopleCount = (value) => {
   return parsed;
 };
 
-const getServiceTypeFromTime = (_timeValue) => 'evening';
+const getServiceTypeFromTime = (timeValue) => {
+  const minutes = toMinutes(timeValue);
+  const lunch = (OPENING_HOURS.services || []).find((service) => service.key === 'lunch');
+  if (lunch && minutes <= toMinutes(lunch.end)) return 'lunch';
+  return 'evening';
+};
 
+// Services ouverts un jour donné. `lunchDisabled` est lu à chaud : le gérant
+// peut couper le midi depuis l'admin sans recharger la page.
 const getOpeningServicesForDay = (day) => {
-  if (day === 0) return [];
-  return ['evening'];
+  if (CLOSED_WEEKDAYS.includes(Number(day))) return [];
+  return (OPENING_HOURS.services || [])
+    .map((service) => service.key)
+    .filter((key) => !(key === 'lunch' && lunchDisabled));
 };
 
 const getWeekStartISO = (iso) => {
@@ -668,13 +698,18 @@ const buildOpenServiceSlotsForWeek = (iso) => {
   };
 };
 
-const SERVICE_SLOT_RANGES = {
-  evening: { start: 18 * 60, end: 22 * 60 },
-};
+const SERVICE_SLOT_RANGES = Object.fromEntries(
+  (OPENING_HOURS.services || []).map((service) => [
+    service.key,
+    { start: toMinutes(service.start), end: toMinutes(service.end) },
+  ])
+);
+
+const SLOT_STEP_MIN = Number(OPENING_HOURS.slotStepMinutes) || 30;
 
 const buildSlotsFromRange = (startMinutes, endMinutes) => {
   const slots = [];
-  for (let value = startMinutes; value <= endMinutes; value += 30) {
+  for (let value = startMinutes; value <= endMinutes; value += SLOT_STEP_MIN) {
     slots.push(fromMinutes(value));
   }
   return slots;
@@ -706,7 +741,7 @@ const getAdminSlotsByServiceForDate = (isoDate) => {
 
 const getDefaultAdminSlotForDate = (isoDate) => {
   const slots = getAdminSlotsForDate(isoDate);
-  if (!slots.length) return '18:00';
+  if (!slots.length) return (OPENING_HOURS.services || [])[0]?.start || '18:00';
   const rounded = roundCurrentTimeToHalfHour();
   if (slots.includes(rounded)) return rounded;
   return slots[0];
@@ -1174,7 +1209,7 @@ const getReservationMembers = (reservation) => {
 };
 
 const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => {
-  const duration = isAdminPage() ? 90 : 120;
+  const duration = RESERVATION_DURATION_MIN;
   const targetStart = toMinutes(timeHHMM);
   const targetEnd = targetStart + duration;
 
@@ -1206,35 +1241,12 @@ const isTableBooked = (tableId, dateISO, timeHHMM, ignoreReservationId = '') => 
 
 const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
   .map((form) => {
-    let tableMembersHidden = form.querySelector('[data-table-members]');
-    if (!tableMembersHidden) {
-      tableMembersHidden = document.createElement('input');
-      tableMembersHidden.type = 'hidden';
-      tableMembersHidden.name = 'tableMembers';
-      tableMembersHidden.setAttribute('data-table-members', '');
-      form.appendChild(tableMembersHidden);
-    }
-
-    let tableZoneHidden = form.querySelector('[data-table-zone]');
-    if (!tableZoneHidden) {
-      tableZoneHidden = document.createElement('input');
-      tableZoneHidden.type = 'hidden';
-      tableZoneHidden.name = 'tableZone';
-      tableZoneHidden.value = 'interieur';
-      tableZoneHidden.setAttribute('data-table-zone', '');
-      form.appendChild(tableZoneHidden);
-    }
-
     return {
       form,
       dateHidden: form.querySelector('[data-date-value]'),
       dateTrigger: form.querySelector('[data-date-trigger]'),
       timeHidden: form.querySelector('[data-time-value]'),
       timeTrigger: form.querySelector('[data-time-trigger]'),
-      tableHidden: form.querySelector('[data-table-value]'),
-      tableMembersHidden,
-      tableZoneHidden,
-      tableTrigger: form.querySelector('[data-table-trigger]'),
       peopleInput: form.querySelector('input[name="people"]'),
     };
   })
@@ -1244,10 +1256,6 @@ const bookingForms = Array.from(document.querySelectorAll('.booking-form'))
       entry.dateTrigger &&
       entry.timeHidden &&
       entry.timeTrigger &&
-      entry.tableHidden &&
-      entry.tableMembersHidden &&
-      entry.tableZoneHidden &&
-      entry.tableTrigger &&
       entry.peopleInput
   );
 
@@ -1265,15 +1273,9 @@ if (bookingForms.length) {
   const getSlotsForDate = (date) => {
     if (!date) return [];
     if (isDateClosed(toISODate(date))) return [];
-    const day = date.getDay();
-    if (day === 0) return [];
-
-    const slots = [];
-    for (let value = 18 * 60; value <= 22 * 60; value += 30) {
-      slots.push(fromMinutes(value));
-    }
-
-    return slots;
+    return getOpeningServicesForDay(date.getDay()).flatMap((service) =>
+      getSlotsForService(service)
+    );
   };
 
   const dateModal = document.createElement('div');
@@ -1323,31 +1325,6 @@ if (bookingForms.length) {
   `;
   document.body.appendChild(timeModal);
 
-  const tableModal = document.createElement('div');
-  tableModal.className = 'table-modal';
-  tableModal.hidden = true;
-  tableModal.innerHTML = `
-    <div class="table-modal__backdrop" data-table-close></div>
-    <div class="table-modal__panel" role="dialog" aria-modal="true" aria-labelledby="table-modal-title">
-      <div class="table-modal__top">
-        <h3 id="table-modal-title" class="table-modal__title">Choisis ta table</h3>
-        <button type="button" class="date-close" data-table-close>Fermer</button>
-      </div>
-      <div class="table-zone-switch" data-table-zone-switch>
-        <button type="button" class="is-active" data-table-zone="interieur">Intérieur</button>
-        <button type="button" data-table-zone="terrasse">Terrasse</button>
-      </div>
-      <p class="table-info" data-table-info></p>
-      <div class="table-legend">
-        <span><i class="legend-dot is-free"></i> Disponible</span>
-        <span><i class="legend-dot is-busy"></i> Réservée</span>
-        <span><i class="legend-dot is-small"></i> Inadaptée à la taille du groupe</span>
-      </div>
-      <div class="table-layout" data-table-layout></div>
-    </div>
-  `;
-  document.body.appendChild(tableModal);
-
   const grid = dateModal.querySelector('[data-date-grid]');
   const monthTitle = dateModal.querySelector('[data-date-month]');
   const dateCloseButtons = dateModal.querySelectorAll('[data-date-close]');
@@ -1358,16 +1335,11 @@ if (bookingForms.length) {
   const timeDateText = timeModal.querySelector('[data-time-date]');
   const timeEmpty = timeModal.querySelector('[data-time-empty]');
   const timeCloseButtons = timeModal.querySelectorAll('[data-time-close]');
-  const tableInfo = tableModal.querySelector('[data-table-info]');
-  const tableLayout = tableModal.querySelector('[data-table-layout]');
-  const tableCloseButtons = tableModal.querySelectorAll('[data-table-close]');
-  const tableZoneSwitch = tableModal.querySelector('[data-table-zone-switch]');
 
   let activeBooking = null;
   let visibleMonth = new Date(todayStart.getFullYear(), todayStart.getMonth(), 1);
   let selectedISO = '';
   let selectedTime = '';
-  let activeTableZone = 'interieur';
 
   const showFeedback = (booking, message, type = 'ok') => {
     let feedback = booking.form.querySelector('[data-booking-feedback]');
@@ -1388,34 +1360,6 @@ if (bookingForms.length) {
     return Number.isNaN(value) ? 0 : value;
   };
 
-  const syncTableZoneSwitch = () => {
-    if (!tableZoneSwitch) return;
-    const buttons = tableZoneSwitch.querySelectorAll('[data-table-zone]');
-    buttons.forEach((button) => {
-      if (!(button instanceof HTMLButtonElement)) return;
-      const zone = normalizeZone(button.getAttribute('data-table-zone'));
-      button.classList.toggle('is-active', zone === activeTableZone);
-    });
-  };
-
-  const setActiveTableZone = (zone, booking, resetSelection = true) => {
-    activeTableZone = normalizeZone(zone);
-    if (booking?.tableZoneHidden) {
-      booking.tableZoneHidden.value = activeTableZone;
-    }
-    syncTableZoneSwitch();
-    if (resetSelection && booking) resetTable(booking);
-  };
-
-  const resetTable = (booking) => {
-    booking.tableHidden.value = '';
-    booking.tableMembersHidden.value = '';
-    booking.tableZoneHidden.value = activeTableZone;
-    booking.tableTrigger.value = '';
-    booking.tableTrigger.classList.remove('is-filled');
-    booking.tableTrigger.placeholder = 'Choisis d\'abord une date et une heure';
-  };
-
   const resetDateAndTime = (booking) => {
     booking.dateHidden.value = '';
     booking.timeHidden.value = '';
@@ -1425,8 +1369,6 @@ if (bookingForms.length) {
     booking.timeTrigger.classList.remove('is-filled');
     booking.dateTrigger.placeholder = 'Cliquez pour choisir une date';
     booking.timeTrigger.placeholder = 'Sélectionnez d\'abord une date';
-    activeTableZone = 'interieur';
-    resetTable(booking);
   };
 
   const openDateModal = (booking) => {
@@ -1462,98 +1404,19 @@ if (bookingForms.length) {
     activeBooking = null;
   };
 
-  const openTableModal = (booking) => {
-    if (!booking.dateHidden.value || !booking.timeHidden.value) return;
-    const people = getPeopleCount(booking);
-    if (!people || people < 1) {
-      showFeedback(booking, 'Indique d\'abord le nombre de personnes.', 'error');
-      return;
-    }
-
-    activeBooking = booking;
-    setActiveTableZone(booking.tableZoneHidden.value || 'interieur', booking, false);
-    renderTablePlan(booking);
-    tableModal.hidden = false;
-  };
-
-  const closeTableModal = () => {
-    tableModal.hidden = true;
-    activeBooking = null;
-  };
-
   const resetTime = (booking) => {
     booking.timeHidden.value = '';
     booking.timeTrigger.value = '';
     booking.timeTrigger.classList.remove('is-filled');
     booking.timeTrigger.placeholder = 'Choisis une heure disponible';
-    resetTable(booking);
   };
-
-  const isUnitBooked = (members, dateISO, timeHHMM) =>
-    members.some((memberId) => isTableBooked(memberId, dateISO, timeHHMM));
-
-  const renderTablePlan = (booking) => {
-    const date = booking.dateHidden.value;
-    const time = booking.timeHidden.value;
-    const people = getPeopleCount(booking);
-    const units = getTableUnitsByZone(activeTableZone);
-    const activeZoneLabel = ZONE_LABELS[activeTableZone] || ZONE_LABELS.interieur;
-    tableInfo.textContent = `Créneau: ${formatISODateLong(date)} à ${time} (1h30) - ${people} personne${people > 1 ? 's' : ''} - ${activeZoneLabel}`;
-    tableLayout.classList.toggle('table-layout--terrace', activeTableZone === 'terrasse');
-    const decorations = activeTableZone === 'terrasse' ? TABLE_TERRACE_DECORATIONS : TABLE_FLOOR_DECORATIONS;
-
-    tableLayout.innerHTML = `${decorations}${units.map((unit) => {
-      const occupied = isUnitBooked(unit.members, date, time);
-      const tooSmall = !occupied && people > unit.seats;
-      const selected = booking.tableHidden.value === unit.id;
-      const disabled = occupied || tooSmall;
-      const plan = unit.plan || { x: 10, y: 10, w: 12, h: 10, shape: 'rect' };
-      const leftChairs = Math.max(1, Math.ceil(unit.seats / 2));
-      const rightChairs = Math.max(1, Math.floor(unit.seats / 2));
-
-      return `
-        <button
-          type="button"
-          class="table-seat table-seat--${plan.shape}${occupied ? ' is-busy' : ''}${tooSmall ? ' is-small' : ''}${
-            !occupied && !tooSmall ? ' is-free' : ''
-          }${selected ? ' is-selected' : ''}"
-          data-table-select="${unit.id}"
-          style="--x:${plan.x}%;--y:${plan.y}%;--w:${plan.w}%;--h:${plan.h}%;--chairs-left:${leftChairs};--chairs-right:${rightChairs};"
-          ${disabled ? 'disabled' : ''}
-        >
-          <span class="table-seat__label">${escapeHTML(unit.displayCode || unit.label || unit.id)}</span>
-          <span class="table-seat__capacity">${escapeHTML(String(unit.seats))}</span>
-        </button>
-      `;
-    }).join('')}`;
-  };
-
-  const selectTable = (unitId) => {
-    if (!activeBooking) return;
-    const unit = getUnitById(unitId);
-    const people = getPeopleCount(activeBooking);
-    if (!unit) return;
-    if (people > unit.seats) return;
-    if (isUnitBooked(unit.members, activeBooking.dateHidden.value, activeBooking.timeHidden.value)) return;
-
-    activeBooking.tableHidden.value = unit.id;
-    activeBooking.tableMembersHidden.value = unit.members.join(',');
-    const zoneLabel = ZONE_LABELS[getZoneFromMembers(unit.members)] || ZONE_LABELS.interieur;
-    activeBooking.tableZoneHidden.value = getZoneFromMembers(unit.members);
-    activeBooking.tableTrigger.value = `${unit.label} (${unit.seats} pers.) - ${zoneLabel}`;
-    activeBooking.tableTrigger.classList.add('is-filled');
-    closeTableModal();
-  };
-
   const selectTime = (value) => {
     if (!activeBooking) return;
     activeBooking.timeHidden.value = value;
     activeBooking.timeTrigger.value = value;
     activeBooking.timeTrigger.classList.add('is-filled');
     selectedTime = value;
-    resetTable(activeBooking);
     closeTimeModal();
-    openTableModal(activeBooking);
   };
 
   const selectDate = (date) => {
@@ -1647,25 +1510,6 @@ if (bookingForms.length) {
       booking.timeTrigger.classList.add('is-filled');
     }
 
-    if (booking.tableHidden.value) {
-      const selectedUnit = getUnitById(booking.tableHidden.value);
-      const fallbackTable = getTableById(booking.tableHidden.value);
-      if (selectedUnit) {
-        booking.tableMembersHidden.value = selectedUnit.members.join(',');
-        const zone = getZoneFromMembers(selectedUnit.members);
-        booking.tableZoneHidden.value = zone;
-        booking.tableTrigger.value = `${selectedUnit.label} (${selectedUnit.seats} pers.) - ${ZONE_LABELS[zone] || ZONE_LABELS.interieur}`;
-        booking.tableTrigger.classList.add('is-filled');
-      } else if (fallbackTable) {
-        booking.tableMembersHidden.value = fallbackTable.id;
-        booking.tableZoneHidden.value = normalizeZone(fallbackTable.zone);
-        booking.tableTrigger.value = `${fallbackTable.label} (${fallbackTable.seats} pers.) - ${ZONE_LABELS[normalizeZone(fallbackTable.zone)] || ZONE_LABELS.interieur}`;
-        booking.tableTrigger.classList.add('is-filled');
-      }
-    } else {
-      booking.tableZoneHidden.value = normalizeZone(booking.tableZoneHidden.value || 'interieur');
-    }
-
     booking.dateTrigger.addEventListener('click', () => openDateModal(booking));
     booking.dateTrigger.addEventListener('keydown', (event) => {
       if (event.key === 'Enter' || event.key === ' ') {
@@ -1693,37 +1537,6 @@ if (bookingForms.length) {
       }
     });
 
-    booking.tableTrigger.addEventListener('click', () => {
-      if (!booking.dateHidden.value) {
-        openDateModal(booking);
-        return;
-      }
-      if (!booking.timeHidden.value) {
-        openTimeModal(booking);
-        return;
-      }
-      openTableModal(booking);
-    });
-
-    booking.tableTrigger.addEventListener('keydown', (event) => {
-      if (event.key === 'Enter' || event.key === ' ') {
-        event.preventDefault();
-        if (!booking.dateHidden.value) {
-          openDateModal(booking);
-          return;
-        }
-        if (!booking.timeHidden.value) {
-          openTimeModal(booking);
-          return;
-        }
-        openTableModal(booking);
-      }
-    });
-
-    booking.peopleInput.addEventListener('input', () => {
-      resetTable(booking);
-    });
-
     let isSubmitting = false;
     booking.form.addEventListener('submit', async (event) => {
       event.preventDefault();
@@ -1735,61 +1548,15 @@ if (bookingForms.length) {
       const people = Number.parseInt(String(formData.get('people') || '').trim(), 10);
       const date = String(formData.get('date') || '').trim();
       const time = String(formData.get('time') || '').trim();
-      const tableId = String(formData.get('tableId') || '').trim();
-      const tableMembersRaw = String(formData.get('tableMembers') || '').trim();
       const message = String(formData.get('message') || '').trim();
 
-      if (!name || !email || !phone || !date || !time || !tableId || !people) {
+      if (!name || !email || !phone || !date || !time || !people) {
         showFeedback(booking, 'Merci de compléter les champs obligatoires.', 'error');
         return;
       }
 
-      if (people < 1 || people > 10) {
-        showFeedback(booking, 'Le nombre de personnes doit être entre 1 et 10.', 'error');
-        return;
-      }
-
-      const parsedMembers = tableMembersRaw
-        .split(',')
-        .map((id) => id.trim())
-        .filter((id) => id && getTableById(id));
-      const tableUnit = getUnitById(tableId);
-      const fallbackTable = getTableById(tableId);
-      const parsedSeats = parsedMembers.reduce((sum, id) => sum + (getTableById(id)?.seats || 0), 0);
-      const parsedLabel =
-        parsedMembers.length > 1
-          ? getUnitById(`GROUP:${parsedMembers.slice().sort().join('+')}`)?.label || 'T-G'
-          : parsedMembers.length === 1
-            ? getTableById(parsedMembers[0])?.label || parsedMembers[0]
-            : '';
-      const selectedMembers = parsedMembers.length
-        ? parsedMembers
-        : tableUnit
-          ? tableUnit.members
-          : fallbackTable
-            ? [fallbackTable.id]
-            : [];
-      const tableSeats = tableUnit ? tableUnit.seats : fallbackTable ? fallbackTable.seats : parsedSeats;
-      const tableLabel = tableUnit ? tableUnit.label : fallbackTable ? fallbackTable.label : parsedLabel;
-
-      if (!selectedMembers.length || !tableLabel) {
-        showFeedback(booking, 'Table invalide. Merci de sélectionner une table.', 'error');
-        return;
-      }
-
-      if (people > tableSeats) {
-        resetTable(booking);
-        showFeedback(booking, 'Cette table est trop petite pour ce groupe.', 'error');
-        return;
-      }
-
-      if (selectedMembers.some((memberId) => isTableBooked(memberId, date, time))) {
-        resetTable(booking);
-        showFeedback(
-          booking,
-          'Cette table n\'est plus disponible sur ce créneau. Choisis une autre table.',
-          'error'
-        );
+      if (people < 1 || people > MAX_GROUP_SIZE) {
+        showFeedback(booking, `Le nombre de personnes doit être entre 1 et ${MAX_GROUP_SIZE}.`, 'error');
         return;
       }
 
@@ -1806,8 +1573,6 @@ if (bookingForms.length) {
           people,
           date,
           time,
-          tableId,
-          tableMembers: selectedMembers,
           message,
         });
 
@@ -1818,7 +1583,12 @@ if (bookingForms.length) {
         addReservation(createdReservation);
         booking.form.reset();
         resetDateAndTime(booking);
-        showFeedback(booking, 'Réservation envoyée. Nous te confirmons cela rapidement.');
+        showFeedback(
+          booking,
+          createdReservation.needsManualTable
+            ? 'Demande envoyée. Pour un grand groupe, nous vous rappelons pour confirmer la table.'
+            : 'Réservation envoyée. Nous te confirmons cela rapidement.'
+        );
       } catch (error) {
         showFeedback(
           booking,
@@ -1834,31 +1604,6 @@ if (bookingForms.length) {
 
   dateCloseButtons.forEach((btn) => btn.addEventListener('click', closeDateModal));
   timeCloseButtons.forEach((btn) => btn.addEventListener('click', closeTimeModal));
-  tableCloseButtons.forEach((btn) => btn.addEventListener('click', closeTableModal));
-
-  tableLayout.addEventListener('click', (event) => {
-    const target = event.target;
-    if (!(target instanceof HTMLElement)) return;
-    const button = target.closest('[data-table-select]');
-    if (!(button instanceof HTMLElement)) return;
-    const tableId = button.getAttribute('data-table-select');
-    if (!tableId) return;
-    selectTable(tableId);
-  });
-
-  if (tableZoneSwitch) {
-    tableZoneSwitch.addEventListener('click', (event) => {
-      const target = event.target;
-      if (!(target instanceof HTMLElement)) return;
-      const button = target.closest('[data-table-zone]');
-      if (!(button instanceof HTMLButtonElement)) return;
-      if (!activeBooking) return;
-      const zone = normalizeZone(button.getAttribute('data-table-zone'));
-      setActiveTableZone(zone, activeBooking);
-      renderTablePlan(activeBooking);
-    });
-  }
-
   prevBtn.addEventListener('click', () => {
     visibleMonth = new Date(visibleMonth.getFullYear(), visibleMonth.getMonth() - 1, 1);
     renderCalendar();
@@ -1881,10 +1626,6 @@ if (bookingForms.length) {
 
   document.addEventListener('keydown', (event) => {
     if (event.key !== 'Escape') return;
-    if (!tableModal.hidden) {
-      closeTableModal();
-      return;
-    }
     if (!timeModal.hidden) {
       closeTimeModal();
       return;
@@ -1894,32 +1635,6 @@ if (bookingForms.length) {
     }
   });
 
-  window.addEventListener('storage', (event) => {
-    const key = event.key || '';
-    const syncKeys = new Set([
-      STORAGE_KEYS.tableLayout,
-      STORAGE_KEYS.tableMerges,
-      STORAGE_KEYS.reservations,
-      STORAGE_KEYS.adminBlocks,
-    ]);
-    if (key && !syncKeys.has(key)) return;
-    if (!activeBooking || tableModal.hidden) return;
-
-    const selectedUnitId = activeBooking.tableHidden.value;
-    if (selectedUnitId) {
-      const refreshedUnit = getUnitById(selectedUnitId);
-      if (!refreshedUnit) {
-        resetTable(activeBooking);
-      } else {
-        activeBooking.tableMembersHidden.value = refreshedUnit.members.join(',');
-        const zone = getZoneFromMembers(refreshedUnit.members);
-        activeBooking.tableZoneHidden.value = zone;
-        activeBooking.tableTrigger.value = `${refreshedUnit.label} (${refreshedUnit.seats} pers.) - ${ZONE_LABELS[zone] || ZONE_LABELS.interieur}`;
-      }
-    }
-
-    renderTablePlan(activeBooking);
-  });
 }
 
 const adminRoot = document.querySelector('[data-admin-page]');
@@ -1952,7 +1667,7 @@ if (adminRoot) {
   const lunchToggleButton = adminRoot.querySelector('[data-admin-lunch-toggle]');
   const lunchLabel = adminRoot.querySelector('[data-admin-lunch-label]');
   const ADMIN_HELP_DEFAULT =
-    'Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (1h30).';
+    `Glisse une table pour la déplacer. Utilise le switch Intérieur/Terrasse. Active le mode fusion (ou clic droit) pour fusionner. Clic gauche sur une table libre pour la marquer indisponible (${RESERVATION_DURATION_LABEL}).`;
   const ADMIN_HELP_MERGE =
     'Mode fusion actif: clique une 1re table puis une 2e table pour les fusionner.';
   let selectedTime = getDefaultAdminSlotForDate(dateInput?.value || toISODate(new Date()));
@@ -2077,7 +1792,7 @@ if (adminRoot) {
 
   const getReservationRangeText = (reservation) => {
     const start = toMinutes(reservation.time);
-    const end = start + 90;
+    const end = start + RESERVATION_DURATION_MIN;
     return `${fromMinutes(start)} - ${fromMinutes(end)}`;
   };
 
@@ -2094,7 +1809,7 @@ if (adminRoot) {
     return reservations.find((reservation) => {
       if (reservation.noShow) return false; // no-show → table libre immédiatement
       const start = toMinutes(reservation.time);
-      const end = start + 90;
+      const end = start + RESERVATION_DURATION_MIN;
       return point >= start && point < end;
     });
   };
@@ -2140,7 +1855,7 @@ if (adminRoot) {
     if (!normalizedMembers.length) return;
     const selectedDate = dateInput.value || toISODate(new Date());
     const blockStart = toMinutes(atTime);
-    const blockEnd = blockStart + 90;
+    const blockEnd = blockStart + MANUAL_BLOCK_DURATION_MIN;
     const unitCode =
       normalizedMembers.length > 1
         ? getUnitDisplayCodeById(`GROUP:${normalizedMembers.slice().sort().join('+')}`)
@@ -2150,7 +1865,7 @@ if (adminRoot) {
       const reservationMembers = getReservationMembers(reservation);
       if (!reservationMembers.some((memberId) => normalizedMembers.includes(memberId))) return false;
       const start = toMinutes(reservation.time);
-      const end = start + 90;
+      const end = start + RESERVATION_DURATION_MIN;
       return overlaps(blockStart, blockEnd, start, end);
     });
 
@@ -2175,7 +1890,7 @@ if (adminRoot) {
       return;
     }
 
-    const endMinutes = toMinutes(atTime) + 90;
+    const endMinutes = toMinutes(atTime) + MANUAL_BLOCK_DURATION_MIN;
     const endTime = fromMinutes(endMinutes);
     const nextBlocks = [...currentBlocks];
     normalizedMembers.forEach((memberId) => {
@@ -2480,7 +2195,6 @@ if (adminRoot) {
       list.innerHTML = filteredReservations
         .map(
           (item) => {
-            const showNoShowBtn = !item.noShow;
             return `
             <article class="reservation-card${item.noShow ? ' reservation-card--noshow' : ''}">
               <div class="reservation-card__head">
@@ -2500,7 +2214,12 @@ if (adminRoot) {
               <p><strong>Table :</strong> ${escapeHTML(item.tableLabel || item.tableId || 'Non définie')}</p>
               <p><strong>Message :</strong> ${escapeHTML(item.message || 'Aucun message')}</p>
               <div class="reservation-card__actions">
-                ${showNoShowBtn ? `<button type="button" class="btn btn-noshow" data-reservation-noshow="${escapeHTML(item.id)}">Non présent</button>` : ''}
+                ${item.status !== 'cancelled' ? `
+                  <label class="noshow-switch" title="Coché : le client n'est pas venu">
+                    <input type="checkbox" data-reservation-noshow="${escapeHTML(item.id)}"${item.noShow ? ' checked' : ''}>
+                    <span class="noshow-switch__track" aria-hidden="true"></span>
+                    <span class="noshow-switch__label">Non présent</span>
+                  </label>` : ''}
                 ${item.status === 'pending'
                   ? `<button type="button" class="btn btn-primary" data-reservation-accept="${escapeHTML(item.id)}">Confirmer</button>
                      <button type="button" class="btn btn-ghost" data-reservation-reject="${escapeHTML(item.id)}">Refuser</button>`
@@ -2895,23 +2614,38 @@ if (adminRoot) {
         return;
       }
 
-      const noShowId = target.getAttribute('data-reservation-noshow');
-      if (noShowId) {
-        try {
-          await requestJSON(`${ADMIN_API.markNoShow}/${encodeURIComponent(noShowId)}/no-show`, {
-            method: 'PATCH',
-          });
-          const existing = readReservationsRaw();
-          const next = existing.map((item) => item.id === noShowId ? { ...item, noShow: true } : item);
-          writeReservations(next);
-          setActionFeedback('Client marqué non présent. La table reste indisponible.');
-          renderAdmin();
-        } catch (error) {
-          setActionFeedback(error?.message || 'Action impossible.', 'error');
-        }
-        return;
-      }
+    });
 
+    // Interrupteur de présence : coché = le client n'est pas venu.
+    list.addEventListener('change', async (event) => {
+      const input = event.target;
+      if (!(input instanceof HTMLInputElement)) return;
+      const noShowId = input.getAttribute('data-reservation-noshow');
+      if (!noShowId) return;
+
+      const noShow = input.checked;
+      input.disabled = true;
+
+      try {
+        await requestJSON(`${ADMIN_API.markNoShow}/${encodeURIComponent(noShowId)}/no-show`, {
+          method: 'PATCH',
+          body: JSON.stringify({ noShow }),
+        });
+        const existing = readReservationsRaw();
+        writeReservations(
+          existing.map((item) => (item.id === noShowId ? { ...item, noShow } : item))
+        );
+        setActionFeedback(
+          noShow
+            ? 'Client marqué non présent. La table redevient disponible.'
+            : 'Client marqué présent. La table est de nouveau occupée.'
+        );
+        renderAdmin();
+      } catch (error) {
+        input.checked = !noShow;
+        input.disabled = false;
+        setActionFeedback(error?.message || 'Action impossible.', 'error');
+      }
     });
   }
 
@@ -2988,4 +2722,47 @@ if (adminRoot) {
   });
 
   initAdmin();
+}
+
+// Annulation d'une réservation par le client (bas de la page réservation).
+const cancelForm = document.querySelector('[data-cancel-form]');
+if (cancelForm) {
+  const cancelFeedback = cancelForm.querySelector('[data-cancel-feedback]');
+  const cancelSubmit = cancelForm.querySelector('[type="submit"]');
+
+  const setCancelFeedback = (message, isError = false) => {
+    cancelFeedback.textContent = message;
+    cancelFeedback.classList.toggle('is-error', isError);
+  };
+
+  cancelForm.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    if (cancelSubmit.disabled) return;
+
+    const formData = new FormData(cancelForm);
+    const name = String(formData.get('name') || '').trim();
+    const email = String(formData.get('email') || '').trim();
+    const phone = String(formData.get('phone') || '').trim();
+
+    if (!name || !email || !phone) {
+      setCancelFeedback('Merci de renseigner ton nom, ton email et ton téléphone.', true);
+      return;
+    }
+
+    cancelSubmit.disabled = true;
+    setCancelFeedback('');
+
+    try {
+      await requestJSON('/reservation/api/cancel', {
+        method: 'POST',
+        body: JSON.stringify({ name, email, phone }),
+      });
+      cancelForm.reset();
+      setCancelFeedback('Ta réservation a bien été annulée. Un email de confirmation t\'a été envoyé.');
+    } catch (error) {
+      setCancelFeedback(error?.message || 'L\'annulation a échoué. Merci de réessayer ou de nous appeler.', true);
+    } finally {
+      cancelSubmit.disabled = false;
+    }
+  });
 }

@@ -24,7 +24,8 @@
         "addressLocality": "Louvain-la-Neuve",
         "addressCountry": "BE"
       },
-      "sameAs": ["https://www.instagram.com/nata.lln/"]
+      "sameAs": ["https://www.instagram.com/nata.lln/"],
+      "openingHoursSpecification": <%- JSON.stringify(structuredDataHours) %>
     }
     </script>
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -186,8 +187,14 @@
             Belgique
           </address>
           <div class="home-info__hours">
-            <p><strong>Lun – Sam</strong> 15:00 – 23:00</p>
-            <p><strong>Dimanche</strong> Fermé</p>
+            <p class="home-info__hours-title">Bar</p>
+            <% displayHours.bar.forEach((row) => { %>
+              <p><strong><%= row.days %></strong> <%= row.value %></p>
+            <% }) %>
+            <p class="home-info__hours-title">Cuisine</p>
+            <% displayHours.kitchen.forEach((row) => { %>
+              <p><strong><%= row.days %></strong> <%= row.value %></p>
+            <% }) %>
           </div>
           <a href="/reservation" class="btn btn-primary home-info-cta">Réserver une table</a>
         </div>

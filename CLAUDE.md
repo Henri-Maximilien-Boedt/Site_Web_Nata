@@ -4,6 +4,123 @@ Lis ce fichier en entier avant d'écrire la moindre ligne de code.
 
 ---
 
+## ⚠️ État réel du code (MAJ septembre 2026) — LIRE EN PREMIER
+
+Ce document décrit l'intention de départ. Le code a évolué et **le site est en production**.
+Points où la réalité diffère des sections ci-dessous :
+
+- **Hébergement : AlwaysData** (Apache en reverse proxy, `app.set('trust proxy', 1)`), pas Render.
+- **Images : Cloudinary** (`multer-storage-cloudinary`, dossier `nata-bar`), pas de stockage local `/public/uploads/`. Voir `middleware/upload.js`.
+- **Auth admin : un seul compte via variables d'env** `ADMIN_EMAIL` + `ADMIN_PASSWORD_HASH` (bcrypt). La table `admin_users` du schéma n'est **pas** utilisée pour le login. Voir `routes/admin.js`.
+- **Cœur métier : `lib/restaurantStore.js`.** Toute la logique résa/plan de salle passe par lui (tables `reservation_tables`, `admin_blocks`, fusion de tables, `no_show`, réglages `settings`). Le modèle `live_status` par table décrit plus bas n'est pas la logique réelle.
+- **Statuts réservation : `pending` / `confirmed` / `cancelled`.** Le client crée en `pending`, l'admin confirme (email au client sur `confirmed`/`cancelled`).
+- **Sécurité déjà en place** : Helmet + CSP (`server.js`), CSRF global (`middleware/csrf.js`), rate-limits (`middleware/rateLimits.js`), login anti-énumération par timing, sanitize maison (`lib/sanitize.js`).
+- **Front = un seul `public/js/app.js`**, hydraté par `clientStateJson` injecté dans la page. Pas de framework.
+- **Analytics maison** de pages vues : `lib/pageAnalytics.js` (+ cookie visiteur soumis au consentement, `middleware/visitor.js`).
+- **Le schéma s'auto-migre au démarrage** via `ensureRuntimeSchema()` dans `restaurantStore.js` (`CREATE TABLE IF NOT EXISTS` / `ALTER … ADD COLUMN IF NOT EXISTS`). Toute nouvelle colonne/table doit rester additive (site live).
+
+### Horaires — `lib/openingHours.js` fait autorité
+
+**Ne jamais écrire un horaire en dur ailleurs.** Les vues reçoivent `displayHours`
+et `openingHours` via `app.locals` ; le front les reçoit dans `clientState.openingHours`.
+
+| Élément | Valeur |
+|---|---|
+| Cuisine, midi | 12:00 → 14:00 |
+| Cuisine, soir | 18:00 → 22:00 |
+| Dimanche | fermé (midi et soir) |
+| Bar | 12:00 → 01:00, **affichage seul**, ne génère aucun créneau |
+| Durée d'une réservation | 120 min, partout (serveur, admin, emails) |
+| Pas entre créneaux | 30 min |
+
+Le réglage admin `lunch_disabled_v1` coupe le service du midi sans toucher au soir.
+
+### Attribution automatique des tables — `lib/tableAllocator.js`
+
+Le client **ne choisit plus sa table** : le serveur la désigne dans la transaction
+de `createReservation()`, après verrouillage des tables actives.
+
+**Zone : intérieur uniquement.** La terrasse ne se réserve pas en ligne
+(`ZONE_PRIORITY` dans `tableAllocator.js`). Si l'intérieur est plein, la demande
+part sans table plutôt que sur la terrasse.
+
+1. La plus petite table seule qui accueille le groupe
+   (plafonnée à 4 places pour un groupe de 3–4).
+2. Sinon, pour 3 ou 4 personnes : **deux tables de 2 côte à côte**.
+3. Sinon, pour 3 ou 4 personnes : une table plus grande.
+4. Au-delà de 6 couverts, ou si rien n'est libre : réservation enregistrée
+   **sans table**, à placer par l'admin (badge « À placer » + sélecteur sur
+   `/admin/reservations`, route `PATCH /admin/api/reservations/:id/table`).
+
+Le **voisinage n'est jamais codé en dur** : il est recalculé à chaque attribution
+depuis `pos_x` / `pos_y`, car l'admin déplace les tables au glisser-déposer.
+Seul réglage : `ADJACENCY_MAX_DISTANCE` (distance max entre centres, en % du plan).
+
+Groupe maximum accepté en ligne : **18 personnes** (`MAX_GROUP_SIZE`).
+
+### Présence client
+
+Interrupteur réversible, pas un bouton. Décoché = le client est venu (défaut).
+`markNoShow(id, boolean)` et `PATCH /admin/api/reservations/:id/no-show` avec
+`{ noShow }`. Attention : une absence **libère** la table dans les calculs de
+conflit, donc décocher la re-bloque.
+
+### Annulation par le client
+
+Lien discret « Annuler ma réservation » en bas de `/reservation` (`<details>`).
+`POST /reservation/api/cancel` (`cancelLimiter`, CSRF) → `cancelReservationByClient()`.
+Nom + email + téléphone doivent correspondre (nom sans accents/casse, 9 derniers
+chiffres du téléphone). Seules les résas `pending`/`confirmed` pas encore commencées
+passent en `cancelled`. Email « Bonjour {prénom} » au client + notification au gérant.
+
+### Statistiques — `lib/reservationStats.js` + `/admin/statistiques`
+
+Les réservations sont purgées au bout d'1 jour (10 pour les annulées). Toute
+analyse passe donc par la table d'agrégats **`reservation_stats_daily`** (une
+ligne par date et par service), remplie par `captureReservationStats()` appelée
+**avant chaque purge** et au démarrage. Les compteurs ne font que monter
+(`GREATEST`) pour ne pas réécrire un archivage à zéro quand les lignes
+disparaissent.
+
+⚠️ Ne jamais écrire un `DELETE FROM reservations` ailleurs : passer par
+`purgeOldReservations()`, qui archive d'abord.
+
+### Fermetures & annonces (feature)
+
+Page admin dédiée **`/admin/annonces`** (« Fermetures et annonces ») avec
+**deux réglages indépendants** stockés dans `settings` :
+
+**1. Fermeture des réservations** — clé `kitchen_closure_v1` = `{active, from, to, message, scope}`
+(`scope` ∈ `cuisine` | `restaurant`).
+- Bloque les réservations sur la plage : **barrière serveur** dans `createReservation()` (409) + dates grisées dans le calendrier.
+- **S'auto-annonce** : quand active, affiche son propre bandeau d'alerte sur le site.
+- ⚠️ Fermer la période n'annule pas les réservations déjà enregistrées.
+
+**2. Annonce site** — clé `site_announcement_v1` = `{active, from, to, message}`.
+- Bandeau d'information planifié. **Aucun effet sur les réservations.**
+
+**Rendu public** : `getActiveBanners()` renvoie les bandeaux visibles aujourd'hui
+(fuseau `Europe/Brussels`) ; routes `/` et `/reservation` passent `banners` au partial
+`views/partials/announcement.ejs`.
+
+### Lancer en local
+
+```bash
+cd app
+npm install
+brew services start postgresql@15         # Postgres local
+createdb nata_bar                          # si absente
+psql nata_bar < db/schema.sql              # charge le schéma (idempotent)
+# .env local : DATABASE_URL=postgresql://localhost/nata_bar, NODE_ENV=development
+# Le login exige ADMIN_PASSWORD_HASH (hash bcrypt), PAS ADMIN_PASSWORD :
+node -e "console.log(require('bcryptjs').hashSync('MON_MDP',12))"   # -> ADMIN_PASSWORD_HASH
+HOST=127.0.0.1 npm start                   # sinon écoute IPv6 seule
+```
+
+Accès : http://127.0.0.1:3000 · Admin : http://127.0.0.1:3000/admin/login
+
+---
+
 ## Projet
 
 Site web complet pour **NATA Bar**, restaurant coréen à Louvain-la-Neuve (Belgique).
@@ -399,15 +516,7 @@ Une table est disponible si elle n'a pas de résa `confirmed` qui chevauche le c
 
 ### Horaires d'ouverture
 ```js
-const OPENING_HOURS = {
-  0: [],
-  1: [{ start: '18:00', end: '22:00' }],
-  2: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
-  3: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
-  4: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
-  5: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
-  6: [{ start: '12:00', end: '14:30' }, { start: '18:00', end: '22:00' }],
-}
+// PÉRIMÉ — voir lib/openingHours.js et la section « Horaires » en haut de ce fichier.
 ```
 
 ### Flux client (résa en ligne)
@@ -674,11 +783,17 @@ Mobile-first. Coder pour 375px d'abord.
 
 ## État du projet
 
-- [x] Setup repo Git + structure dossiers
-- [x] Dépendances npm installées
-- [ ] Phase 1 — server.js, db.js, auth, layout EJS de base
-- [ ] Phase 2 — Pages publiques : Accueil, Menu, Événements, Actualités
-- [ ] Phase 3 — Réservation : plan de salle CSS, formulaire, logique dispo
-- [ ] Phase 4 — Admin : dashboard, réservations, tables, menu, actualités
-- [ ] Phase 5 — Emails Brevo, SEO, RGPD
-- [ ] Phase 6 — Déploiement Render, tests, mise en ligne
+Le site est **en production sur AlwaysData**. Toutes les phases sont livrées :
+
+- [x] server.js, db.js, auth admin (env + bcrypt), layout EJS
+- [x] Pages publiques : Accueil, Menu, Événements, Actualités (+ détail)
+- [x] Réservation : formulaire, logique dispo (via `restaurantStore.js`)
+- [x] Admin : dashboard, réservations, tables (drag & drop + fusion), menu, actualités (+ Cloudinary)
+- [x] Emails Brevo, SEO (sitemap, JSON-LD), pages RGPD, analytics maison
+- [x] Sécurité : Helmet/CSP, CSRF global, rate-limits
+- [x] Fermeture cuisine / annonce site
+- [x] Archivage des statistiques de réservation (`reservation_stats_daily`)
+- [x] Horaires centralisés (`lib/openingHours.js`), midi réactivé, dimanche fermé
+- [x] Interrupteur de présence réversible
+- [x] Attribution automatique des tables (`lib/tableAllocator.js`), plan client retiré
+- [x] Onglet `/admin/statistiques`

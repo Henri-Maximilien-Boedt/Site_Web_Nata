@@ -2,8 +2,14 @@ const pool = require('../db')
 const {
   sendReservationAcknowledgement,
   sendReservationStatusEmail,
-  sendManagerNewReservationNotification
+  sendManagerNewReservationNotification,
+  sendClientCancellationEmail,
+  sendManagerClientCancellationNotification
 } = require('./reservationMailer')
+const openingHours = require('./openingHours')
+const { allocateTables, MAX_AUTO_ASSIGN_SEATS } = require('./tableAllocator')
+
+const RESERVATION_DURATION_MIN = openingHours.RESERVATION_DURATION_MIN
 
 const SETTINGS_KEYS = {
   tableMerges: 'table_merges_v1',
@@ -116,6 +122,10 @@ const normalizePhone = (value) => {
   if (!/^[\d\s+().\-/]+$/.test(phone)) return null
   return phone
 }
+
+// Groupe maximum accepté en ligne. Au-delà de MAX_AUTO_ASSIGN_SEATS couverts,
+// la demande est enregistrée sans table et placée par l'admin.
+const MAX_GROUP_SIZE = 18
 
 const MAX_NAME_LEN = 120
 const MAX_EMAIL_LEN = 200
@@ -301,11 +311,90 @@ const ensureRuntimeSchema = async (client) => {
     ADD COLUMN IF NOT EXISTS no_show BOOLEAN DEFAULT false
   `)
 
+  // Agrégats journaliers des réservations.
+  // Les réservations sont purgées au bout d'1 jour (10 pour les annulées) :
+  // sans cette table, aucune analyse au-delà de la semaine n'est possible.
+  await client.query(`
+    CREATE TABLE IF NOT EXISTS reservation_stats_daily (
+      stat_date date NOT NULL,
+      service text NOT NULL CHECK (service IN ('lunch', 'evening')),
+      reservations integer NOT NULL DEFAULT 0,
+      confirmed integer NOT NULL DEFAULT 0,
+      covers integer NOT NULL DEFAULT 0,
+      no_shows integer NOT NULL DEFAULT 0,
+      cancelled integer NOT NULL DEFAULT 0,
+      online_count integer NOT NULL DEFAULT 0,
+      phone_count integer NOT NULL DEFAULT 0,
+      created_at timestamptz DEFAULT now(),
+      updated_at timestamptz DEFAULT now(),
+      PRIMARY KEY (stat_date, service)
+    )
+  `)
+
+  await client.query(`
+    CREATE INDEX IF NOT EXISTS idx_reservation_stats_daily_date
+    ON reservation_stats_daily(stat_date)
+  `)
+
   console.log('✓ Schema BDD vérifié')
+}
+
+// Heure limite qui sépare le service du midi de celui du soir.
+const LUNCH_SERVICE_CUTOFF = '16:00'
+
+// Recalcule les agrégats depuis les réservations encore en base et les fusionne
+// dans reservation_stats_daily.
+//
+// GREATEST est volontaire : une date déjà archivée voit ses lignes disparaître
+// progressivement (les non-annulées après 1 jour, les annulées après 10). Un
+// simple écrasement remplacerait alors un archivage correct par des zéros.
+const captureReservationStats = async (executor = pool) => {
+  await executor.query(
+    `
+    INSERT INTO reservation_stats_daily AS s (
+      stat_date,
+      service,
+      reservations,
+      confirmed,
+      covers,
+      no_shows,
+      cancelled,
+      online_count,
+      phone_count,
+      updated_at
+    )
+    SELECT
+      r.date,
+      CASE WHEN r.time_start < TIME '${LUNCH_SERVICE_CUTOFF}' THEN 'lunch' ELSE 'evening' END,
+      COUNT(*) FILTER (WHERE r.status <> 'cancelled'),
+      COUNT(*) FILTER (WHERE r.status = 'confirmed'),
+      COALESCE(SUM(r.covers) FILTER (WHERE r.status <> 'cancelled'), 0),
+      COUNT(*) FILTER (WHERE r.status <> 'cancelled' AND r.no_show IS TRUE),
+      COUNT(*) FILTER (WHERE r.status = 'cancelled'),
+      COUNT(*) FILTER (WHERE r.status <> 'cancelled' AND r.source = 'online'),
+      COUNT(*) FILTER (WHERE r.status <> 'cancelled' AND r.source = 'phone'),
+      now()
+    FROM reservations r
+    GROUP BY 1, 2
+    ON CONFLICT (stat_date, service) DO UPDATE SET
+      reservations = GREATEST(s.reservations, EXCLUDED.reservations),
+      confirmed    = GREATEST(s.confirmed,    EXCLUDED.confirmed),
+      covers       = GREATEST(s.covers,       EXCLUDED.covers),
+      no_shows     = GREATEST(s.no_shows,     EXCLUDED.no_shows),
+      cancelled    = GREATEST(s.cancelled,    EXCLUDED.cancelled),
+      online_count = GREATEST(s.online_count, EXCLUDED.online_count),
+      phone_count  = GREATEST(s.phone_count,  EXCLUDED.phone_count),
+      updated_at   = now()
+    `
+  )
 }
 
 const purgeOldReservations = async () => {
   await ensureInitialized()
+
+  // Archiver AVANT de supprimer, sinon la donnée est perdue définitivement.
+  await captureReservationStats()
+
   await pool.query(
     `
     DELETE FROM reservations
@@ -429,6 +518,8 @@ const ensureInitialized = async () => {
       await ensureSettingsDefaults(client)
       await ensureInteriorLayoutVersion(client)
       await ensureTerraceLayoutVersion(client)
+      // Rattrapage : archive ce qui est encore en base au démarrage.
+      await captureReservationStats(client)
       await client.query('COMMIT')
     } catch (error) {
       await client.query('ROLLBACK').catch(() => {})
@@ -808,7 +899,9 @@ const getClientState = async () => {
     reservations,
     adminBlocks,
     lunchDisabled,
-    kitchenClosure
+    kitchenClosure,
+    maxGroupSize: MAX_GROUP_SIZE,
+    openingHours: openingHours.getClientPayload({ lunchDisabled })
   }
 }
 
@@ -838,7 +931,7 @@ const parseMemberIds = (tableMembers, tableId, tablesById) => {
     .sort((a, b) => a.localeCompare(b))
 }
 
-const hasConflict = ({ members, date, time, reservations, adminBlocks, duration = 90 }) => {
+const hasConflict = ({ members, date, time, reservations, adminBlocks, duration = RESERVATION_DURATION_MIN }) => {
   const targetStart = toMinutes(time)
   const targetEnd = targetStart + duration
 
@@ -884,8 +977,24 @@ const createReservation = async (payload) => {
     throw createError(400, 'Données de réservation invalides.')
   }
 
-  if (people < 1 || people > 10) {
-    throw createError(400, 'Le nombre de personnes doit être entre 1 et 10.')
+  if (people < 1 || people > MAX_GROUP_SIZE) {
+    throw createError(400, `Le nombre de personnes doit être entre 1 et ${MAX_GROUP_SIZE}.`)
+  }
+
+  // Barrière serveur sur les horaires : le calendrier client masque déjà les
+  // jours fermés, mais l'API doit refuser d'elle-même (dimanche, heure hors
+  // service, midi coupé par le réglage admin).
+  const weekday = new Date(`${date}T00:00:00Z`).getUTCDay()
+  const allowedSlots = openingHours.getSlotsForWeekday(weekday, {
+    lunchDisabled: state.lunchDisabled
+  })
+
+  if (!allowedSlots.length) {
+    throw createError(409, 'Le restaurant est fermé ce jour-là.')
+  }
+
+  if (!allowedSlots.includes(time)) {
+    throw createError(409, "Ce créneau n'est pas proposé à la réservation.")
   }
 
   if (isDateWithinClosure(state.kitchenClosure, date)) {
@@ -895,66 +1004,51 @@ const createReservation = async (payload) => {
     )
   }
 
-  const members = parseMemberIds(payload?.tableMembers, payload?.tableId, tablesByUiId)
-  if (!members.length) {
-    throw createError(400, 'Table invalide.')
-  }
-
-  const tableSeats = members.reduce((sum, memberId) => sum + (tablesByUiId[memberId]?.seats || 0), 0)
-  if (people > tableSeats) {
-    throw createError(400, 'Cette table est trop petite pour ce groupe.')
-  }
-
-  if (hasConflict({
-    members,
-    date,
-    time,
-    reservations: state.reservations,
-    adminBlocks: state.adminBlocks,
-    duration: 120
-  })) {
-    throw createError(409, 'Cette table n\'est plus disponible sur ce créneau.')
-  }
-
   const client = await pool.connect()
 
   try {
     await client.query('BEGIN')
 
-    // Verrou pour éviter les insertions simultanées sur la même table/créneau
-    const memberDbIds = members
-      .map((memberId) => Number(tablesByUiId[memberId]?.dbId))
-      .filter((value) => Number.isInteger(value))
+    // Verrou sur toutes les tables actives : l'attribution lit l'occupation
+    // puis choisit, les deux doivent être atomiques face aux réservations
+    // simultanées.
+    await client.query(`SELECT id FROM tables WHERE is_active = true ORDER BY id FOR UPDATE`)
 
-    if (!memberDbIds.length) {
-      throw createError(400, 'Table invalide.')
-    }
-
-    await client.query(
-      `SELECT id FROM tables WHERE id = ANY($1::integer[]) FOR UPDATE`,
-      [memberDbIds]
-    )
-
-    const conflictCheck = await client.query(
+    // Tables déjà prises sur le créneau (réservations non annulées et non
+    // absentes, plus les blocages posés par l'admin).
+    const busy = await client.query(
       `
-        SELECT r.id FROM reservations r
+        SELECT rt.table_id AS table_id
+        FROM reservations r
         JOIN reservation_tables rt ON rt.reservation_id = r.id
         WHERE r.date = $1
           AND r.status <> 'cancelled'
           AND r.no_show IS NOT TRUE
-          AND rt.table_id = ANY($2::integer[])
-          AND r.time_start < ($3::time + interval '120 minutes')
-          AND ($3::time) < (r.time_start + interval '120 minutes')
-        LIMIT 1
+          AND r.time_start < ($2::time + ($3 * interval '1 minute'))
+          AND ($2::time) < (r.time_start + ($3 * interval '1 minute'))
+        UNION
+        -- end_minutes est un absolu depuis minuit (il peut dépasser 1440 pour
+        -- un blocage qui franchit minuit), donc comparaison en minutes.
+        SELECT b.table_id AS table_id
+        FROM admin_blocks b
+        WHERE b.date = $1
+          AND (EXTRACT(EPOCH FROM b.start_time) / 60) < ((EXTRACT(EPOCH FROM $2::time) / 60) + $3)
+          AND (EXTRACT(EPOCH FROM $2::time) / 60) < b.end_minutes
       `,
-      [date, memberDbIds, time]
+      [date, time, RESERVATION_DURATION_MIN]
     )
 
-    if (conflictCheck.rows.length) {
-      throw createError(409, "Cette table n'est plus disponible sur ce créneau.")
-    }
+    const busyDbIds = new Set(busy.rows.map((row) => String(row.table_id)))
+    const isFree = (uiId) => !busyDbIds.has(String(tablesByUiId[uiId]?.dbId))
 
-    const anchorTableId = memberDbIds[0]
+    const allocation = allocateTables({ tables: state.tables, people, isFree })
+    const members = allocation.members
+    const memberDbIds = members
+      .map((memberId) => Number(tablesByUiId[memberId]?.dbId))
+      .filter((value) => Number.isInteger(value))
+
+    // Aucune table attribuée : la demande reste en attente, l'admin la placera.
+    const anchorTableId = memberDbIds.length ? memberDbIds[0] : null
 
     const insertReservation = await client.query(
       `
@@ -992,10 +1086,20 @@ const createReservation = async (payload) => {
     await client.query('COMMIT')
 
     const mergedGroups = state.tableMerges
-    const tableLabel =
-      members.length > 1
-        ? getMergedUnitCode(members, mergedGroups)
-        : tablesByUiId[members[0]]?.code || members[0]
+    const tableSeats = members.reduce(
+      (sum, memberId) => sum + (tablesByUiId[memberId]?.seats || 0),
+      0
+    )
+    // Pour une paire attribuée automatiquement, afficher les vrais codes
+    // (« T-2 + T-3 ») plutôt qu'un code de fusion générique, qui serait
+    // identique pour toutes les paires non enregistrées.
+    const memberCodes = members.map((memberId) => tablesByUiId[memberId]?.code || memberId)
+    const knownMergeIndex = mergedGroups.findIndex(
+      (group) => group.length === members.length && group.every((id, i) => id === members[i])
+    )
+    const tableLabel = members.length > 1
+      ? (knownMergeIndex >= 0 ? getMergedUnitCode(members, mergedGroups) : memberCodes.join(' + '))
+      : memberCodes[0] || ''
 
     const newReservation = {
       id: String(reservationId),
@@ -1005,10 +1109,12 @@ const createReservation = async (payload) => {
       people,
       date,
       time,
-      tableId: members.length > 1 ? `GROUP:${members.join('+')}` : members[0],
+      tableId: members.length > 1 ? `GROUP:${members.join('+')}` : members[0] || '',
       tableLabel,
       tableSeats,
       tableMembers: members,
+      needsManualTable: members.length === 0,
+      allocationReason: allocation.reason,
       message,
       source: 'online',
       status: 'pending',
@@ -1121,7 +1227,10 @@ const createQuoteRequest = async (payload) => {
   }
 }
 
-const markNoShow = async (reservationId) => {
+// Marque ou démarque une absence. Réversible : `noShow` à false remet la
+// réservation en présence, et la table redevient occupée dans les calculs de
+// conflit (une absence libère le créneau).
+const markNoShow = async (reservationId, noShow = true) => {
   await ensureInitialized()
 
   const id = Number.parseInt(String(reservationId || '').trim(), 10)
@@ -1129,11 +1238,109 @@ const markNoShow = async (reservationId) => {
     throw createError(400, 'ID de réservation invalide.')
   }
 
+  const value = noShow === true || noShow === 'true' || noShow === 1 || noShow === '1'
+
   const { rowCount } = await pool.query(
-    `UPDATE reservations SET no_show = true WHERE id = $1 AND status <> 'cancelled'`,
-    [id]
+    `UPDATE reservations SET no_show = $2 WHERE id = $1 AND status <> 'cancelled'`,
+    [id, value]
   )
   return rowCount > 0
+}
+
+// Assigne (ou réassigne) une ou plusieurs tables à une réservation.
+// Utilisé par l'admin pour placer les groupes que l'attribution automatique
+// n'a pas pu servir.
+const assignReservationTables = async (reservationId, tableUiIds) => {
+  await ensureInitialized()
+
+  const id = Number.parseInt(String(reservationId || '').trim(), 10)
+  if (!Number.isInteger(id)) {
+    throw createError(400, 'ID de réservation invalide.')
+  }
+
+  const tables = await listTables()
+  const tablesByUiId = Object.fromEntries(tables.map((table) => [table.id, table]))
+
+  const requested = Array.isArray(tableUiIds)
+    ? tableUiIds
+    : String(tableUiIds || '').split(',')
+
+  const members = Array.from(
+    new Set(requested.map((value) => String(value || '').trim()).filter((value) => tablesByUiId[value]))
+  ).sort()
+
+  if (!members.length) {
+    throw createError(400, 'Aucune table valide sélectionnée.')
+  }
+
+  const memberDbIds = members.map((memberId) => Number(tablesByUiId[memberId].dbId))
+
+  const client = await pool.connect()
+
+  try {
+    await client.query('BEGIN')
+
+    const current = await client.query(
+      `SELECT id, date::text AS date, to_char(time_start, 'HH24:MI') AS time_start, covers, status
+       FROM reservations WHERE id = $1 FOR UPDATE`,
+      [id]
+    )
+
+    if (!current.rows.length) {
+      throw createError(404, 'Réservation introuvable.')
+    }
+
+    const reservation = current.rows[0]
+
+    if (reservation.status === 'cancelled') {
+      throw createError(409, 'Réservation annulée : impossible de lui attribuer une table.')
+    }
+
+    const seats = members.reduce((sum, memberId) => sum + (tablesByUiId[memberId].seats || 0), 0)
+    if (Number(reservation.covers) > seats) {
+      throw createError(400, `Capacité insuffisante : ${seats} places pour ${reservation.covers} couverts.`)
+    }
+
+    const conflict = await client.query(
+      `
+        SELECT r.id FROM reservations r
+        JOIN reservation_tables rt ON rt.reservation_id = r.id
+        WHERE r.date = $1
+          AND r.id <> $2
+          AND r.status <> 'cancelled'
+          AND r.no_show IS NOT TRUE
+          AND rt.table_id = ANY($3::integer[])
+          AND r.time_start < ($4::time + ($5 * interval '1 minute'))
+          AND ($4::time) < (r.time_start + ($5 * interval '1 minute'))
+        LIMIT 1
+      `,
+      [reservation.date, id, memberDbIds, reservation.time_start, RESERVATION_DURATION_MIN]
+    )
+
+    if (conflict.rows.length) {
+      throw createError(409, 'Une de ces tables est déjà prise sur ce créneau.')
+    }
+
+    await client.query('DELETE FROM reservation_tables WHERE reservation_id = $1', [id])
+
+    for (const memberDbId of memberDbIds) {
+      await client.query(
+        `INSERT INTO reservation_tables (reservation_id, table_id) VALUES ($1, $2)
+         ON CONFLICT DO NOTHING`,
+        [id, memberDbId]
+      )
+    }
+
+    await client.query('UPDATE reservations SET table_id = $2 WHERE id = $1', [id, memberDbIds[0]])
+    await client.query('COMMIT')
+
+    return { id: String(id), tableMembers: members, tableSeats: seats }
+  } catch (error) {
+    await client.query('ROLLBACK').catch(() => {})
+    throw error
+  } finally {
+    client.release()
+  }
 }
 
 const deleteReservation = async (reservationId) => {
@@ -1256,6 +1463,104 @@ const updateReservationStatus = async (reservationId, nextStatus) => {
   }
 }
 
+// Comparaison tolérante des identités saisies par le client pour annuler.
+const normalizeNameForMatch = (value) =>
+  String(value || '')
+    .normalize('NFD')
+    .replace(/[̀-ͯ]/g, '')
+    .toLowerCase()
+    .replace(/\s+/g, ' ')
+    .trim()
+
+// Compare les 9 derniers chiffres : « 0470 12 34 56 » = « +32 470 12 34 56 ».
+const phoneDigitsForMatch = (value) => String(value || '').replace(/\D/g, '').slice(-9)
+
+const nowTimeInZone = () => {
+  try {
+    return new Date().toLocaleTimeString('en-GB', {
+      timeZone: REPORT_TIME_ZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false
+    })
+  } catch {
+    return new Date().toISOString().slice(11, 16)
+  }
+}
+
+// Annulation par le client depuis le site. Les trois champs (nom, email,
+// téléphone) doivent correspondre. Seules les réservations à venir, pas encore
+// commencées, sont annulées. Renvoie les réservations annulées (vide si rien).
+const cancelReservationByClient = async (payload) => {
+  await ensureInitialized()
+
+  const name = truncSafe(payload?.name, MAX_NAME_LEN)
+  const email = normalizeEmail(payload?.email)
+  const phone = normalizePhone(payload?.phone)
+
+  if (!name || !email || !phone || email.length > MAX_EMAIL_LEN) {
+    throw createError(400, 'Merci de renseigner ton nom, ton email et ton téléphone.')
+  }
+
+  const today = todayISOInZone()
+  const nowTime = nowTimeInZone()
+  const wantedName = normalizeNameForMatch(name)
+  const wantedPhone = phoneDigitsForMatch(phone)
+
+  const { rows } = await pool.query(
+    `
+      SELECT id, name, phone, date::text AS date, to_char(time_start, 'HH24:MI') AS time_start
+      FROM reservations
+      WHERE lower(email) = $1
+        AND status IN ('pending', 'confirmed')
+        AND date >= $2::date
+    `,
+    [email, today]
+  )
+
+  const ids = rows
+    .filter((row) => normalizeNameForMatch(row.name) === wantedName)
+    .filter((row) => wantedPhone.length >= 6 && phoneDigitsForMatch(row.phone) === wantedPhone)
+    .filter((row) => row.date > today || row.time_start > nowTime)
+    .map((row) => row.id)
+
+  if (!ids.length) return []
+
+  const { rows: cancelled } = await pool.query(
+    `
+      UPDATE reservations
+      SET status = 'cancelled'
+      WHERE id = ANY($1::int[])
+        AND status IN ('pending', 'confirmed')
+      RETURNING id, name, email, phone, covers, message,
+        date::text AS date, to_char(time_start, 'HH24:MI') AS time_start
+    `,
+    [ids]
+  )
+
+  const result = cancelled.map((row) => ({
+    id: String(row.id),
+    name: row.name,
+    email: row.email || '',
+    phone: row.phone || '',
+    people: Number(row.covers) || 0,
+    date: row.date,
+    time: row.time_start,
+    message: row.message || ''
+  }))
+
+  for (const reservation of result) {
+    await sendClientCancellationEmail(reservation).catch((error) => {
+      console.warn('Email annulation client non envoyé :', error?.message || error)
+    })
+    await sendManagerClientCancellationNotification(reservation).catch((error) => {
+      console.warn('Notif annulation gérant non envoyée :', error?.message || error)
+    })
+  }
+
+  return result
+}
+
 const updateTableLayout = async (layout) => {
   await ensureInitialized()
 
@@ -1325,7 +1630,7 @@ const replaceAdminBlocks = async (blocks) => {
       let endMinutes = Number.isFinite(rawEndMinutes) ? rawEndMinutes : toMinutes(fallbackEnd)
 
       if (!Number.isFinite(endMinutes) || endMinutes <= 0) {
-        endMinutes = startMinutes + 90
+        endMinutes = startMinutes + RESERVATION_DURATION_MIN
       }
 
       if (endMinutes <= startMinutes) {
@@ -1390,6 +1695,10 @@ const replaceAdminBlocks = async (blocks) => {
 }
 
 module.exports = {
+  assignReservationTables,
+  cancelReservationByClient,
+  listTables,
+  captureReservationStats,
   createQuoteRequest,
   createReservation,
   deleteReservation,
@@ -1399,6 +1708,7 @@ module.exports = {
   getLunchDisabled,
   getSiteAnnouncement,
   markNoShow,
+  purgeOldReservations,
   replaceAdminBlocks,
   serializeStateForScript,
   setKitchenClosure,

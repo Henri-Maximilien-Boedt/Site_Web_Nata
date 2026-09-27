@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Statistiques — Admin NATA</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/css/main.css">
+  <link rel="stylesheet" href="/css/admin.css">
+</head>
+<body class="admin-page">
+  <div class="noise"></div>
+  <%- include('../partials/admin-topbar', { currentSection: 'statistiques' }) %>
+
+  <div class="admin-standalone">
+    <div class="admin-page-head">
+      <div>
+        <p class="eyebrow">Admin</p>
+        <h1>Statistiques</h1>
+      </div>
+    </div>
+
+    <% if (!stats) { %>
+      <div class="admin-empty">
+        <p>Statistiques indisponibles. Vérifie la connexion à la base de données.</p>
+      </div>
+    <% } else { %>
+      <%
+        const pct = (value) => value === null ? '—' : (value > 0 ? '+' : '') + value.toLocaleString('fr-BE') + ' %'
+        const trendClass = (value) => value === null ? '' : value > 0 ? ' is-up' : value < 0 ? ' is-down' : ''
+        const windows = [
+          { label: '7 derniers jours', data: stats.week },
+          { label: '30 derniers jours', data: stats.month }
+        ]
+      %>
+
+      <% if (!stats.hasData) { %>
+        <div class="admin-empty">
+          <p>
+            Aucun historique pour l'instant. Les agrégats se remplissent au fil des services,
+            une ligne par jour et par service.
+          </p>
+        </div>
+      <% } %>
+
+      <% windows.forEach((win) => { %>
+        <section class="admin-panel stats-window">
+          <h2 class="stats-window__title"><%= win.label %></h2>
+          <div class="stats-cards">
+            <article class="stats-card">
+              <p class="stats-card__label">Réservations</p>
+              <p class="stats-card__value"><%= win.data.current.reservations.toLocaleString('fr-BE') %></p>
+              <p class="stats-card__trend<%= trendClass(win.data.change.reservations) %>">
+                <%= pct(win.data.change.reservations) %> vs période précédente
+              </p>
+            </article>
+            <article class="stats-card">
+              <p class="stats-card__label">Couverts</p>
+              <p class="stats-card__value"><%= win.data.current.covers.toLocaleString('fr-BE') %></p>
+              <p class="stats-card__trend<%= trendClass(win.data.change.covers) %>">
+                <%= pct(win.data.change.covers) %> vs période précédente
+              </p>
+            </article>
+            <article class="stats-card">
+              <p class="stats-card__label">Absences</p>
+              <p class="stats-card__value"><%= win.data.current.noShows.toLocaleString('fr-BE') %></p>
+              <p class="stats-card__trend">
+                <%= win.data.current.noShowRate.toLocaleString('fr-BE') %> % des réservations
+              </p>
+            </article>
+            <article class="stats-card">
+              <p class="stats-card__label">Midi / Soir</p>
+              <p class="stats-card__value"><%= win.data.current.lunch %> / <%= win.data.current.evening %></p>
+              <p class="stats-card__trend">
+                <%= win.data.current.averageCovers.toLocaleString('fr-BE') %> couverts par réservation
+              </p>
+            </article>
+          </div>
+        </section>
+      <% }) %>
+
+      <%
+        const series = [
+          { title: 'Par semaine', rows: stats.byWeek, head: 'Semaine' },
+          { title: 'Par mois', rows: stats.byMonth, head: 'Mois' },
+          { title: 'Par an', rows: stats.byYear, head: 'Année' }
+        ]
+      %>
+
+      <% series.forEach((block) => { %>
+        <section class="admin-panel">
+          <h2 class="stats-window__title"><%= block.title %></h2>
+          <% if (!block.rows.length) { %>
+            <p class="admin-help">Pas encore de données sur cette période.</p>
+          <% } else { %>
+            <div class="admin-analytics__table-wrap">
+              <table class="admin-analytics__table">
+                <thead>
+                  <tr>
+                    <th scope="col"><%= block.head %></th>
+                    <th scope="col">Réservations</th>
+                    <th scope="col">Couverts</th>
+                    <th scope="col">Midi</th>
+                    <th scope="col">Soir</th>
+                    <th scope="col">Absences</th>
+                    <th scope="col">Annulées</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <% block.rows.slice().reverse().forEach((row) => { %>
+                    <tr>
+                      <th scope="row"><%= row.label %></th>
+                      <td><%= row.reservations.toLocaleString('fr-BE') %></td>
+                      <td><%= row.covers.toLocaleString('fr-BE') %></td>
+                      <td><%= row.lunch.toLocaleString('fr-BE') %></td>
+                      <td><%= row.evening.toLocaleString('fr-BE') %></td>
+                      <td><%= row.noShows.toLocaleString('fr-BE') %> <small>(<%= row.noShowRate.toLocaleString('fr-BE') %> %)</small></td>
+                      <td><%= row.cancelled.toLocaleString('fr-BE') %></td>
+                    </tr>
+                  <% }) %>
+                </tbody>
+              </table>
+            </div>
+          <% } %>
+        </section>
+      <% }) %>
+    <% } %>
+  </div>
+</body>
+</html>

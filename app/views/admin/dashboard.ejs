@@ -96,7 +96,7 @@
             </div>
 
             <div class="admin-panel admin-panel--timeline">
-              <p class="admin-count">Vue service (18:00 – 22:00) par table (30 minutes)</p>
+              <p class="admin-count">Vue service (<%= openingHours.SERVICES.lunch.start %> – <%= openingHours.SERVICES.lunch.end %> · <%= openingHours.SERVICES.evening.start %> – <%= openingHours.SERVICES.evening.end %>) par table (<%= openingHours.SLOT_STEP_MIN %> minutes)</p>
               <div class="admin-timeline" data-admin-timeline></div>
             </div>
           </div>

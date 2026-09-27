@@ -52,7 +52,23 @@
                   <%= dateF %>
                 </td>
                 <td><%= (r.time_start || '').slice(0, 5) %></td>
-                <td><%= r.table_code || 'Non assignée' %></td>
+                <td>
+                  <% if (r.table_code) { %>
+                    <%= r.table_code %>
+                  <% } else if (r.status !== 'cancelled') { %>
+                    <span class="badge badge--pending">À placer</span>
+                    <div class="table-assign">
+                      <select data-assign-table data-id="<%= r.id %>" aria-label="Attribuer une table">
+                        <option value="">Choisir…</option>
+                        <% tables.forEach((t) => { %>
+                          <option value="<%= t.id %>"><%= t.code %> — <%= t.seats %> pers. (<%= t.zone === 'terrasse' ? 'Terrasse' : 'Intérieur' %>)</option>
+                        <% }) %>
+                      </select>
+                    </div>
+                  <% } else { %>
+                    Non assignée
+                  <% } %>
+                </td>
                 <td><%= r.name %></td>
                 <td><%= r.covers %></td>
                 <td>
@@ -77,9 +93,11 @@
                     <button class="btn btn-primary btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Confirmer</button>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Refuser</button>
                   <% } else if (r.status === 'confirmed') { %>
-                    <% if (!r.no_show) { %>
-                      <button class="btn btn-noshow btn--tiny" data-res-noshow data-id="<%= r.id %>">Non présent</button>
-                    <% } %>
+                    <label class="noshow-switch" title="Coché : le client n'est pas venu">
+                      <input type="checkbox" data-res-noshow data-id="<%= r.id %>" <%= r.no_show ? 'checked' : '' %>>
+                      <span class="noshow-switch__track" aria-hidden="true"></span>
+                      <span class="noshow-switch__label">Non présent</span>
+                    </label>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="cancelled">Annuler</button>
                   <% } else { %>
                     <button class="btn btn-ghost btn--tiny" data-res-status data-id="<%= r.id %>" data-status="confirmed">Reconfirmer</button>
@@ -97,7 +115,6 @@
       const CSRF = '<%= csrfToken %>';
       const root = document.currentScript?.parentElement || document;
       const buttons = root.querySelectorAll('[data-res-status]');
-      if (!buttons.length) return;
       buttons.forEach((btn) => {
         btn.addEventListener('click', async () => {
           const id = btn.getAttribute('data-id');
@@ -122,16 +139,44 @@
         });
       });
 
-      const noShowButtons = root.querySelectorAll('[data-res-noshow]');
-      noShowButtons.forEach((btn) => {
-        btn.addEventListener('click', async () => {
-          const id = btn.getAttribute('data-id');
+      const assignSelects = root.querySelectorAll('[data-assign-table]');
+      assignSelects.forEach((select) => {
+        select.addEventListener('change', async () => {
+          const id = select.getAttribute('data-id');
+          const tableId = select.value;
+          if (!id || !tableId) return;
+          select.disabled = true;
+          try {
+            const res = await fetch(`/admin/api/reservations/${encodeURIComponent(id)}/table`, {
+              method: 'PATCH',
+              headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF },
+              body: JSON.stringify({ tableMembers: [tableId] })
+            });
+            if (!res.ok) {
+              const data = await res.json().catch(() => ({}));
+              throw new Error(data.message || `Erreur ${res.status}`);
+            }
+            window.location.reload();
+          } catch (err) {
+            alert(err.message || 'Attribution impossible.');
+            select.value = '';
+            select.disabled = false;
+          }
+        });
+      });
+
+      const noShowSwitches = root.querySelectorAll('[data-res-noshow]');
+      noShowSwitches.forEach((input) => {
+        input.addEventListener('change', async () => {
+          const id = input.getAttribute('data-id');
           if (!id) return;
-          btn.disabled = true;
+          const noShow = input.checked;
+          input.disabled = true;
           try {
             const res = await fetch(`/admin/api/reservations/${encodeURIComponent(id)}/no-show`, {
               method: 'PATCH',
-              headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF }
+              headers: { 'Content-Type': 'application/json', 'x-csrf-token': CSRF },
+              body: JSON.stringify({ noShow })
             });
             if (!res.ok) {
               const data = await res.json().catch(() => ({}));
@@ -140,7 +185,8 @@
             window.location.reload();
           } catch (err) {
             alert(err.message || 'Action impossible.');
-            btn.disabled = false;
+            input.checked = !noShow;
+            input.disabled = false;
           }
         });
       });

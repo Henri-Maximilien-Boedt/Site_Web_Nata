@@ -950,3 +950,88 @@
     flex-wrap: wrap;
   }
 }
+
+/* Note remplaçant l'ancien sélecteur de table : la table est attribuée
+   automatiquement par le serveur. */
+.booking-note {
+  margin: 0;
+  padding: 0.85rem 1rem;
+  border-radius: 10px;
+  background: var(--bg-input, #252119);
+  border: 1px solid rgba(232, 98, 26, 0.35);
+  color: var(--text-secondary, #a89880);
+  font-size: 0.9rem;
+  line-height: 1.5;
+}
+
+/* ── Annulation client (discret, bas de page) ───────────────────────────────── */
+
+.cancel-booking {
+  padding: 1rem 0 2.5rem;
+  display: flex;
+  justify-content: center;
+}
+
+.cancel-booking__box {
+  width: min(460px, 100%);
+}
+
+.cancel-booking__toggle {
+  list-style: none;
+  cursor: pointer;
+  min-height: 48px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+  font-size: 0.9rem;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.cancel-booking__toggle::-webkit-details-marker {
+  display: none;
+}
+
+.cancel-booking__toggle:hover,
+.cancel-booking__toggle:focus-visible {
+  color: var(--text);
+}
+
+.cancel-booking__form {
+  margin-top: 0.5rem;
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 16px;
+  padding: 1rem;
+  display: grid;
+  gap: 0.8rem;
+}
+
+.cancel-booking__form label {
+  display: grid;
+  gap: 0.35rem;
+  font-size: 0.9rem;
+  color: var(--muted);
+}
+
+.cancel-booking__hint {
+  margin: 0;
+  font-size: 0.85rem;
+  color: var(--muted);
+}
+
+.cancel-booking__submit {
+  background: transparent;
+  border: 1px solid #a8483a;
+  color: #ffb3a7;
+}
+
+.cancel-booking__submit:disabled {
+  opacity: 0.6;
+  cursor: wait;
+}
+
+.cancel-booking__form .booking-feedback:empty {
+  display: none;
+}

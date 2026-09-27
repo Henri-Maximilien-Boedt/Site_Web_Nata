@@ -8,13 +8,17 @@ const upload = require('../middleware/upload')
 const { cloudinary } = require('../middleware/upload')
 const pool = require('../db')
 const { getPageViewStats } = require('../lib/pageAnalytics')
+const { getReservationStats } = require('../lib/reservationStats')
 const {
+  assignReservationTables,
   deleteReservation,
+  listTables,
   getClientState,
   getKitchenClosure,
   getLunchDisabled,
   getSiteAnnouncement,
   markNoShow,
+  purgeOldReservations,
   replaceAdminBlocks,
   serializeStateForScript,
   setKitchenClosure,
@@ -138,11 +142,8 @@ router.get('/', isAuth, (req, res, next) => {
 
 router.get('/reservations', isAuth, async (req, res, next) => {
   try {
-    await pool.query(`
-      DELETE FROM reservations
-      WHERE (status = 'cancelled' AND date < CURRENT_DATE - INTERVAL '10 days')
-         OR (status <> 'cancelled' AND date < CURRENT_DATE - INTERVAL '1 day')
-    `)
+    // Purge via le store : elle archive les agrégats avant de supprimer.
+    await purgeOldReservations()
 
     const { rows: reservations } = await pool.query(
       `SELECT
@@ -154,19 +155,51 @@ router.get('/reservations', isAuth, async (req, res, next) => {
         r.source,
         r.status,
         r.no_show,
-        t.code AS table_code
+        -- Toutes les tables de la réservation, pas seulement celle d'ancrage.
+        (
+          SELECT string_agg(t.code, ' + ' ORDER BY t.code)
+          FROM reservation_tables rt
+          JOIN tables t ON t.id = rt.table_id
+          WHERE rt.reservation_id = r.id
+        ) AS table_code
       FROM reservations r
-      LEFT JOIN tables t ON t.id = r.table_id
       WHERE (r.status = 'cancelled' AND r.date >= CURRENT_DATE - INTERVAL '10 days')
          OR (r.status <> 'cancelled' AND r.date >= CURRENT_DATE - INTERVAL '1 day')
       ORDER BY r.date DESC, r.time_start DESC, r.created_at DESC
       LIMIT 200`
     )
 
+    // listTables renvoie les identifiants internes attendus par l'assignation.
+    const tables = await listTables()
+
     res.render('admin/reservations', {
       title: 'Réservations — Admin NATA',
       currentSection: 'reservations',
-      reservations
+      reservations,
+      tables
+    })
+  } catch (err) {
+    next(err)
+  }
+})
+
+router.get('/statistiques', isAuth, async (req, res, next) => {
+  try {
+    // Purger d'abord : la purge archive les agrégats, donc les chiffres
+    // affichés incluent le service qui vient de se terminer.
+    await purgeOldReservations()
+
+    let stats = null
+    try {
+      stats = await getReservationStats()
+    } catch (statsError) {
+      console.error('Erreur chargement statistiques réservations:', statsError)
+    }
+
+    res.render('admin/statistiques', {
+      title: 'Statistiques — Admin NATA',
+      currentSection: 'statistiques',
+      stats
     })
   } catch (err) {
     next(err)
@@ -574,9 +607,26 @@ router.patch('/api/reservations/:id/status', isAuth, async (req, res, next) => {
 
 router.patch('/api/reservations/:id/no-show', isAuth, async (req, res, next) => {
   try {
-    const marked = await markNoShow(req.params.id)
+    // Sans corps de requête, on garde l'ancien comportement : marquer absent.
+    const requested = req.body?.noShow
+    const noShow = requested === undefined ? true : requested === true || requested === 'true'
+    const marked = await markNoShow(req.params.id, noShow)
     if (!marked) return res.status(404).json({ ok: false, message: 'Réservation introuvable.' })
-    res.json({ ok: true })
+    res.json({ ok: true, noShow })
+  } catch (error) {
+    if (error.status) {
+      return res.status(error.status).json({ ok: false, message: error.message })
+    }
+    next(error)
+  }
+})
+
+// Assignation manuelle d'une table (groupes que l'attribution automatique
+// n'a pas pu servir).
+router.patch('/api/reservations/:id/table', isAuth, async (req, res, next) => {
+  try {
+    const result = await assignReservationTables(req.params.id, req.body?.tableMembers)
+    res.json({ ok: true, ...result })
   } catch (error) {
     if (error.status) {
       return res.status(error.status).json({ ok: false, message: error.message })
