@@ -20,13 +20,28 @@ const getMailerConfig = () => {
   return { apiKey, fromEmail, adminEmail }
 }
 
+// Pied de page des emails clients : identité de l'expéditeur + lien RGPD.
+const SITE_URL = String(process.env.SITE_URL || 'https://nata-lln.be').replace(/\/+$/, '')
+const CLIENT_FOOTER_HTML = `
+    <p style="max-width:620px;margin:12px auto 0;font-family:Arial,Helvetica,sans-serif;font-size:12px;color:#789;text-align:center;">
+      NATA SRL · Grand-Place 51, 1348 Louvain-la-Neuve · BE 1001.480.755<br>
+      Vos données servent uniquement à gérer votre réservation.
+      <a href="${SITE_URL}/politique-confidentialite" style="color:#789;">Politique de confidentialité</a>
+    </p>`
+const CLIENT_FOOTER_TEXT = [
+  '',
+  '--',
+  'NATA SRL · Grand-Place 51, 1348 Louvain-la-Neuve · BE 1001.480.755',
+  `Vos données servent uniquement à gérer votre réservation : ${SITE_URL}/politique-confidentialite`
+].join('\n')
+
 const buildApiInstance = (apiKey) => {
   const apiInstance = new brevo.TransactionalEmailsApi()
   apiInstance.setApiKey(brevo.TransactionalEmailsApiApiKeys.apiKey, apiKey)
   return apiInstance
 }
 
-const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => {
+const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo, client = false }) => {
   const { apiKey, fromEmail } = getMailerConfig()
   if (!apiKey || !fromEmail) {
     console.warn('Email non envoyé (BREVO_API_KEY ou MAIL_FROM manquant).')
@@ -38,8 +53,8 @@ const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => 
   payload.sender = { email: fromEmail, name: 'NATA' }
   payload.to = to
   payload.subject = subject
-  payload.htmlContent = htmlContent
-  payload.textContent = textContent
+  payload.htmlContent = client ? htmlContent + CLIENT_FOOTER_HTML : htmlContent
+  payload.textContent = client ? textContent + '\n' + CLIENT_FOOTER_TEXT : textContent
   if (replyTo) payload.replyTo = replyTo
 
   // Journaux sans données personnelles (ni adresse, ni sujet qui peut contenir un nom).
@@ -84,6 +99,7 @@ const sendReservationAcknowledgement = async (reservation) => {
 
   return sendEmail({
     to: [{ email: reservation.email, name: reservation.name || '' }],
+    client: true,
     subject,
     htmlContent,
     textContent
@@ -127,6 +143,7 @@ const sendReservationStatusEmail = async (reservation, status) => {
 
   return sendEmail({
     to: [{ email: reservation.email, name: reservation.name || '' }],
+    client: true,
     subject,
     htmlContent,
     textContent
@@ -202,6 +219,7 @@ const sendClientCancellationEmail = async (reservation) => {
 
   return sendEmail({
     to: [{ email: reservation.email, name: reservation.name || '' }],
+    client: true,
     subject,
     htmlContent,
     textContent

@@ -541,3 +541,20 @@ body.image-lightbox-open {
     padding: 1rem;
   }
 }
+
+/* Mentions obligatoires : prix, allergènes, alcool */
+.menu-page .menu-legal {
+  display: grid;
+  gap: 0.5rem;
+  margin: 2rem auto 0;
+  padding: 1rem;
+  max-width: 900px;
+  color: var(--text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  border-top: 1px solid var(--bg-input);
+}
+
+.menu-page .menu-legal p {
+  margin: 0;
+}
