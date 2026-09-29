@@ -62,8 +62,8 @@ app.use(helmet({
       // EJS embarque parfois des handlers inline → 'unsafe-inline' toléré sur scripts.
       // À durcir avec des nonces dans une seconde itération.
       scriptSrc: ["'self'", "'unsafe-inline'"],
-      styleSrc: ["'self'", "'unsafe-inline'", 'https://fonts.googleapis.com'],
-      fontSrc: ["'self'", 'https://fonts.gstatic.com', 'data:'],
+      styleSrc: ["'self'", "'unsafe-inline'"],
+      fontSrc: ["'self'", 'data:'],
       imgSrc: ["'self'", 'data:', 'https://res.cloudinary.com'],
       connectSrc: ["'self'"],
       formAction: ["'self'"],

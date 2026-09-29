@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="/css/fonts.css" />
     <link rel="stylesheet" href="/css/main.css" />
     <link rel="stylesheet" href="/css/evenements.css" />
   </head>
@@ -132,7 +127,7 @@
         <div class="events-devis__head">
           <p class="eyebrow">Demande de devis</p>
           <h2>Parle-nous de ton projet</h2>
-          <p>Le formulaire est enregistré en base de données et transmis par email à l'admin.</p>
+          <p>Ta demande est transmise directement à l'équipe NATA, qui te répond rapidement.</p>
           <div class="events-devis__meta">
             <span>Réponse rapide</span>
             <span>Offre personnalisée</span>
@@ -182,6 +177,10 @@
               Message
               <textarea name="message" rows="5" required></textarea>
             </label>
+            <p class="form-privacy">
+              Vos données servent uniquement à répondre à votre demande et sont supprimées après 30 jours.
+              <a href="/politique-confidentialite">En savoir plus sur vos données</a>.
+            </p>
             <button type="submit" class="btn btn-primary">Envoyer le devis</button>
           </form>
 
@@ -226,6 +225,10 @@
               Message
               <textarea name="message" rows="5" required></textarea>
             </label>
+            <p class="form-privacy">
+              Vos données servent uniquement à répondre à votre demande et sont supprimées après 30 jours.
+              <a href="/politique-confidentialite">En savoir plus sur vos données</a>.
+            </p>
             <button type="submit" class="btn btn-primary">Envoyer le devis</button>
           </form>
         </div>

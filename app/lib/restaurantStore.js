@@ -402,6 +402,12 @@ const purgeOldReservations = async () => {
        OR (status <> 'cancelled' AND date < CURRENT_DATE - INTERVAL '1 day')
     `
   )
+
+  // RGPD : durées annoncées dans /politique-confidentialite.
+  // Devis : déjà transmis au gérant par email, conservés 30 jours au plus.
+  await pool.query(`DELETE FROM quote_requests WHERE created_at < now() - INTERVAL '30 days'`)
+  // Blocages de tables passés : plus aucune utilité, et le motif est un texte libre.
+  await pool.query(`DELETE FROM admin_blocks WHERE date < CURRENT_DATE - INTERVAL '1 day'`)
 }
 
 const ensureDefaultTables = async (client) => {

@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
-    <link rel="preconnect" href="https://fonts.googleapis.com" />
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=Manrope:wght@400;500;700;800&display=swap"
-      rel="stylesheet"
-    />
+    <link rel="stylesheet" href="/css/fonts.css" />
     <link rel="stylesheet" href="/css/main.css" />
     <link rel="stylesheet" href="/css/reservation.css" />
   </head>
@@ -95,6 +90,10 @@
             Message
             <textarea name="message" rows="4" placeholder="Nombre de personnes, heure..."></textarea>
           </label>
+          <p class="form-privacy">
+            Vos coordonnées servent uniquement à gérer votre réservation et sont supprimées quelques jours après votre venue.
+            <a href="/politique-confidentialite">En savoir plus sur vos données</a>.
+          </p>
           <button type="submit" class="btn btn-primary">Envoyer</button>
         </form>
       </section>
@@ -118,6 +117,10 @@
               Téléphone
               <input type="tel" name="phone" autocomplete="tel" maxlength="30" required />
             </label>
+            <p class="form-privacy">
+              Ces informations servent uniquement à retrouver votre réservation ; elles ne sont pas enregistrées.
+              <a href="/politique-confidentialite">En savoir plus sur vos données</a>.
+            </p>
             <button type="submit" class="btn cancel-booking__submit">Annuler ma réservation</button>
             <p class="booking-feedback" data-cancel-feedback aria-live="polite"></p>
           </form>

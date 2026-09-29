@@ -1095,6 +1095,8 @@ const writeReservations = (reservations) => {
 };
 
 const addReservation = (payload) => {
+  // Côté public, rien ne relit ce cache : inutile d'y laisser les coordonnées du client.
+  if (!IS_ADMIN_DOCUMENT) return;
   const reservations = readReservations();
   reservations.unshift(payload);
   writeReservations(reservations);

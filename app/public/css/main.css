@@ -683,3 +683,16 @@ footer {
   border-bottom: 2px solid var(--orange);
 }
 
+
+/* Mention RGPD sous les formulaires (art. 13 : information au moment de la collecte) */
+.form-privacy {
+  margin: 0;
+  color: var(--text-secondary);
+  font-size: 0.8rem;
+  line-height: 1.5;
+}
+
+.form-privacy a {
+  color: inherit;
+  text-decoration: underline;
+}

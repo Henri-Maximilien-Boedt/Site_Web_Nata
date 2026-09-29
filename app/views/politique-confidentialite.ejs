@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
+    <link rel="stylesheet" href="/css/fonts.css" />
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
@@ -15,136 +16,167 @@
       <header class="legal-hero">
         <p class="eyebrow">Données personnelles</p>
         <h1>Politique de confidentialité</h1>
-        <p>Conformité RGPD pour la gestion des réservations, devis et analytics internes.</p>
+        <p>Quelles données nous collectons sur nata-lln.be, pourquoi, combien de temps, et quels sont vos droits.</p>
       </header>
 
       <section class="legal-section">
         <h2>Responsable du traitement</h2>
         <p>
-          NATA (voir coordonnées dans les mentions légales) est responsable des traitements décrits ci-dessous.
-          Contact DPD / référent : event@horizontazia.be.
+          NATA SRL (numéro d’entreprise 1001.480.755), Grand-Place 51, 1348 Louvain-la-Neuve, Belgique,
+          est responsable des traitements décrits ci-dessous.
+        </p>
+        <p>
+          Contact pour toute question relative à vos données personnelles : event@horizontazia.be.
+          NATA n’est pas tenue de désigner un délégué à la protection des données (DPO).
         </p>
       </section>
 
       <section class="legal-section">
-        <h2>Données collectées</h2>
+        <h2>Données collectées et finalités</h2>
         <ul class="legal-list">
-          <li><strong>Réservation en ligne :</strong> nom, e-mail, téléphone, date/heure, nombre de personnes, message.</li>
-          <li><strong>Demande de devis événements :</strong> nom, e-mail, téléphone, type d’événement, date souhaitée, nombre d’invités, message.</li>
-          <li><strong>Compte admin :</strong> e-mail et mot de passe haché pour l’accès gérant.</li>
-          <li><strong>Logs techniques :</strong> adresses IP, user-agent, horodatage pour sécurité et diagnostic.</li>
-          <li><strong>Analytics internes :</strong> pages vues agrégées (sans cookies de suivi ni identifiant individuel).</li>
-          <li><strong>Pièces jointes (le cas échéant) :</strong> uniquement si un champ upload est activé dans un formulaire ; types et taille limités.</li>
+          <li>
+            <strong>Réservation en ligne :</strong> nom, e-mail, téléphone, date, heure, nombre de personnes et message éventuel.
+            Ces données servent à enregistrer votre réservation, vous attribuer une table, vous envoyer les e-mails de suivi
+            (réception, confirmation, annulation) et vous contacter si nécessaire. Nous notons aussi, pour le service,
+            la table attribuée, le statut de la réservation et votre présence.
+          </li>
+          <li>
+            <strong>Réservation par téléphone :</strong> nom, nombre de personnes, date, heure et, le cas échéant, une note
+            saisie par l’équipe.
+          </li>
+          <li>
+            <strong>Annulation en ligne :</strong> le nom, l’e-mail et le téléphone saisis servent uniquement à retrouver votre
+            réservation. Ils ne sont pas enregistrés.
+          </li>
+          <li>
+            <strong>Demande de devis (privatisation, événement) :</strong> prénom, nom, e-mail, téléphone, message et,
+            pour les entreprises, nom de la société, personne de contact, numéro de TVA et identifiant Peppol.
+            Ces données servent à répondre à votre demande et à préparer une offre.
+          </li>
+          <li>
+            <strong>Mesure d’audience :</strong> nombre de pages vues par jour, sans cookie ni identifiant.
+            Si vous acceptez le cookie de mesure d’audience, un identifiant aléatoire nous permet en plus de compter
+            les visiteurs uniques. Il n’est relié à aucune autre donnée vous concernant.
+          </li>
+          <li>
+            <strong>Sécurité :</strong> adresse IP lors des tentatives de connexion à l’espace gérant et pour limiter
+            les envois abusifs de formulaires ; journaux techniques de l’hébergeur (adresse IP, navigateur, date et heure).
+          </li>
+          <li>
+            <strong>Statistiques internes :</strong> avant la suppression des réservations, nous en conservons uniquement des totaux
+            par jour et par service (nombre de réservations, de couverts, d’annulations, d’absences). Ces chiffres sont anonymes.
+          </li>
         </ul>
       </section>
 
       <section class="legal-section">
         <h2>Bases légales</h2>
         <ul class="legal-list">
-          <li><strong>Exécution d’un contrat :</strong> gestion des réservations et devis.</li>
-          <li><strong>Intérêt légitime :</strong> sécurité, prévention de la fraude, statistiques internes anonymes.</li>
-          <li><strong>Consentement :</strong> uniquement si des cookies non essentiels sont activés (voir politique cookies).</li>
+          <li><strong>Exécution de mesures précontractuelles et du contrat</strong> (art. 6.1.b RGPD) : réservations, annulations et devis.</li>
+          <li><strong>Intérêt légitime</strong> (art. 6.1.f RGPD) : sécurité du site, prévention des abus, statistiques anonymes et pages vues sans cookie.</li>
+          <li><strong>Consentement</strong> (art. 6.1.a RGPD) : cookie de mesure d’audience, que vous pouvez refuser ou retirer à tout moment via « Gérer les cookies ».</li>
         </ul>
       </section>
 
       <section class="legal-section">
         <h2>Durées de conservation</h2>
         <ul class="legal-list">
-          <li>Réservations et devis : purge automatique 30 jours après la date de l’événement ou la demande.</li>
-          <li>Comptes admin : tant que le compte est actif, puis suppression sous 30 jours.</li>
-          <li>Logs techniques : 30 jours maximum.</li>
-          <li>Preuves de consentement cookies (le cas échéant) : 30 jours.</li>
-          <li>Backups hébergeur : rétention glissante de 30 jours (selon politique Render).</li>
+          <li><strong>Réservations :</strong> supprimées automatiquement le surlendemain de la date réservée ; 10 jours après la date pour les réservations annulées.</li>
+          <li><strong>Demandes de devis :</strong> supprimées automatiquement de notre base 30 jours après leur envoi. L’e-mail de notification reçu par l’équipe est conservé le temps de traiter votre demande.</li>
+          <li><strong>Mesure d’audience :</strong> 30 jours pour les compteurs et identifiants ; 30 jours pour le cookie.</li>
+          <li><strong>Statistiques de réservation :</strong> conservées sans limite, car elles ne contiennent aucune donnée personnelle.</li>
+          <li><strong>Adresses IP de limitation des abus :</strong> gardées en mémoire 30 minutes au plus, jamais enregistrées en base.</li>
+          <li><strong>Journaux techniques et sauvegardes :</strong> selon la politique de rétention de l’hébergeur AlwaysData.</li>
         </ul>
       </section>
 
       <section class="legal-section">
-        <h2>Destinataires & sous-traitants</h2>
+        <h2>Destinataires et sous-traitants</h2>
         <ul class="legal-list">
-          <li>Équipe NATA habilitée.</li>
-          <li>Hébergeur Render (USA) avec clauses contractuelles types UE.</li>
-          <li>Fournisseur e-mail (Brevo) pour les confirmations / notifications.</li>
-          <li>Prestataires techniques ponctuels (maintenance), soumis à obligation de confidentialité.</li>
+          <li><strong>L’équipe NATA</strong> habilitée à gérer les réservations et les devis.</li>
+          <li><strong>AlwaysData</strong> (France) : hébergement du site et de la base de données.</li>
+          <li><strong>Brevo</strong> (France) : envoi des e-mails de réservation et de devis.</li>
+          <li>
+            <strong>Cloudinary</strong> (États-Unis) : hébergement des photos des actualités. Lorsque vous affichez une photo,
+            votre navigateur la télécharge depuis Cloudinary, qui reçoit donc votre adresse IP. Aucune autre donnée ne lui est transmise.
+          </li>
+          <li><strong>Prestataire de maintenance</strong> (L&amp;M Computing), tenu à la confidentialité, uniquement lorsque c’est nécessaire.</li>
         </ul>
+        <p>
+          Les polices d’écriture sont hébergées directement sur notre site : aucune donnée n’est transmise à Google.
+          Vos données ne sont ni vendues, ni louées, ni utilisées à des fins publicitaires.
+        </p>
       </section>
 
       <section class="legal-section">
-        <h2>Droits des personnes</h2>
+        <h2>Transferts hors de l’Union européenne</h2>
         <p>
-          Vous pouvez exercer vos droits d’accès, rectification, effacement, limitation, opposition et portabilité en écrivant à
-          <a href="mailto:event@horizontazia.be">event@horizontazia.be</a>.
-          Vous pouvez également introduire une réclamation auprès de l’Autorité de protection des données (APD Belgique).
+          Seul Cloudinary est établi hors de l’Union européenne (États-Unis). Ce transfert, limité à l’adresse IP nécessaire
+          à l’affichage des photos, repose sur l’accord de traitement des données intégré aux conditions d’utilisation
+          de Cloudinary, qui s’appuie sur les garanties prévues par le RGPD. Toutes les autres données sont hébergées et traitées dans l’Union européenne.
+        </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Vos droits</h2>
+        <p>
+          Vous pouvez demander l’accès à vos données, leur rectification, leur effacement, la limitation de leur traitement,
+          leur portabilité, ou vous opposer à leur traitement, en écrivant à event@horizontazia.be.
+          Vous pouvez aussi retirer à tout moment votre consentement au cookie de mesure d’audience via le bouton
+          « Gérer les cookies » en bas de page, sans que cela affecte les traitements réalisés avant ce retrait.
         </p>
         <p>
-          Pour les demandes liées à l’oubli ou l’effacement, certaines données peuvent être conservées pour respecter des obligations
-          légales (comptabilité, prévention de la fraude).
+          Nous répondons dans un délai d’un mois, prolongeable de deux mois pour les demandes complexes (art. 12.3 RGPD).
+          Une preuve d’identité peut être demandée en cas de doute raisonnable.
         </p>
+      </section>
+
+      <section class="legal-section">
+        <h2>Réclamation</h2>
         <p>
-          Réponse aux demandes sous 30 jours, prorogeable une fois en cas de complexité (art. 12.3 RGPD).
+          Si vous estimez que vos droits ne sont pas respectés, vous pouvez introduire une réclamation auprès de
+          l’Autorité de protection des données (APD) — Rue de la Presse 35, 1000 Bruxelles, contact@apd-gba.be,
+          www.autoriteprotectiondonnees.be.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Sécurité</h2>
         <p>
-          Mots de passe admin hachés, connexions HTTPS en production, contrôle d’accès restreint, sauvegardes chiffrées côté hébergeur,
-          limitation d’accès aux bases de données, journalisation des accès admin, séparation des environnements (prod/dev) et mises à jour
-          régulières des dépendances.
-        </p>
-        <p>
-          Tests de sécurité et mises à jour critiques appliqués dès disponibilité ; désactivation rapide des comptes compromis ; principe de moindre privilège.
-        </p>
-      </section>
-
-      <section class="legal-section">
-        <h2>Transferts hors UE</h2>
-        <p>
-          Les données peuvent être hébergées ou transitent via Render (USA) et Brevo. Les Clauses Contractuelles Types (SCC) de la Commission européenne sont utilisées pour encadrer ces transferts.
-        </p>
-        <p>
-          En cas d’ajout d’un nouveau sous-traitant hors UE, la présente politique sera mise à jour et, si nécessaire, un complément
-          d’information ou de consentement sera demandé.
-        </p>
-      </section>
-
-      <section class="legal-section">
-        <h2>Réclamations</h2>
-        <p>
-          Autorité de protection des données (APD) — Rue de la Presse 35, 1000 Bruxelles, contact@apd-gba.be.
+          Connexion chiffrée (HTTPS), accès à l’espace gérant protégé par mot de passe haché et limité en nombre de tentatives,
+          protection contre les requêtes falsifiées (CSRF), en-têtes de sécurité, limitation des envois de formulaires,
+          suppression automatique des données dès qu’elles ne sont plus utiles et journaux techniques sans e-mail ni nom de client.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Violations de données</h2>
         <p>
-          En cas de violation de données personnelles présentant un risque pour les droits et libertés, NATA notifiera l’APD dans les délais
-          légaux et, le cas échéant, informera les personnes concernées.
-        </p>
-        <p>
-          Un registre interne des incidents est tenu et inclut la nature de la violation, la catégorie de données touchées et les mesures correctives.
+          En cas de violation de données personnelles, NATA la documente dans un registre interne, la notifie à l’APD
+          dans les 72 heures lorsqu’elle présente un risque pour vos droits et libertés, et vous en informe directement
+          si ce risque est élevé.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Mineurs</h2>
         <p>
-          Les formulaires de réservation et de devis sont destinés aux personnes majeures. Si un mineur soumet des données, un représentant légal
-          peut demander leur suppression.
+          Les formulaires de réservation et de devis sont destinés aux personnes majeures. Si un mineur nous a transmis des données,
+          son représentant légal peut en demander la suppression.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Décisions automatisées</h2>
         <p>
-          Aucune décision produisant des effets juridiques significatifs n’est prise de manière entièrement automatisée à partir des données
-          collectées sur ce site.
+          La table est attribuée automatiquement selon la taille du groupe. Cette attribution ne produit aucun effet juridique
+          et l’équipe peut toujours la modifier. Aucun profilage n’est réalisé.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Dernière mise à jour</h2>
-        <p>25 mars 2026.</p>
-        </p>
+        <p>29 septembre 2026.</p>
       </section>
     </main>
 

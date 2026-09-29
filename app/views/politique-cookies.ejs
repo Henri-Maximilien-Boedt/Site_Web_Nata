@@ -5,6 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title><%= title %></title>
     <meta name="description" content="<%= description %>" />
+    <link rel="stylesheet" href="/css/fonts.css" />
     <link rel="stylesheet" href="/css/main.css" />
   </head>
   <body>
@@ -15,68 +16,70 @@
       <header class="legal-hero">
         <p class="eyebrow">Cookies & traceurs</p>
         <h1>Politique cookies</h1>
-        <p>Explication des cookies utilisés sur nata-lln.be et de vos choix.</p>
+        <p>La liste complète des cookies et du stockage local utilisés sur nata-lln.be, et comment gérer vos choix.</p>
       </header>
 
       <section class="legal-section">
-        <h2>Cookies et traceurs utilisés</h2>
+        <h2>Cookies essentiels</h2>
+        <p>Ils sont nécessaires au fonctionnement et à la sécurité du site. Ils ne demandent pas votre consentement.</p>
         <ul class="legal-list">
-          <li><strong>connect.sid :</strong> session sécurisée pour l’espace gérant (essentiel).</li>
-          <li><strong>nata_cookie_consent :</strong> mémorise votre choix (essentiel).</li>
-          <li><strong>localStorage (nata_cookie_consent_v1) :</strong> mémorise également votre choix (essentiel).</li>
-          <li><strong>Analytics internes :</strong> pages vues agrégées, sans cookie, ni identifiant individuel.</li>
-        </ul>
-        <p>Aucun cookie publicitaire, marketing ou reciblage n’est utilisé.</p>
-      </section>
-
-      <section class="legal-section">
-        <h2>Catégories de cookies</h2>
-        <ul class="legal-list">
-          <li><strong>Essentiels :</strong> nécessaires au fonctionnement (session, consentement).</li>
-          <li><strong>Mesure d’audience interne :</strong> réalisée sans cookies et sans profilage individuel.</li>
-          <li><strong>Publicité / profilage :</strong> non utilisés sur ce site.</li>
+          <li>
+            <strong>connect.sid</strong> : cookie de session. Il protège les formulaires contre les requêtes falsifiées (CSRF)
+            et maintient la connexion à l’espace gérant. Durée : 4 heures, prolongée tant que vous naviguez.
+          </li>
+          <li>
+            <strong>nata_cookie_consent</strong> : mémorise votre choix concernant la mesure d’audience. Durée : 30 jours.
+          </li>
         </ul>
       </section>
 
       <section class="legal-section">
-        <h2>Base légale</h2>
+        <h2>Cookie de mesure d’audience (avec votre accord)</h2>
+        <ul class="legal-list">
+          <li>
+            <strong>nata_vid</strong> : identifiant aléatoire qui nous permet de compter les visiteurs uniques de nos pages.
+            Il n’est déposé que si vous cliquez sur « Accepter », n’est lu que par notre site et n’est partagé avec personne.
+            Durée : 30 jours. Il est supprimé automatiquement si vous refusez ou retirez votre accord.
+          </li>
+        </ul>
         <p>
-          Les cookies strictement nécessaires sont déposés sur la base de notre intérêt légitime à sécuriser et faire fonctionner le site.
-          Aucun cookie non essentiel n’est déposé sans votre consentement préalable.
+          Sans ce cookie, nous comptons seulement le nombre total de pages vues par jour, sans aucun identifiant.
         </p>
       </section>
 
       <section class="legal-section">
-        <h2>Durée de vie</h2>
+        <h2>Stockage local du navigateur</h2>
+        <p>Le site enregistre aussi quelques informations dans le stockage local de votre navigateur (localStorage). Elles ne sont jamais envoyées à des tiers.</p>
         <ul class="legal-list">
-          <li>connect.sid : jusqu’à 24h ou fermeture de session.</li>
-          <li>nata_cookie_consent : 30 jours.</li>
-          <li>localStorage consent : 30 jours (renouvelé à chaque mise à jour du choix).</li>
+          <li><strong>nata_cookie_consent_v1</strong> : votre choix concernant la mesure d’audience et sa date, pour ne pas vous le redemander pendant 30 jours.</li>
+          <li><strong>nata_public_reservations_v1, nata_public_blocks_v1</strong> : créneaux déjà occupés, sans aucune donnée personnelle, pour afficher les disponibilités.</li>
+          <li><strong>nata_table_layout_v2, nata_table_merges_v1, nata_lunch_disabled_v1</strong> : configuration de la salle et du service du midi.</li>
         </ul>
+      </section>
+
+      <section class="legal-section">
+        <h2>Aucun cookie tiers</h2>
+        <p>
+          Aucun cookie publicitaire, de réseau social ou de suivi tiers n’est utilisé (pas de Google Analytics, de pixel Facebook,
+          de TikTok, etc.). Les polices d’écriture sont hébergées sur notre propre site.
+          Les photos des actualités sont servies par Cloudinary, qui ne dépose pas de cookie mais reçoit votre adresse IP
+          pour les afficher (voir la <a href="/politique-confidentialite">politique de confidentialité</a>).
+          Si un service tiers était ajouté un jour, il serait soumis à votre consentement préalable et mentionné ici.
+        </p>
       </section>
 
       <section class="legal-section">
         <h2>Gérer vos choix</h2>
         <p>
-          Vous pouvez retirer ou modifier votre consentement à tout moment via le bouton « Gérer les cookies » en bas à droite.
-        </p>
-        <p>
-          Vous pouvez aussi paramétrer votre navigateur pour bloquer ou supprimer les cookies. Le blocage des cookies essentiels
-          peut empêcher l’accès à l’espace gérant ou perturber certaines fonctionnalités.
-        </p>
-      </section>
-
-      <section class="legal-section">
-        <h2>Absence de tiers publicitaires</h2>
-        <p>
-          Aucun pixel marketing (Facebook, TikTok, etc.) ni SDK publicitaire n’est implanté. Si un tel service était ajouté ultérieurement,
-          il serait soumis à votre consentement préalable et mentionné ici.
+          Vous pouvez modifier ou retirer votre consentement à tout moment grâce au bouton « Gérer les cookies » en bas de page.
+          Refuser n’a aucune conséquence sur l’utilisation du site. Vous pouvez aussi supprimer les cookies et le stockage local
+          depuis les réglages de votre navigateur ; bloquer les cookies essentiels peut empêcher l’envoi des formulaires.
         </p>
       </section>
 
       <section class="legal-section">
         <h2>Mise à jour</h2>
-        <p>Dernière mise à jour : 25 mars 2026.</p>
+        <p>Dernière mise à jour : 29 septembre 2026.</p>
       </section>
     </main>
 

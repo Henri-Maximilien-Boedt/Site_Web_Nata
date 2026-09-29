@@ -23,7 +23,7 @@ router.post('/devis', quoteLimiter, async (req, res, next) => {
     try {
       mailSent = await sendQuoteRequestNotification(quote)
     } catch (mailError) {
-      console.error('Erreur email devis:', mailError)
+      console.error('Erreur email devis:', mailError?.message || mailError)
     }
 
     res.redirect(`/evenements?quote=${mailSent ? 'ok' : 'saved'}`)

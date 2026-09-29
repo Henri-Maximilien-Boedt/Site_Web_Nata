@@ -42,12 +42,15 @@ const sendEmail = async ({ to, subject, htmlContent, textContent, replyTo }) => 
   payload.textContent = textContent
   if (replyTo) payload.replyTo = replyTo
 
+  // Journaux sans données personnelles (ni adresse, ni sujet qui peut contenir un nom).
+  const recipients = `${to.length} destinataire${to.length > 1 ? 's' : ''}`
+
   try {
     await api.sendTransacEmail(payload)
-    console.log(`✓ Email envoyé → ${to.map(t => t.email).join(', ')} | "${subject}"`)
+    console.log(`✓ Email envoyé → ${recipients}`)
     return true
   } catch (err) {
-    console.error(`✗ Email échoué → ${to.map(t => t.email).join(', ')} | "${subject}" |`, err.message)
+    console.error(`✗ Email échoué → ${recipients} |`, err.message)
     throw err
   }
 }
