@@ -2,10 +2,14 @@ const menuBtn = document.querySelector('.menu-btn');
 const nav = document.querySelector('.nav');
 const year = document.getElementById('year');
 
+// Les pages publiques reçoivent un état expurgé (sans données clients) : elles
+// ne doivent jamais écraser le cache de l'admin, partagé via localStorage.
+const IS_ADMIN_DOCUMENT = Boolean(document.querySelector('[data-admin-page]'));
+
 const STORAGE_KEYS = {
-  reservations: 'nata_reservations_v1',
+  reservations: IS_ADMIN_DOCUMENT ? 'nata_reservations_v1' : 'nata_public_reservations_v1',
   adminSession: 'nata_admin_session_v1',
-  adminBlocks: 'nata_admin_blocks_v1',
+  adminBlocks: IS_ADMIN_DOCUMENT ? 'nata_admin_blocks_v1' : 'nata_public_blocks_v1',
   tableLayout: 'nata_table_layout_v2',
   tableMerges: 'nata_table_merges_v1',
   lunchDisabled: 'nata_lunch_disabled_v1',
@@ -64,6 +68,13 @@ const requestJSON = async (url, options = {}) => {
 
   return payload;
 };
+
+// Nettoie les données clients laissées chez les visiteurs par les anciennes
+// versions du site. Jamais dans le navigateur de l'admin (cache encore utilisé).
+if (!IS_ADMIN_DOCUMENT && localStorage.getItem(STORAGE_KEYS.adminSession) !== '1') {
+  localStorage.removeItem('nata_reservations_v1');
+  localStorage.removeItem('nata_admin_blocks_v1');
+}
 
 if (initialServerState && Array.isArray(initialServerState.tables)) {
   if (Array.isArray(initialServerState.reservations)) {

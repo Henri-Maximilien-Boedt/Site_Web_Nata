@@ -905,6 +905,33 @@ const getClientState = async () => {
   }
 }
 
+// État exposé aux visiteurs (/reservation) : uniquement ce qu'il faut pour
+// griser les créneaux. Jamais de nom, email, téléphone ni note interne.
+const getPublicState = async () => {
+  const state = await getClientState()
+
+  return {
+    ...state,
+    reservations: state.reservations.map((reservation) => ({
+      id: reservation.id,
+      date: reservation.date,
+      time: reservation.time,
+      tableId: reservation.tableId,
+      tableMembers: reservation.tableMembers,
+      status: reservation.status,
+      noShow: reservation.noShow
+    })),
+    adminBlocks: state.adminBlocks.map((block) => ({
+      id: block.id,
+      tableId: block.tableId,
+      date: block.date,
+      startTime: block.startTime,
+      endMinutes: block.endMinutes,
+      endTime: block.endTime
+    }))
+  }
+}
+
 const parseMemberIds = (tableMembers, tableId, tablesById) => {
   const fromArray = Array.isArray(tableMembers)
     ? tableMembers
@@ -1704,6 +1731,7 @@ module.exports = {
   deleteReservation,
   getActiveBanners,
   getClientState,
+  getPublicState,
   getKitchenClosure,
   getLunchDisabled,
   getSiteAnnouncement,

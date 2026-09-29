@@ -4,14 +4,14 @@ const {
   cancelReservationByClient,
   createReservation,
   getActiveBanners,
-  getClientState,
+  getPublicState,
   serializeStateForScript
 } = require('../lib/restaurantStore')
 const { reservationLimiter, cancelLimiter } = require('../middleware/rateLimits')
 
 router.get('/', async (req, res, next) => {
   try {
-    const [clientState, banners] = await Promise.all([getClientState(), getActiveBanners()])
+    const [clientState, banners] = await Promise.all([getPublicState(), getActiveBanners()])
 
     res.render('reservation', {
       title: 'Réservation | NATA Bar',
@@ -26,7 +26,7 @@ router.get('/', async (req, res, next) => {
 
 router.get('/api/state', async (req, res, next) => {
   try {
-    const clientState = await getClientState()
+    const clientState = await getPublicState()
     res.json(clientState)
   } catch (error) {
     next(error)
