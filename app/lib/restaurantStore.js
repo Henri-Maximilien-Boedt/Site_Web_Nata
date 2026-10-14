@@ -907,7 +907,7 @@ const getClientState = async () => {
     lunchDisabled,
     kitchenClosure,
     maxGroupSize: MAX_GROUP_SIZE,
-    openingHours: openingHours.getClientPayload({ lunchDisabled })
+    openingHours: openingHours.getClientPayload()
   }
 }
 
@@ -1015,7 +1015,7 @@ const createReservation = async (payload) => {
   }
 
   // Barrière serveur sur les horaires : le calendrier client masque déjà les
-  // jours fermés, mais l'API doit refuser d'elle-même (dimanche, heure hors
+  // jours fermés, mais l'API doit refuser d'elle-même (midi du dimanche, heure hors
   // service, midi coupé par le réglage admin).
   const weekday = new Date(`${date}T00:00:00Z`).getUTCDay()
   const allowedSlots = openingHours.getSlotsForWeekday(weekday, {

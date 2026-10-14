@@ -21,10 +21,10 @@ Le site est **en production sur AlwaysData**. Toute modification de schéma doit
 | Groupe de 7 personnes et plus | Réservation enregistrée **en attente sans table**, l'admin assigne. |
 | Groupe maximum | 18 personnes. |
 | Zone d'attribution | Intérieur uniquement — jamais la terrasse. |
-| Cuisine, midi | 12:00 → 14:00, lundi au samedi. |
-| Cuisine, soir | 18:00 → 22:00, lundi au samedi. |
-| Dimanche | Fermé toute la journée. |
-| Bar | 12:00 → 01:00, **affichage seul**, ne génère aucun créneau. |
+| Cuisine, midi | 12:00 → 14:00, lundi au samedi (pas de midi le dimanche). |
+| Cuisine, soir | 18:00 → 22:00, tous les jours. |
+| Dimanche | Bar 15:00 → 01:00, réservations 18:00 → 22:00 uniquement. |
+| Bar | lun–sam 12:00 → 01:00, dim 15:00 → 01:00, **affichage seul**, ne génère aucun créneau. |
 | Durée d'une réservation | 2 h partout (le code disait 2 h / 1 h 30 selon les endroits). |
 | Dernier créneau du midi | 14:00, la table reste bloquée 2 h au-delà. |
 | Présence client | Interrupteur réversible, position par défaut « venu ». |
@@ -56,7 +56,7 @@ Le service du midi est **désactivé dans le code**, pas seulement masqué
 
 - [x] Module d'horaires unique, partagé serveur et front, en remplacement des
       quatre définitions éparpillées.
-- [x] Créneaux : midi 12:00 → 14:00, soir 18:00 → 22:00, dimanche fermé.
+- [x] Créneaux : midi 12:00 → 14:00, soir 18:00 → 22:00, dimanche soir seulement.
 - [x] Durée unifiée à 2 h (serveur, admin, emails).
 
 Fichiers à corriger, tous vérifiés :

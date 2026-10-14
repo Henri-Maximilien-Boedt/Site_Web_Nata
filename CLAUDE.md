@@ -28,8 +28,8 @@ et `openingHours` via `app.locals` ; le front les reçoit dans `clientState.open
 |---|---|
 | Cuisine, midi | 12:00 → 14:00 |
 | Cuisine, soir | 18:00 → 22:00 |
-| Dimanche | fermé (midi et soir) |
-| Bar | 12:00 → 01:00, **affichage seul**, ne génère aucun créneau |
+| Dimanche | soir seulement, 18:00 → 22:00 (pas de midi) — `SERVICES_BY_WEEKDAY` |
+| Bar | lun–sam 12:00 → 01:00, dim 15:00 → 01:00, **affichage seul**, ne génère aucun créneau |
 | Durée d'une réservation | 120 min, partout (serveur, admin, emails) |
 | Pas entre créneaux | 30 min |
 
@@ -793,7 +793,7 @@ Le site est **en production sur AlwaysData**. Toutes les phases sont livrées :
 - [x] Sécurité : Helmet/CSP, CSRF global, rate-limits
 - [x] Fermeture cuisine / annonce site
 - [x] Archivage des statistiques de réservation (`reservation_stats_daily`)
-- [x] Horaires centralisés (`lib/openingHours.js`), midi réactivé, dimanche fermé
+- [x] Horaires centralisés (`lib/openingHours.js`), midi réactivé, dimanche ouvert (bar 15h–1h, résas 18h–22h)
 - [x] Interrupteur de présence réversible
 - [x] Attribution automatique des tables (`lib/tableAllocator.js`), plan client retiré
 - [x] Onglet `/admin/statistiques`

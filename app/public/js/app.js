@@ -627,7 +627,16 @@ const OPENING_HOURS = (initialServerState && initialServerState.openingHours) ||
   durationMinutes: 120,
   durationLabel: '2h',
   slotStepMinutes: 30,
-  closedWeekdays: [0],
+  closedWeekdays: [],
+  servicesByWeekday: [
+    ['evening'],
+    ['lunch', 'evening'],
+    ['lunch', 'evening'],
+    ['lunch', 'evening'],
+    ['lunch', 'evening'],
+    ['lunch', 'evening'],
+    ['lunch', 'evening'],
+  ],
   services: [
     { key: 'lunch', label: 'Midi', start: '12:00', end: '14:00', slots: [] },
     { key: 'evening', label: 'Soir', start: '18:00', end: '22:00', slots: [] },
@@ -644,7 +653,8 @@ const MANUAL_BLOCK_DURATION_MIN = RESERVATION_DURATION_MIN;
 
 // Groupe maximum accepté par le formulaire public.
 const MAX_GROUP_SIZE = Number(initialServerState?.maxGroupSize) || 18;
-const CLOSED_WEEKDAYS = OPENING_HOURS.closedWeekdays || [0];
+const CLOSED_WEEKDAYS = OPENING_HOURS.closedWeekdays || [];
+const SERVICES_BY_WEEKDAY = OPENING_HOURS.servicesByWeekday || [];
 
 const toPeopleCount = (value) => {
   const parsed = Number.parseInt(String(value || '').trim(), 10);
@@ -663,8 +673,10 @@ const getServiceTypeFromTime = (timeValue) => {
 // peut couper le midi depuis l'admin sans recharger la page.
 const getOpeningServicesForDay = (day) => {
   if (CLOSED_WEEKDAYS.includes(Number(day))) return [];
+  const open = SERVICES_BY_WEEKDAY[Number(day)];
   return (OPENING_HOURS.services || [])
     .map((service) => service.key)
+    .filter((key) => !open || open.includes(key))
     .filter((key) => !(key === 'lunch' && lunchDisabled));
 };
 
@@ -1332,7 +1344,7 @@ if (bookingForms.length) {
       <p class="time-date" data-time-date></p>
       <div class="time-grid" data-time-grid></div>
       <p class="time-empty" data-time-empty hidden>
-        Aucun créneau ce jour. Fermé le dimanche.
+        Aucun créneau ce jour.
       </p>
     </div>
   `;

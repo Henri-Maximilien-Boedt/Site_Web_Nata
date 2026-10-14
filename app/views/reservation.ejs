@@ -29,8 +29,8 @@
         <div>
           <p class="eyebrow">Contact</p>
           <h2>NATA</h2>
-          <p>Bar ouvert du lundi au samedi, <%= displayHours.bar[0].value %>.</p>
-          <p>Service en cuisine : <%= displayHours.kitchen[0].value %>.</p>
+          <p>Bar : <%= displayHours.bar.map((row) => `${row.days.toLowerCase()} ${row.value}`).join(', ') %>.</p>
+          <p>Service en cuisine : <%= displayHours.kitchen.map((row) => `${row.days.toLowerCase()} ${row.value}`).join(', ') %>.</p>
           <p>Grand-Place 51, 1348 Ottignies-Louvain-la-Neuve</p>
           <p>Tél: 01 23 45 67 89</p>
         </div>

@@ -19,11 +19,26 @@ const SERVICES = {
 
 const SERVICE_ORDER = ['lunch', 'evening']
 
-// Jours de fermeture complète (0 = dimanche).
-const CLOSED_WEEKDAYS = [0]
+// Services ouverts par jour de la semaine (0 = dimanche … 6 = samedi).
+// Le dimanche, seul le service du soir est réservable.
+const SERVICES_BY_WEEKDAY = {
+  0: ['evening'],
+  1: ['lunch', 'evening'],
+  2: ['lunch', 'evening'],
+  3: ['lunch', 'evening'],
+  4: ['lunch', 'evening'],
+  5: ['lunch', 'evening'],
+  6: ['lunch', 'evening']
+}
+
+// Jours de fermeture complète : ceux qui n'ont aucun service.
+const CLOSED_WEEKDAYS = [0, 1, 2, 3, 4, 5, 6].filter(
+  (weekday) => !(SERVICES_BY_WEEKDAY[weekday] || []).length
+)
 
 // Horaires du bar : affichage seul, aucun créneau de réservation.
 const BAR_HOURS = { start: '12:00', end: '01:00' }
+const BAR_HOURS_SUNDAY = { start: '15:00', end: '01:00' }
 
 const toMinutes = (value) => {
   const [hours, minutes] = String(value || '')
@@ -46,7 +61,10 @@ const isClosedWeekday = (weekday) => CLOSED_WEEKDAYS.includes(Number(weekday))
 // qui ferme le midi sans toucher au soir.
 const getServicesForWeekday = (weekday, { lunchDisabled = false } = {}) => {
   if (isClosedWeekday(weekday)) return []
-  return SERVICE_ORDER.filter((key) => !(key === 'lunch' && lunchDisabled))
+  const open = SERVICES_BY_WEEKDAY[Number(weekday)] || []
+  return SERVICE_ORDER.filter(
+    (key) => open.includes(key) && !(key === 'lunch' && lunchDisabled)
+  )
 }
 
 // Heures de début réservables pour un service, bornes incluses.
@@ -88,11 +106,11 @@ const getDisplayHours = () => ({
       days: 'Lundi – Samedi',
       value: `${formatRange(SERVICES.lunch.start, SERVICES.lunch.end)} · ${formatRange(SERVICES.evening.start, SERVICES.evening.end)}`
     },
-    { days: 'Dimanche', value: 'Fermé' }
+    { days: 'Dimanche', value: formatRange(SERVICES.evening.start, SERVICES.evening.end) }
   ],
   bar: [
     { days: 'Lundi – Samedi', value: formatRange(BAR_HOURS.start, BAR_HOURS.end) },
-    { days: 'Dimanche', value: 'Fermé' }
+    { days: 'Dimanche', value: formatRange(BAR_HOURS_SUNDAY.start, BAR_HOURS_SUNDAY.end) }
   ]
 })
 
@@ -103,11 +121,17 @@ const getStructuredDataHours = () => [
     dayOfWeek: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'],
     opens: BAR_HOURS.start,
     closes: BAR_HOURS.end
+  },
+  {
+    '@type': 'OpeningHoursSpecification',
+    dayOfWeek: ['Sunday'],
+    opens: BAR_HOURS_SUNDAY.start,
+    closes: BAR_HOURS_SUNDAY.end
   }
 ]
 
 // Charge utile envoyée au navigateur dans clientState.
-const getClientPayload = ({ lunchDisabled = false } = {}) => ({
+const getClientPayload = () => ({
   durationMinutes: RESERVATION_DURATION_MIN,
   durationLabel: getDurationLabel(),
   slotStepMinutes: SLOT_STEP_MIN,
@@ -119,17 +143,18 @@ const getClientPayload = ({ lunchDisabled = false } = {}) => ({
     end: SERVICES[key].end,
     slots: getSlotsForService(key)
   })),
-  servicesByWeekday: [0, 1, 2, 3, 4, 5, 6].map((weekday) =>
-    getServicesForWeekday(weekday, { lunchDisabled })
-  )
+  // Planning brut : le client applique lui-même lunchDisabled, lu à chaud.
+  servicesByWeekday: [0, 1, 2, 3, 4, 5, 6].map((weekday) => getServicesForWeekday(weekday))
 })
 
 module.exports = {
   BAR_HOURS,
+  BAR_HOURS_SUNDAY,
   CLOSED_WEEKDAYS,
   RESERVATION_DURATION_MIN,
   SERVICES,
   SERVICE_ORDER,
+  SERVICES_BY_WEEKDAY,
   SLOT_STEP_MIN,
   getClientPayload,
   getDisplayHours,
